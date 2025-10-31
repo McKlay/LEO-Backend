@@ -40,6 +40,7 @@ env/
 *.swo
 *~
 .DS_Store
+LEO-Backend.code-workspace
 
 # Testing
 .pytest_cache/
