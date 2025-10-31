@@ -126,7 +126,7 @@ leo-backend/
 │     └─ cors.py
 ├─ services/                      # “Use-cases” (pure business flow, no HTTP or SDK specifics)
 │  ├─ pipeline/
-│  │  ├─ conversation.py           # NEW: manages chat history, memory state
+│  │  ├─ conversation.py           # manages chat history, memory state
 │  │  ├─ nlp_ingress.py            # lang detect → (optional) translate → (optional) intent
 │  │  ├─ retrieval.py              # build query, filters from intent; call vector store
 │  │  ├─ grounding.py              # construct prompt w/ snippets + citation schema

@@ -16,7 +16,8 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore"
+        extra="ignore",
+        json_file=None  # Don't try to parse env values as JSON
     )
     
     # Application Settings
@@ -36,9 +37,9 @@ class Settings(BaseSettings):
     api_host: str = Field(default="0.0.0.0", description="API host")
     api_port: int = Field(default=8000, description="API port")
     api_prefix: str = Field(default="/api", description="API route prefix")
-    cors_origins: list[str] = Field(
-        default=["http://localhost:3000", "http://localhost:5173"],
-        description="Allowed CORS origins"
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://localhost:5173",
+        description="Allowed CORS origins (comma-separated)"
     )
     
     # Security Settings
@@ -169,13 +170,11 @@ class Settings(BaseSettings):
         description="Cache time-to-live in seconds"
     )
     
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        """Parse CORS origins from comma-separated string or list."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    def get_cors_origins(self) -> list[str]:
+        """Get CORS origins as a list."""
+        if isinstance(self.cors_origins, list):
+            return self.cors_origins
+        return [origin.strip() for origin in self.cors_origins.split(",")]
 
 
 # Global settings instance

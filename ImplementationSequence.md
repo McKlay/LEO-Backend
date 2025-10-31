@@ -48,21 +48,21 @@ Build a Philippine labor law chatbot backend using Python/FastAPI with:
 
 **Tasks**
 
-**Authentication & Session Management:**
+**1.A Authentication & Session Management:**
 * Implement `api/v1/routes_auth.py`:
   - `POST /api/auth/session` - Anonymous session creation with JWT tokens
   - Session validation middleware for protected endpoints
   - JWT token generation/validation with expiry handling
 * Add session management service in `services/auth/`
 
-**Core Chat Infrastructure:**
+**1.B Core Chat Infrastructure:**
 * Implement `adapters/vectorstore/supabase_store.py` for upsert/query (pgvector)
 * Implement `adapters/llm/openai_llm.py` with streaming support
 * Build `services/pipeline/` modules: `retrieval.py`, `grounding.py`, `generation.py`, `postprocess.py`
 * Add `services/pipeline/conversation.py`: session-based memory management
 * Add `adapters/memory/langchain_memory.py` (in-memory + optional Redis)
 
-**Chat API Implementation:**
+**1.C Chat API Implementation:**
 * Implement `api/v1/routes_chat.py`:
   - `POST /api/chat/message` with full API spec compliance
   - Request validation (2000 char limit, language codes, required fields)
@@ -71,7 +71,7 @@ Build a Philippine labor law chatbot backend using Python/FastAPI with:
   - Rate limiting (10 requests/minute per session)
   - Comprehensive error handling with proper HTTP status codes
 
-**Knowledge Base Setup:**
+**1.D Knowledge Base Setup:**
 * Implement `kb/ingest/sync_to_vectorstore.py`: chunking and indexing CLI
 * Seed 20-30 Philippine Labor Code sections with proper metadata
 * Citation validation with canonical URLs (Lawphil, DOLE, NLRC)

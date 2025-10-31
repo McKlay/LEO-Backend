@@ -18,7 +18,8 @@ from core import (
     format_error_response,
     rate_limiter,
 )
-from api.v1 import health_router
+from api.v1 import health_router, auth_router
+from app.containers import cleanup_services
 
 
 logger = get_logger(__name__)
@@ -50,6 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     
     # Shutdown
     logger.info("Shutting down application")
+    cleanup_services()
 
 
 def create_app() -> FastAPI:
@@ -78,7 +80,7 @@ def create_app() -> FastAPI:
     # CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=settings.get_cors_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -92,6 +94,12 @@ def create_app() -> FastAPI:
         health_router,
         prefix="/api/v1",
         tags=["Health"]
+    )
+    
+    app.include_router(
+        auth_router,
+        prefix="/api/v1",
+        tags=["Authentication"]
     )
     
     return app
