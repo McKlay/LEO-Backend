@@ -5,7 +5,7 @@ Defines the contract for vector database operations,
 enabling easy swapping between vector stores (Supabase, Pinecone, etc.).
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any, Dict
 from pydantic import BaseModel
 
 
@@ -15,7 +15,7 @@ class Document(BaseModel):
     id: str
     content: str
     embedding: list[float]
-    metadata: dict[str, any] = {}
+    metadata: Dict[str, Any] = {}
 
 
 class QueryResult(BaseModel):
@@ -23,7 +23,7 @@ class QueryResult(BaseModel):
     
     id: str
     content: str
-    metadata: dict[str, any]
+    metadata: Dict[str, Any]
     score: float  # Similarity score
 
 

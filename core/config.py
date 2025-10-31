@@ -63,24 +63,28 @@ class Settings(BaseSettings):
     
     # OpenAI Settings
     openai_api_key: str = Field(..., description="OpenAI API key")
-    openai_model: str = Field(
-        default="gpt-4.1",
+    openai_llm_model: str = Field(
+        default="gpt-4-turbo-preview",
         description="OpenAI chat model"
     )
     openai_embedding_model: str = Field(
         default="text-embedding-3-small",
         description="OpenAI embedding model"
     )
-    openai_temperature: float = Field(
+    llm_temperature: float = Field(
         default=0.3,
         ge=0.0,
         le=2.0,
         description="LLM temperature for generation"
     )
-    openai_max_tokens: int = Field(
-        default=2000,
+    llm_max_tokens: int = Field(
+        default=1000,
         gt=0,
         description="Maximum tokens for LLM responses"
+    )
+    enable_streaming: bool = Field(
+        default=True,
+        description="Enable streaming responses"
     )
     
     # Supabase Settings
@@ -92,7 +96,7 @@ class Settings(BaseSettings):
     )
     
     # Vector Store Settings
-    vector_table_name: str = Field(
+    vectorstore_table_name: str = Field(
         default="labor_law_embeddings",
         description="Vector store table name"
     )
@@ -105,6 +109,44 @@ class Settings(BaseSettings):
         ge=1,
         le=20,
         description="Number of chunks to retrieve"
+    )
+    retrieval_similarity_threshold: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Minimum similarity score for retrieval"
+    )
+    
+    # Memory Settings
+    memory_token_limit: int = Field(
+        default=4000,
+        gt=0,
+        description="Maximum tokens to keep in memory"
+    )
+    max_history_messages: int = Field(
+        default=10,
+        gt=0,
+        description="Maximum messages to keep in conversation history"
+    )
+    context_window_tokens: int = Field(
+        default=4000,
+        gt=0,
+        description="Maximum tokens for context window"
+    )
+    
+    # Grounding & Generation Settings
+    max_context_length: int = Field(
+        default=8000,
+        gt=0,
+        description="Maximum context length in characters"
+    )
+    enable_auto_disclaimer: bool = Field(
+        default=True,
+        description="Automatically add legal disclaimers"
+    )
+    enable_pii_redaction: bool = Field(
+        default=False,
+        description="Enable PII redaction in responses"
     )
     
     # Google Cloud Settings (Optional - Translation & Maps)

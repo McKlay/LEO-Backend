@@ -5,16 +5,23 @@ Defines the contract for conversation memory/history management,
 enabling different storage backends (in-memory, Redis, database).
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 
 class ConversationMessage(BaseModel):
     """Conversation message model."""
     
-    role: str  # "user" or "assistant"
+    role: str  # "user", "assistant", or "system"
     content: str
     timestamp: Optional[str] = None
+
+
+class ConversationHistory(BaseModel):
+    """Conversation history container."""
+    
+    session_id: str
+    messages: List[ConversationMessage]
 
 
 class BaseMemory(ABC):
@@ -28,52 +35,54 @@ class BaseMemory(ABC):
     @abstractmethod
     async def get_history(
         self,
-        conversation_id: str,
+        session_id: str,
         limit: Optional[int] = None
-    ) -> list[ConversationMessage]:
+    ) -> ConversationHistory:
         """
         Get conversation history.
         
         Args:
-            conversation_id: Conversation identifier
+            session_id: Session/conversation identifier
             limit: Maximum number of messages to retrieve
             
         Returns:
-            List of conversation messages
+            Conversation history
         """
         pass
     
     @abstractmethod
-    async def append_message(
+    async def add_message(
         self,
-        conversation_id: str,
-        message: ConversationMessage
+        session_id: str,
+        role: str,
+        content: str
     ) -> None:
         """
-        Append message to conversation history.
+        Add message to conversation history.
         
         Args:
-            conversation_id: Conversation identifier
-            message: Message to append
+            session_id: Session/conversation identifier
+            role: Message role ("user", "assistant", "system")
+            content: Message content
         """
         pass
     
     @abstractmethod
-    async def clear_history(self, conversation_id: str) -> None:
+    async def clear_history(self, session_id: str) -> None:
         """
         Clear conversation history.
         
         Args:
-            conversation_id: Conversation identifier
+            session_id: Session/conversation identifier
         """
         pass
     
     @abstractmethod
-    async def delete_conversation(self, conversation_id: str) -> None:
+    async def delete_session(self, session_id: str) -> None:
         """
-        Delete entire conversation.
+        Delete entire conversation session.
         
         Args:
-            conversation_id: Conversation identifier
+            session_id: Session/conversation identifier
         """
         pass
