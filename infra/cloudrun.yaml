@@ -1,0 +1,108 @@
+# Cloud Run Service Configuration
+# Deploy with: gcloud run services replace cloudrun.yaml
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: leo-backend
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        # CPU allocation
+        run.googleapis.com/cpu-throttling: "true"
+        # Startup probe
+        run.googleapis.com/startup-cpu-boost: "true"
+        # Session affinity for WebSocket support (future)
+        run.googleapis.com/sessionAffinity: "true"
+    spec:
+      # Container configuration
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: leo-backend-sa
+      
+      containers:
+      - name: leo-backend
+        image: gcr.io/PROJECT_ID/leo-backend:latest
+        
+        ports:
+        - name: http1
+          containerPort: 8000
+        
+        # Resource limits
+        resources:
+          limits:
+            cpu: "2"
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 512Mi
+        
+        # Environment variables
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: API_PORT
+          value: "8000"
+        
+        # Secrets from Secret Manager
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret-key
+              key: latest
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-api-key
+              key: latest
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: supabase-url
+              key: latest
+        - name: SUPABASE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-key
+              key: latest
+        
+        # Health checks
+        startupProbe:
+          httpGet:
+            path: /api/v1/healthz
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        
+        livenessProbe:
+          httpGet:
+            path: /api/v1/healthz
+            port: 8000
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 30
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /api/v1/readyz
+            port: 8000
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+  
+  traffic:
+  - percent: 100
+    latestRevision: true
