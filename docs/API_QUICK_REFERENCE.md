@@ -408,7 +408,7 @@ All errors must follow this format:
 ### Step 1: Setup
 1. Create REST API with Express/FastAPI/Django
 2. Setup database (PostgreSQL recommended)
-3. Integrate LLM (OpenAI GPT-4 or similar)
+3. Integrate LLM (OpenAI GPT-4.1)
 4. Configure CORS for frontend domain
 
 ### Step 2: Core Endpoints (Priority)

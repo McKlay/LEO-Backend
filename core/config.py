@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     # OpenAI Settings
     openai_api_key: str = Field(..., description="OpenAI API key")
     openai_model: str = Field(
-        default="gpt-4-turbo-preview",
+        default="gpt-4.1",
         description="OpenAI chat model"
     )
     openai_embedding_model: str = Field(

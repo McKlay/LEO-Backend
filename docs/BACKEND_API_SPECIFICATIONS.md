@@ -191,7 +191,7 @@ Accept-Language: en | fil | ceb
   ],
   "metadata": {
     "processingTime": 1.5,
-    "model": "gpt-4",
+    "model": "gpt-4.1",
     "confidence": 0.92,
     "disclaimerRequired": true
   }
