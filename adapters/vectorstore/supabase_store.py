@@ -36,7 +36,7 @@ class SupabaseVectorStore(BaseVectorStore):
         """
         self.client = supabase_client
         self.settings = settings
-        self.table_name = settings.vector_table_name
+        self.table_name = settings.vectorstore_table_name
         self.embedding_dimension = settings.embedding_dimension
         
         logger.info(
@@ -128,17 +128,18 @@ class SupabaseVectorStore(BaseVectorStore):
             rpc_params = {
                 "query_embedding": query_embedding,
                 "match_threshold": threshold or 0.0,
-                "match_count": limit
+                "match_count": limit,
+                "filter_metadata": json.dumps(filters) if filters else '{}'
             }
             
-            # Add metadata filters if provided
-            if filters:
-                rpc_params["filter_metadata"] = json.dumps(filters)
+            logger.debug(f"Calling match_documents RPC with params: {rpc_params}")
             
             response = self.client.rpc(
                 "match_documents",
                 rpc_params
             ).execute()
+            
+            logger.debug(f"RPC response data: {response.data if response else 'None'}")
             
             # Parse results
             results = []

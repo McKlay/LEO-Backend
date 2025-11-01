@@ -1,0 +1,2704 @@
+Source: https://library.laborlaw.ph/wp-content/uploads/2023/10/2023-Handbook-on-Workers-Statutory-Benefits.pdf
+
+HANDBOOK ON 
+WORKERS’ STATUTORY 
+MONETARY BENEFITS
+
+DEPARTMENT OF LABOR AND EMPLOYMENT 
+BUREAU OF WORKING CONDITIONS 
+INTRAMUROS, MANILA 
+2023 
+The Project Team 
+Atty. Alvin B. Curada, Nicanor V. Bon, Emila T. de Guzman, 
+Pauli Andrenette Grace D. Ong, and other BWC staff 
+All Rights Reserved 
+This Handbook, or any part thereof, may not be reproduced for 
+commercial purposes without the written permission of the Bureau of 
+Working Conditions, Department of Labor and Employment. 
+This Handbook is published by the: 
+Bureau of Working Conditions (BWC) 
+Department of Labor and Employment (DOLE) 
+3rd Floor, DOLE Building, Muralla cor. Gen. Luna Streets, Intramuros, Manila 
+Tel. No. (02) 8527-3000 locals 306 or 308; Telefax No. (02) 8527-3478; 
+email: askbwc@gmail.com; website: bwc.dole.gov.ph – NOT FOR SALE – 
+Cover Art :   Marc Vincent M. Labrador 
+
+TABLE OF CONTENTS 
+ 
+COMPLIANCE GUIDE ......................................................................................... 1 
+1. MINIMUM WAGE ................................................................................................ 2 
+A. COVERAGE .................................................................................................................................. 3 
+B. MINIMUM WAGE RATES ....................................................................................................... 4 
+C. RULES IN DETERMINING COMPENSABLE WORKING HOURS .................................... 5 
+1. Hours worked ............................................................................................................. 5 
+2. Principles in determining hours worked .................................................. 5 
+3. Treatment on waiting time ............................................................................... 5 
+4. Attendance at lectures, meetings, training programs, and 
+other similar activities .......................................................................................... 6 
+5. Meal and Rest Periods ......................................................................................... 6 
+D. MONTHLY-PAID EMPLOYEES AND DAILY-PAID EMPLOYEES .................................. 6 
+E. COMPUTATION OF THE ESTIMATED EQUIVALENT MONTHLY RATE (EEMR) OF 
+MONTHLY-PAID AND DAILY-PAID EMPLOYEES ........................................................... 7 
+F. SUBSIDIZED MEALS AND SNACKS ..................................................................................... 8 
+G. WAGE OF KASAMBAHAY....................................................................................................... 8 
+H. WAGE OF KASAMBAHAY WHO WORKS AS SALESCLERK ........................................... 9 
+I. EFFECT OF REDUCTION OF WORKDAYS ON WAGES .................................................. 9 
+J. PENALTY AND DOUBLE INDEMNITY FOR VIOLATION OF THE PRESCRIBED 
+INCREASES OR ADJUSTMENTS IN THE WAGE RATES (RA 8188) .......................... 10 
+K. BARANGAY MICRO BUSINESS ENTERPRISES (BMBES) .......................................... 10 
+L. WAGE OF WORKERS PAID BY RESULTS .......................................................................... 11 
+M. WAGE OF APPRENTICES, LEARNERS, AND PERSONS WITH DISABILITY ................ 11 
+N. ANNUAL ESTABLISHMENT REPORT ON WAGES (AERW) ........................................ 11 
+O. COVERAGE FROM INCOME TAX ......................................................................................... 12 
+2. HOLIDAY PAY ................................................................................................... 14 
+A. DEFINITION .............................................................................................................................. 14 
+B. COVERAGE ............................................................................................................................... 14 
+C. REGULAR HOLIDAYS ............................................................................................................. 15 
+D. HOLIDAY PAY RATES ............................................................................................................. 15 
+E. ABSENCES ................................................................................................................................. 16 
+F. SUCCESSIVE REGULAR HOLIDAYS .................................................................................... 17 
+G. TEMPORARY OR PERIODIC SHUTDOWN/CESSATION OF WORK ............................ 17 
+H. HOLIDAY PAY OF CERTAIN EMPLOYEES......................................................................... 17 
+3. PREMIUM PAY .................................................................................................. 18 
+A. DEFINITION ............................................................................................................................... 18 
+B. COVERAGE ................................................................................................................................ 18 
+ 
+ 
+C. SPECIAL DAYS ......................................................................................................................... 19 
+1. Special (Non-Working) Days .......................................................................... 19 
+2. Special (Working) Days...................................................................................... 19 
+D. PREMIUM PAY RATES........................................................................................................... 19 
+4. OVERTIME PAY ................................................................................................. 21 
+A. DEFINITION ............................................................................................................................... 21 
+B. COVERAGE ................................................................................................................................ 21 
+C. OVERTIME PAY RATES .......................................................................................................... 21 
+D. STIPULATED OVERTIME RATES ......................................................................................... 22 
+5. NIGHT SHIFT DIFFERENTIAL ....................................................................... 23 
+A. DEFINITION .............................................................................................................................. 23 
+B. COVERAGE ............................................................................................................................... 23 
+C. NIGHT SHIFT DIFFERENTIAL RATE .................................................................................. 24 
+D. GUIDE COMPUTATIONS FOR HOLIDAY PAY, PREMIUM PAY, OVERTIME PAY, 
+AND NIGHT SHIFT DIFFERENTIAL .................................................................................... 24 
+6. SERVICE CHARGES ......................................................................................... 26 
+A. DEFINITION ............................................................................................................................. 26 
+B. COVERAGE .............................................................................................................................. 26 
+C. DISTRIBUTION OF SERVICE CHARGES ............................................................................ 26 
+D. FREQUENCY OF DISTRIBUTION ........................................................................................ 26 
+E. INCREASE IN MINIMUM WAGE ......................................................................................... 26 
+7. SERVICE INCENTIVE LEAVE ......................................................................... 27 
+A. DEFINITION ..............................................................................................................................27 
+B. COVERAGE ...............................................................................................................................27 
+C. MEANING OF “ONE YEAR OF SERVICE” .......................................................................... 28 
+D. CONVERSION .......................................................................................................................... 28 
+8. MATERNITY LEAVE ......................................................................................... 29 
+A. DEFINITION ............................................................................................................................. 29 
+B. COVERAGE .............................................................................................................................. 29 
+C. DURATION ............................................................................................................................... 29 
+D. CONDITIONS FOR ENTITLEMENT ...................................................................................... 30 
+E. FREQUENCY OF AVAILMENT ............................................................................................. 30 
+9. PATERNITY LEAVE ........................................................................................... 31 
+A. DEFINITION ............................................................................................................................... 31 
+B. COVERAGE ................................................................................................................................ 31 
+C. DURATION ................................................................................................................................. 31 
+D. CONDITIONS FOR ENTITLEMENT ....................................................................................... 32 
+E. FREQUENCY OF AVAILMENT .............................................................................................. 32 
+ 
+ 
+10. PARENTAL LEAVE FOR SOLO PARENTS .................................................. 33 
+A. DEFINITION .............................................................................................................................. 33 
+B. COVERAGE ............................................................................................................................... 33 
+C. DURATION................................................................................................................................34 
+D. CONDITIONS FOR ENTITLEMENT ...................................................................................... 35 
+E. FREQUENCY OF AVAILMENT .............................................................................................. 35 
+11. LEAVE FOR VICTIMS OF VIOLENCE AGAINST WOMEN AND THEIR 
+CHILDREN (VAWC) ......................................................................................... 36 
+A. DEFINITION .............................................................................................................................. 36 
+B. COVERAGE ............................................................................................................................... 36 
+C. DURATION................................................................................................................................ 36 
+D. CONDITIONS FOR ENTITLEMENT ...................................................................................... 36 
+E. FREQUENCY OF AVAILMENT .............................................................................................. 37 
+12. SPECIAL LEAVE FOR WOMEN .....................................................................38 
+A. DEFINITION .............................................................................................................................. 38 
+B. COVERAGE ............................................................................................................................... 38 
+C. DURATION................................................................................................................................ 38 
+D. CONDITIONS FOR ENTITLEMENT ...................................................................................... 39 
+E. FREQUENCY OF AVAILMENT .............................................................................................. 39 
+13. THIRTEENTH-MONTH PAY ........................................................................... 40 
+A. DEFINITION ............................................................................................................................. 40 
+B. COVERAGE .............................................................................................................................. 40 
+C. AMOUNT ................................................................................................................................... 41 
+D. COMPUTATION ....................................................................................................................... 41 
+E. TIME OF PAYMENT ................................................................................................................42 
+F. THIRTEENTH-MONTH PAY FOR CERTAIN TYPES OF EMPLOYEES .........................42 
+G. THIRTEENTH-MONTH PAY OF RESIGNED OR SEPARATED EMPLOYEE ...............43 
+H. THIRTEENTH-MONTH PAY OF FEMALE EMPLOYEE WHO IS ON MATERNITY 
+LEAVE ........................................................................................................................................43 
+I. NON-INCLUSION IN REGULAR WAGE .............................................................................43 
+J. COVERAGE FROM INCOME TAX OF THIRTEENTH-MONTH PAY AND OTHER 
+BENEFITS ..................................................................................................................................43 
+K. NO EXEMPTION OR DEFERMENT .................................................................................... 44 
+L. REPORT OF COMPLIANCE ................................................................................................. 44 
+14. SEPARATION PAY ........................................................................................... 45 
+A. DEFINITION ..............................................................................................................................45 
+B. COVERAGE ...............................................................................................................................45 
+C. AMOUNT ...................................................................................................................................45 
+D. COMPUTATION ...................................................................................................................... 46 
+ 
+ 
+E. NOTICE OF TERMINATION .................................................................................................. 47 
+F. COVERAGE FROM INCOME TAX OF SEPARATION PAY .............................................. 47 
+15. RETIREMENT PAY............................................................................................ 48 
+A. DEFINITION ............................................................................................................................. 48 
+B. COVERAGE .............................................................................................................................. 48 
+C. AMOUNT .................................................................................................................................. 48 
+D. COMPUTATION ....................................................................................................................... 48 
+E. RETIREMENT BENEFIT UNDER A COLLECTIVE BARGAINING AGREEMENT OR 
+APPLICABLE CONTRACT ..................................................................................................... 49 
+F. RETIREMENT BENEFIT OF WORKERS WHO ARE PAID BY RESULTS ..................... 49 
+G. RETIREMENT BENEFIT OF PART-TIME WORKERS ...................................................... 49 
+H. RETIREMENT BENEFIT OF UNDERGROUND OR SURFACE MINE EMPLOYEES 
+UNDER REPUBLIC ACT NO. 8558, AS AMENDED BY REPUBLIC ACT NO. 10757
+ ................................................................................................................................................... 50 
+I. RETIREMENT BENEFIT OF RACEHORSE JOCKEYS ...................................................... 50 
+J. OTHER BENEFITS UPON RETIREMENT ........................................................................... 50 
+K. COVERAGE FROM INCOME TAX OF RETIREMENT PAY................................................ 51 
+16. EMPLOYEES’ COMPENSATION PROGRAM ............................................. 52 
+A. EMPLOYEES’ COMPENSATION PROGRAM ..................................................................... 52 
+B. COVERAGE ............................................................................................................................... 52 
+C. CONDITIONS OF COMPENSABILITY .................................................................................. 52 
+1. Compensable Diseases ..................................................................................... 52 
+2. Compensable Injuries......................................................................................... 53 
+D. BENEFITS .................................................................................................................................. 53 
+E. NOTIFICATION AND FILING OF CLAIMS ........................................................................... 55 
+F. CONTRIBUTION ....................................................................................................................... 55 
+17. PHILHEALTH BENEFITS................................................................................. 57 
+A. NATIONAL HEALTH INSURANCE PROGRAM ..................................................................57 
+B. COVERAGE ...............................................................................................................................57 
+C. BENEFITS ..................................................................................................................................57 
+D. CONTRIBUTION .......................................................................................................................57 
+18. SOCIAL SECURITY BENEFITS....................................................................... 59 
+A. SOCIAL SECURITY BENEFITS ............................................................................................. 59 
+B. COVERAGE .............................................................................................................................. 59 
+C. BENEFITS ................................................................................................................................. 59 
+D. CONTRIBUTION ...................................................................................................................... 60 
+19. PAG-IBIG BENEFITS ......................................................................................... 61 
+A. HOME DEVELOPMENT MUTUAL FUND .......................................................................... 61 
+B. COVERAGE ............................................................................................................................... 61 
+ 
+ 
+C. PROGRAMS AND BENEFITS ................................................................................................. 61 
+D. MEMBERSHIP CONTRIBUTION ......................................................................................... 64 
+DIRECTORY OF DOLE REGIONAL OFFICES ............................................ 66 
+DIRECTORY OF DOLE-NCR FIELD OFFICES ........................................... 67 
+THE BWC ........................................................................................................... 68 
+VISION ............................................................................................................................................. 68 
+MISSION ......................................................................................................................................... 68
+
+COMPLIANCE GUIDE
+
+Applicable Labor Standards          Retail & Service Establishments           Non-              Ref.
+                                   Employing 1 to 5      Employing 1 to 9   Agriculture/      (Page
+                                      workers              workers          Agriculture       no.)
+
+Minimum Wage*                            ✓                     ✓                 ✓             2
+Holiday Pay                            N/A                   N/A                 ✓            14
+Premium Pay                             ✓                     ✓                 ✓            18
+Overtime Pay                           ✓                     ✓                 ✓            21
+Night Shift Differential              N/A                     ✓                 ✓            23
+Service Charges                        ✓                     ✓                 ✓            26
+Service Incentive Leave               N/A                   N/A                 ✓            27
+Maternity Leave                       ✓                     ✓                 ✓            29
+Paternity Leave                      ✓                      ✓                 ✓            31
+Parental Leave                       ✓                      ✓                 ✓            33
+Leave for VAWC                      ✓                      ✓                 ✓            36
+Special Leave for Women              ✓                      ✓                 ✓            38
+13th-Month Pay                      ✓                      ✓                 ✓            40
+Separation Pay                      ✓                      ✓                 ✓            45
+Retirement Pay                     N/A                    N/A***               ✓            48
+ECC Benefits**                      ✓                      ✓                 ✓            52
+PhilHealth Benefits**               ✓                      ✓                 ✓            57
+SSS Benefits**                     ✓                      ✓                 ✓            59
+Pag-IBIG Benefits**                ✓                      ✓                 ✓            61
+
+
+  * rates may vary per region  
+  ** will be paid by the Government 
+*** employing not more than 10 workers
+
+1 
+MINIMUM WAGE 
+Republic Act No. 6727 or the “Wage Rationalization Act” mandates the fixing 
+of the minimum wages applicable to different industrial sectors, namely, non
+agriculture, agriculture plantation, and non-plantation, cottage/handicraft, and 
+retail/service, depending on the number of workers or capitalization or annual 
+gross sales in some sectors. 
+The Rules Implementing RA 6727 define the following as basis for wage 
+classification: 
+“Agriculture” refers to farming in all its branches and, among others, 
+includes the cultivation and tillage of the soil, production, cultivation, 
+growing and harvesting of any agricultural or horticultural 
+commodities, dairying, raising of livestock or poultry, the culture of fish 
+and other aquatic products in farms or ponds, and any activities 
+performed by a farmer or on a farm as an incident to or in conjunction 
+with such farming operations, but does not include the manufacturing 
+and/or processing of sugar, coconut, abaca, tobacco, pineapple, aquatic 
+or other farm products. 
+“Retail establishment” is one principally engaged in the sale of goods to 
+end-users for personal or household use.  A retail establishment that 
+regularly engages in wholesale activities loses its retail character. 
+“Service establishment” is one principally engaged in the sale of service 
+to individuals for their own or household use and is generally recognized 
+as such.  
+The said law rationalized wage determination by establishing the 
+mechanism and proper standards through the creation of Regional Tripartite 
+Wages and Productivity Boards (RTWPBs) authorized to determine the daily 
+minimum wage rates in the following different regions based on established 
+criteria:  
+National Capital Region (NCR) or Metro Manila 
+Cordillera Administrative Region (CAR) 
+Region I - 
+Region II 
+Region III - - 
+Northern Luzon or Ilocos 
+Cagayan Valley 
+Central Luzon 
+CALABARZONa - Provinces of Cavite, Laguna, Batangas, Rizal, and 
+Quezon 
+aSee Executive Order No. 103, Series of 2002 (Dividing Region IV into Region IV-A and Region IV-B, Transferring 
+the Province of Aurora to Region III and for Other Purposes). 
+- 
+3 
+MIMAROPA 
+Regionb 
+Region V 
+Region VI 
+Region VII 
+Region VIII 
+Region IX 
+Region X 
+Region XI 
+Region XII 
+Caraga 
+Regionc - - - - - - - - 
+Provinces of Mindoro Oriental, Mindoro 
+Occidental, Marinduque, Romblon, and Palawan 
+Bicol 
+Western Visayas 
+Central Visayas 
+Eastern Visayas 
+Western Mindanao or Zamboanga Peninsula 
+Northern Mindanao 
+Southern Mindanao or Davao 
+Central Mindanao or SOCCSKSARGEN (South 
+Cotabato, North Cotabato, Sultan Kudarat, 
+Sarangani, and General Santos) 
+Provinces of Agusan del Norte, Agusan del Sur, 
+Surigao del Norte, and Surigao del Sur 
+Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)d - 
+The Regional Wage Orders prescribe the daily minimum wage rates per 
+industry per locality within the region and in some instances depending on the 
+number of workers and the capitalization of enterprises. The Wage Orders 
+likewise provide the basis and procedure for application for exemption from 
+compliance therefrom. 
+
+A. Coverage 
+The wage increases prescribed under Wage Orders apply to all private sector 
+workers and employees receiving the daily minimum wage rates or those 
+receiving up to a certain daily wage ceiling, where applicable, regardless of their 
+position, designation, or status of employment, and irrespective of the method 
+by which their wages are paid, except workers of duly registered Barangay Micro 
+Business Enterprises (BMBEs) with Certificate of Authority pursuant to Republic 
+Act No. 10644. 
+Upon application with and as determined by an RTWPB, based on 
+documentation and other requirements in accordance with applicable rules 
+and regulations issued by the National Wages and Productivity Commission 
+(NWPC), an establishment may be exempted from compliance with a Wage 
+Order for a period not to exceed one (1) year. 
+bSee Republic Act No. 10879 or the MIMAROPA Act. 
+cSee Republic Act No. 7901 entitled An Act Creating Region XIII to be known as the Caraga Administrative Region, 
+and for Other Purposes. 
+See Republic Act No. 11054 or the Organic Law for the Bangsamoro Autonomous Region in Muslim Mindanao 
+and Wage Order issued by the BTWPB. 
+
+B. Minimum Wage Rates 
+
+DAILY MINIMUM WAGE (MW)ᵉ
+National Capital Region
+(As of July 2023)
+
+Cities/Municipalities: Cities of Caloocan, Las Piñas, Makati, Malabon, Mandaluyong, Manila, Marikina, Muntinlupa, Parañaque, Pasay, Pasig, Quezon, San Juan, Taguig, Valenzuela, and Municipalities of Navotas and Pateros
+
+Sector/Industry	Current Minimum Wage Rates	New Wage Increase	New Minimum Wage Rates
+Non-agriculture	₱ 570.00	₱ 40.00	₱ 610.00
+Agriculture (Plantation and Non-Plantation)			
+Service/Retail Establishments			
+employing 15 workers or less	₱ 533.00	₱ 40.00	₱ 573.00
+Manufacturing Establishments			
+regularly employing less than 10 workers			
+
+SOURCE: National Wages and Productivity Commission
+
+Summary of Current Regional Daily Minimum Wage Rates (MWR)
+(As of July 2023)
+
+REGION	WO NO./DATE OF EFFECTIVITY	MWR (PHP)
+NCR	WO 24 / 16 July 2023	573.00 - 610.00
+CAR	WO 21 / 14 June 2022	400.00
+I	WO 21 / 06 June 2022	372.00 - 400.00
+II	WO 21 / 08 June 2022	400.00 - 420.00
+III	WO 23 / 20 June 2022	344.00 - 460.00
+CALABARZON	WO 19 / 30 June 2022	350.00 - 470.00
+MIMAROPA	WO 10 / 10 June 2022	329.00 - 355.00
+V	WO 20 / 18 June 2022	365.00
+VI	WO 26 / 05 June 2022	410.00 - 450.00
+VII	WO 23 / 14 June 2022	382.00 - 435.00
+VIII	WO 22 / 27 June 2022	345.00 - 375.00
+IX	WO 21 / 25 June 2022	338.00 - 351.00
+X	WO 21 / 18 June 2022	378.00 - 405.00
+XI	WO 21 / 19 June 2022	428.00 - 443.00
+XII	WO 22 / 09 June 2022	347.00 - 368.00
+Caraga	WO 17 / 06 June 2022	350.00
+BARMM	WO 02 / 21 July 2022	306.00 - 341.00
+
+SOURCE: National Wages and Productivity Commission
+
+The National Wages and Productivity Commission updates monthly the 
+summary of current regional daily minimum wage rates which may be accessed 
+at www.nwpc.dole.gov.ph under Statistics. 
+C. Rules in Determining Compensable Working Hoursf 
+The basis of the minimum wage rates prescribed by law shall be the normal 
+working hours of eight (8) hours a day. 
+1. 
+Hours worked 
+The following shall be considered as compensable hours worked: 
+a. All time during which an employee is required to be on duty or to be 
+at the employer's premises or to be at a prescribed work place; and 
+b. All time during which an employee is suffered or permitted to work. 
+2. Principles in determining hours worked 
+The following general principles shall govern in determining whether 
+the time spent by an employee is considered hours worked: 
+a. All hours are hours worked which the employee is required to give 
+his employer, regardless of whether or not such hours are spent in 
+productive labor or involve physical or mental exertion. 
+b. An employee need not leave the premises of the work place in order 
+that his rest period shall not be counted, it being enough that he 
+stops working, may rest completely and may leave his work place, to 
+go elsewhere, whether within or outside the premises of his work 
+place. 
+c. If the work performed was necessary, or it benefited the employer, or 
+the employee could not abandon his work at the end of his normal 
+working hours because he had no replacement, all time spent for 
+such work shall be considered as hours worked, if the work was with 
+the knowledge of his employer or immediate supervisor. 
+d. The time during which an employee is inactive by reason of 
+interruptions in his work beyond his control shall be considered 
+working time either if the imminence of the resumption of work 
+requires the employee's presence at the place of work or if the 
+interval is too brief to be utilized effectively and gainfully in the 
+employee's own interest. 
+3. Treatment on waiting time 
+a. Waiting time spent by an employee shall be considered as working 
+time if waiting is an integral part of his work or the employee is 
+required or engaged by the employer to wait. 
+fRule I, Book III of the Omnibus Rules Implementing the Labor Code of the Philippines. 
+6 
+b. An employee who is required to remain on call in the employer's 
+premises or so close thereto that he cannot use the time effectively 
+and gainfully for his own purpose shall be considered as working 
+while on call. An employee who is not required to leave word at his 
+home or with company officials where he may be reached is not 
+working while on call. 
+4. Attendance at lectures, meetings, training programs, and other similar 
+activities 
+Attendance at lectures, meetings, training programs, and other 
+similar activities shall not be counted as working time if all of the 
+following conditions are met: 
+a. Attendance is outside of the employee's regular working hours; 
+b. Attendance is in fact voluntary; and 
+c. The employee does not perform any productive work during such 
+attendance. 
+5. Meal and Rest Periods 
+Every employer shall give his employees, regardless of sex, not less 
+than one (1) hour time-off for regular meals, except in the following cases 
+when a meal period of not less than twenty (20) minutes may be given 
+by the employer provided that such shorter meal period is credited as 
+compensable hours worked of the employee: 
+a. Where the work is non-manual work in nature or does not involve 
+strenuous physical exertion; 
+b. Where the establishment regularly operates not less than sixteen (16) 
+hours a day; 
+c. In case of actual or impending emergencies or there is urgent work 
+to be performed on machineries, equipment or installations to avoid 
+serious loss which the employer would otherwise suffer; and 
+d. Where the work is necessary to prevent serious loss of perishable 
+goods. 
+Rest periods or coffee breaks running from five (5) to twenty (20) 
+minutes shall be considered as compensable working time. 
+D. Monthly-Paid Employees and Daily-Paid Employees 
+“Monthly-paid employees” are those who are paid every day of the month, 
+including unworked rest days, special days, and regular holidays.  Factor 365 
+days in a year is used in determining the equivalent monthly salary of monthly
+paid employees. 
+7 
+“Daily-paid employees” are those who are paid on the days they actually 
+worked and on unworked regular holidays. 
+E. Computation of the Estimated Equivalent Monthly Rate 
+(EEMR) of Monthly-Paid and Daily-Paid Employees 
+The following factors are based on the declared regular holidays and special 
+non-working days in Proc. No. 42-22, as amended by Proc. No. 90-22: 
+1. 
+For monthly-paid employees: 
+Factor 365 days in a year is used in determining the equivalent annual and 
+monthly salary of monthly-paid employees. To compute their Estimated 
+Equivalent Monthly Rate (EEMR), the procedure is as follows: 
+Applicable Daily Rate (ADR)×365
+ 12 months
+ =EEMR 
+Where 365 days/year = 293.0 Ordinary working days 
+52.0 Rest days 
+12 .0 Regular holidays 
+8.0  Special non-working days 
+365.0 Total equivalent no. of days/year 
+
+2. For daily-paid employees: 
+The following factors and formula may be used in computing the EEMR of 
+different groups of daily-paid employees for purposes of entitlement to 
+minimum wages and allied benefits under existing laws: 
+a. For those who are required to work everyday, including Sundays or 
+rest days, special days and regular holidays 
+Applicable Daily Rate (ADR)×395.0
+ 12 months
+ Where 394.4 days/year = 
+=EEMR 
+293.0 Ordinary working days 
+67.6 Rest days (52 x 1.3) 
+24.0  Regular holidays (12 x 2) 
+10.4  Special non-working days (8 x 1.3) 
+395.0 Total equivalent no. of days/year 
+b. For those who do not work and are not considered paid on Sundays 
+or rest days 
+Applicable Daily Rate (ADR)×313
+ 12 months
+ =EEMR 
+8 
+Where 313 days/year = 293.0 Ordinary working days 
+12.0  Regular holidays 
+8.0  Special non-working days (10.4 if 
+worked) 
+313g Total equivalent no. of days/year 
+c. For those who do not work and are not considered paid on Saturdays 
+and Sundays or rest days 
+Applicable Daily Rate (ADR)×261
+ 12 months
+ Where 261 days/year = 
+=EEMR 
+241 Ordinary working days 
+12  
+Regular holidays 
+8  Special non-working days (10.4 if 
+worked) 
+261h Total equivalent no. of days/year 
+Without prejudice to existing company policies, practices and/or 
+agreements, the above formula are merely suggestions and may be used as 
+guides in determining the equivalent monthly minimum wage rates.
+
+F. Subsidized Meals and Snacks  
+The employer may provide subsidized meals and snacks to his employees 
+provided that the subsidy shall not be less than 30% of the fair and reasonable 
+value of such facilities.  In such case, the employer may deduct from the wages 
+of the employees not more than 70% of the value of the meals and snacks 
+enjoyed by the employees, pursuant to the Facility Evaluation Order issued by 
+the RTWPB concerned. (Sec. 4, Rule VII-A, Book III of the Rules Implementing 
+the Labor Code) For the computation of the fair and reasonable value of the 
+meals given, the employer may seek assistance from concerned Regional 
+Tripartite Wages and Productivity Board (RTWPBs) for the conduct of facility 
+evaluation. 
+G. Wage of Kasambahayi 
+After one year from the effectivity of the Batas Kasambahay and periodically 
+thereafter, the Regional Tripartite Wages and Productivity Boards (RTWPBs) 
+were mandated to review and, if proper, determine and adjust the minimum 
+wage rates of Kasambahay. The RTWPBs shall conduct consultations/hearings 
+with stakeholders prior to the issuance of a wage order. 
+gFactor 305 may be used instead of 313 if the 8 special non-working days are not considered paid. 
+hFactor 253 may be used instead of 261 if the 8 special non-working days are not considered paid. 
+i See also DOLE Q&A on Batas Kasambahay (Republic Act No. 10361) Revised Edition. Published by the DOLE
+Bureau of Workers with Special Concerns. 
+9 
+ 
+As of July 2023, the monthly minimum wage of Kasambahay shall not be less 
+than the following: 
+
+Monthly Minimum Wage Rates by Region (Philippines)
+Source: National Wages and Productivity Commission / RTWPBs
+Format:
+Region | Wage Order No. / Date of Effectivity | Cities & 1st Class Municipalities | Other Municipalities
+
+- NCR  NCR-DW-03 / 13 June 2022  ₱6,000.00  -
+- CAR  CAR-DW-04 / 14 June 2022  ₱4,500.00  ₱4,000.00
+- Region I  RB1-DW-03 / 06 July 2022  ₱5,000.00  ₱4,500.00
+- Region II  RBII-DW-03 / 15 July 2022  ₱5,000.00  ₱4,500.00
+- Region III  RBIII-DW-03 / 16 July 2022  ₱5,000.00  ₱4,500.00
+- CALABARZON  RBIVA-DW-03 / 16 July 2022  ₱5,000.00  ₱4,500.00
+- MIMAROPA  RB-IVB-DW-03 / 01 June 2022  ₱5,000.00  ₱4,500.00
+- Region V  RBV-DW-04 / 05 June 2022  ₱5,000.00  ₱4,500.00
+- Region VI  RBVI-DW-03 / 15 June 2022  ₱5,000.00  ₱4,500.00
+- Region VII  RBVII-DW-03 / 17 June 2022  ₱5,000.00  ₱4,500.00
+- Region VIII  RBVIII-DW-03 / 13 June 2022  ₱5,000.00  ₱4,500.00
+- Region IX  RBIX-DW-03 / 12 June 2022  ₱4,500.00  ₱4,000.00
+- Region X  RBX-DW-03 / 18 June 2022  ₱4,500.00  ₱4,000.00
+- Region XI  RBXI-DW-04 / 08 June 2022  ₱5,000.00  ₱4,500.00
+- Region XII  RBXII-DW-03 / 30 June 2022  ₱5,000.00  ₱4,500.00
+- CARAGA  RBXIII-DW-03 / 30 June 2022  ₱4,500.00  ₱4,000.00
+SOURCE: National Wages and Productivity Commission/RTWPBs 
+
+The National Wages and Productivity Commission updates monthly the 
+summary of monthly minimum wage of Kasambahay which may be accessed 
+at www.nwpc.dole.gov.ph under Statistics. 
+H. Wage of Kasambahay who Works as Salesclerk 
+A Kasambahay who works as salesclerk should receive wage in accordance 
+with the prescribed minimum wage which is applicable in the retail and service 
+establishments, under existing Wage Orders. 
+I. Effect of Reduction of Workdays on Wages 
+In situations where the employer has to reduce the number of regular 
+working days to prevent serious losses, such as when there is a substantial 
+slump in the demand for his/her goods or services or when there is lack of raw 
+materials, the employer may deduct the wages corresponding to the days taken 
+off from the workweek, consistent with the principle of “no work, no pay.” This is 
+without prejudice to an agreement or company policy which provides 
+otherwise. 
+ 
+ 
+10 
+J. Penalty and Double Indemnity for Violation of the 
+Prescribed Increases or Adjustments in the Wage Rates (RA 
+8188) 
+Any person, corporation, trust, firm, partnership, association or entity which 
+refuses or fails to pay any of the prescribed increases or adjustments in the wage 
+rates made in accordance with RA 6727, shall be punished by a fine of not less 
+than Twenty-five Thousand Pesos (P25,000.00) nor more than One Hundred 
+Thousand Pesos (P100,000.00) or imprisonment of not less than two (2) years 
+nor more than four (4) years, or both such fine and imprisonment at the 
+discretion of the court: Provided, That any person convicted hereof shall not be 
+entitled to the benefits provided for under the Probation Law.  
+The employer concerned shall be ordered to pay an amount equivalent to 
+double the unpaid benefits owing to the employees: Provided, That payment of 
+indemnity shall not absolve the employer from the criminal liability imposable 
+hereof. 
+If the violation is committed by a corporation, trust, firm, partnership, 
+association or any other entity, the penalty of imprisonment shall be imposed 
+upon the entity’s responsible officers, including, but not limited to, the 
+president, vice-president, chief executive officer, general manager, managing 
+director or partner. 
+K. Barangay Micro Business Enterprises (BMBEs) 
+BMBEs or business enterprises engaged in the production, processing or 
+manufacturing of products or commodities including agro-processing, trading 
+and services whose total assets, excluding the land on which the particular 
+business entity’s office, plant and equipment are situated are not more than 
+Three Million Pesos (P3,000,000) are not covered from the coverage of the 
+Minimum Wage Law: Provided, that all employees shall still be entitled to the 
+same benefits given to regular employees such as social security and health 
+care benefits.   
+The DTI, through the Negosyo Center in the city or municipality level, shall 
+have the sole power to issue the Certificate of Authority for BMBEs to avail of the 
+benefits provided by R.A. No. 9178, otherwise known as the “Barangay Micro 
+Business Enterprises (BMBE’s) Act of 2002”.j 
+The BMBE workers and owners shall agree on the acceptable wage rates 
+based on the wage advisories issued by the RTWPBs.   
+
+jSection 5(b) of Republic Act No. 10644 entitled An Act Promoting Job Generation and Inclusive Growth Through 
+the Development of Micro, Small and Medium Enterprises. Issued on 15 July 2014. 
+L. Wage of Workers Paid by Resultsk 
+11 
+All workers paid by results, including homeworkers and those who are paid 
+on piecework, takay, pakyaw or task basis, shall receive not less than the 
+prescribed minimum wage rates under the Regional Wage Orders for the 
+normal working hours which shall not exceed eight (8) hours a day, or a 
+proportion thereof for work less than the normal working hours. 
+To ensure the payment of fair and reasonable wage rates, the wage rates of 
+workers who are paid by results as may be determined through time and 
+motion studies or in consultation with representatives of employers’ and 
+workers’ organizations. 
+A Piece-Rate Order or Production Standard Order shall be issued by the 
+DOLE Regional Director, in his capacity as DOLE Chairperson, based on the 
+recommendation of the Secretariat of the RTWPB as a result of the time and 
+motion study conducted in the workplace of the applicant.  It should be 
+adjusted every time a new Wage Order is issued by the RTWPB to ensure that 
+piece rates correspond to the applicable minimum wage.  
+M. Wage of Apprentices, Learners, and Persons with disability 
+Wage of apprentices and learners shall in no case be less than seventy-five 
+(75%) percent of the applicable minimum wage rates. 
+Apprentices and learners are those who are covered by apprenticeship and 
+learnership agreements duly approved by the Technical Education and Skills 
+Development Authority (TESDA).l 
+A qualified employee with disability shall be subject to the same terms and 
+conditions of employment and the same compensation, privileges, benefits, 
+fringe benefits or allowances as a qualified able-bodied person.m 
+N. Annual Establishment Report on Wages (AERW)n 
+Pursuant to Article 124 of the Labor Code, as amended by Republic Act No. 
+6727 or the Wage Rationalization Act, all private establishments are required to 
+submit an annual report on “a verified itemized listing of their labor component, 
+specifying the names of their workers and employees below the managerial 
+level, including learners, apprentices and disabled/handicapped workers who 
+were hired under the terms prescribed in the employment contracts, and their 
+corresponding salaries and wages.” 
+kSee Department Order No. 125, Series of 2013 or the Revised Guidelines on the Conduct of Time and Motion Study 
+(TMS). Issued on 01 April 2013. 
+l See Revised Guidelines in the Implementation of the Apprenticeship and Learnership Programs. 
+m Sec. 1 of Republic Act No. 10524 or the Magna Carta for Persons with Disability. 
+nSee DOLE Labor Advisory No. 09, Series of 2022 for reference. 
+12 
+in 
+the 
+For this purpose, all private establishments are required to register and log
+to 
+online 
+report 
+of 
+the 
+AERW 
+at 
+https://annualwagereport.nwpc.dole.gov.ph/. For 2022, the report shall be 
+submitted not later than 31 May 2023. While for succeeding years, submission 
+shall not be later than January 31 of the following year (e.g. for calendar year 
+2023, submission shall not be later than 31 January 2024).  
+Establishments which do not have access to online facilities may go to the 
+nearest RTWPB so they can be assisted with the encoding of entries. 
+Concerns and technical problems encountered may be sent to: 
+wage.report@produktiboatsahod.onmicrosoft.com or to the Wage Report 
+Hotlines at 8527-5519, 85278011 and 09178630855. 
+O. Coverage from Income Taxo 
+Effective January 1, 2018, the following income payments are exempted 
+from the requirement of withholding tax on compensation: 
+1. 
+Compensation income of Minimum Wage Earners (MWEs) who work in 
+the private sector and being paid the Statutory Minimum Wage (SMW), 
+as fixed by Regional Tripartite Wage and Productivity Board 
+(RTWPB)/National Wages and Productivity Commission (NWPC), 
+applicable to the place where he/she is assigned. 
+Aside from the SMW, the holiday pay, overtime pay, night shift 
+differential pay, and hazard pay, earned by the aforementioned MWE 
+shall likewise be covered by the above exemption. For this purpose, 
+hazard pay shall mean the amount paid by the employer to MWEs who 
+were actually assigned to danger or strife-torn areas, disease-infested 
+places, or in distressed or isolated stations and camps, which expose 
+them to great danger or contagion or peril to life. Any hazard paid to 
+MWEs which does not satisfy the above criteria is deemed subject to 
+income tax and consequently, withholding tax on the said hazard pay. 
+Additional compensation such as commissions, honoraria, fringe 
+benefits, benefits in excess of the allowable statutory amount of 
+₱90,000.00, taxable allowances, and other taxable income given to an 
+MWE by the same employer other than those which are expressly 
+exempt from income tax shall be subject to withholding tax using the 
+withholding tax table. 
+o BIR Revenue Regulations No. 11-2018 [Amending Certain Provisions of Revenue Regulations No. 2-98, as 
+Amended, to Implement Further Amendments Introduced by Republic Act No. 10963, Otherwise Known as the 
+“Tax Reform for Acceleration and Inclusion (TRAIN)” Law, Relative to Withholding of Income Tax]. Issued on 31 
+January 2018. 
+13 
+2. Compensation during the year not exceeding Two hundred fifty 
+thousand pesos (₱250,000.00). 
+
+
+For questions regarding minimum 
+wage rates, please contact the 
+NATIONAL WAGES AND 
+PRODUCTIVITY COMMISSION 
+Address: 2F & 3F, DY Intl., Building, 
+San Marcelino corner Gen. Malvar 
+Streets, Malate, Manila 
+Telephone numbers: (02) 8527-8014 
+or (02) 8527-5171 
+Website: https://nwpc.dole.gov.ph 
+Facebook: www.fb.com/dole.nwpc  
+E-mail address: 
+info@nwpc.dole.gov.ph
+
+For questions regarding rights and 
+benefits of domestic workers, please 
+contact the 
+BUREAU OF WORKERS WITH 
+SPECIAL CONCERNS 
+Address: DOLE Annex Building, 
+Cabildo Street corner Muralla Street, 
+Intramuros, Manila 
+Telephone number: (02) 8527-5858 
+Website: https://bwsc.dole.gov.ph 
+Facebook: 
+www.fb.com/BWSC.DOLE 
+E-mail address: bwsc@dole.gov.ph
+
+2 
+HOLIDAY PAY 
+(Article 94) 
+A. Definition 
+Holiday pay refers to the payment of the regular daily wage for any 
+unworked regular holiday. 
+B. Coverage 
+This benefit applies to all employees except: 
+1. 
+Government employees, whether employed by the National 
+Government or any of its political subdivisions, including those 
+employed in government-owned and/or controlled corporations with 
+original charters or created under special laws; 
+2. Those of retail and service establishments regularly employing less 
+than ten (10) workers; 
+3. Kasambahay and persons in the personal service of another; 
+4. Managerial employees, if they meet all of the following conditions: 
+4.1 Their primary duty is to manage the establishment in which they 
+are employed or of a department or subdivision thereof; 
+4.2 They customarily and regularly direct the work of two or more 
+employees therein; and 
+4.3 They have the authority to hire or fire other employees of lower 
+rank; or their suggestions and recommendations as to hiring, 
+firing, and promotion, or any other change of status of other 
+employees are given particular weight.  
+5. Officers or members of a managerial staff, if they perform the 
+following duties and responsibilities: 
+5.1 Primarily perform work directly related to management policies 
+of their employer; 
+5.2 Customarily and regularly exercise discretion and independent 
+judgment; 
+5.3 (a) Regularly and directly assist a proprietor or managerial 
+employee in the management of the establishment or subdivision 
+thereof in which he or she is employed; or (b) execute, under 
+general supervision, work along specialized or technical lines 
+requiring special training, experience, or knowledge; or (c) 
+execute, under general supervision, special assignments and 
+tasks; and 
+15 
+5.4 Do not devote more than twenty percent (20%) of their hours 
+worked in a workweek to activities which are not directly and 
+closely related to the performance of the work described in 
+paragraphs 5.1, 5.2, and 5.3 above. 
+6. Field personnel and other employees whose time and performance is 
+unsupervised by the employer, including those who are engaged on 
+task or contract basis, purely commission basis or those who are paid 
+a fixed amount for performing work irrespective of the time 
+consumed in the performance thereof. 
+C. Regular Holidays 
+Pursuant to Proclamation No. 42 s. 2022, as amended by Proclamation 
+No. 90 s. 2022, the following are the twelve (12) regular holidays for the year 
+2023: 
+New Year’s Day 
+Maundy Thursday 
+Good Friday 
+Araw ng Kagitingan 
+Eidul Fitr 
+Labor Day 
+Independence Day 
+Eidul Adha 
+National Heroes Day 
+Bonifacio Day 
+Christmas Day 
+Rizal Day 
+D. Holiday Pay Rates - - - - - - - - - - - - 
+01 January (Sunday) 
+06 April (Thursday) 
+07 April (Friday) 
+10 April (Monday nearest April 9) 
+Movable Date 
+01 May (Monday) 
+12 June (Monday) 
+Movable Date 
+28 August (Monday) 
+27 November (Monday nearest 
+November 30) 
+25 December (Monday) 
+30 December (Saturday) 
+Every employee covered by the Holiday Pay Rule is entitled to the 
+minimum wage rate.  This means that the employee is entitled to at least 
+100% of his/her minimum wage rate even if he/she did not report for work, 
+provided he/she is present or is on leave of absence with pay on the work day 
+immediately preceding the holiday. 
+Work performed on that day merits at least twice (200%) the daily wage 
+of the employee.  
+The above mentioned is without prejudice to any voluntary practice or 
+provision in the Collective Bargaining Agreement (CBA) providing for 
+payment of wages and other benefits for days declared as special days even 
+if unworked. 
+16 
+Illustration: 
+Using the NCR minimum wage of ₽610.00 per day for the non
+agricultural sector, effective 16 July 2023 under Wage Order No. NCR-24. 
+For work within eight (8) hours, plus 100% of the minimum wage of 100% 
+or a total of 200%. 
+
+Wage Rates by Sector/Industry
+Format:
+Sector/Industry | Rate | Amount
+
+- Non-Agriculture  ₱610.00  ₱610 × 200% = ₱1,220.00
+- Retail and service establishments regularly employing less than ten (10) workers  ₱573.00  Not covered
+
+Where the holiday falls on the scheduled rest day of the employee, work 
+performed on said day merits at least an additional 30% of the employee’s 
+regular holiday rate of 200% or a total of at least 260% (Please see 3. Premium 
+Pay). 
+When a regular holiday falls on a Sunday, the following Monday shall not 
+be a holiday, unless a proclamation is issued declaring it a special day.  
+When Araw ng Kagitingan falls on the same day as Maundy Thursday or 
+Good Friday, a covered employee is entitled to at least two hundred percent 
+(200%) of his/her daily wage even if said day is unworked. Where the 
+employee is required to work on that day, he/she is entitled to an additional 
+100% of the daily wage. 
+E. Absences 
+1. 
+All covered employees shall be entitled to holiday pay when they are 
+on leave of absence with pay on the workday immediately preceding 
+the regular holiday. Employees who are on leave of absence without 
+pay on the day immediately preceding a regular holiday may not be 
+paid the required holiday pay if they do not work on such regular 
+holiday. 
+2. Employers shall grant the same percentage of the holiday pay as the 
+benefit granted by competent authority in the form of employee’s 
+compensation or social security payment, whichever is higher, if the 
+employees are not reporting for work while on such leave benefits. 
+3. Where the day immediately preceding the holiday is a non-work day 
+in the establishment or the scheduled rest day of the employee, 
+he/she shall not be deemed to be on leave of absence on that day, in 
+which case he/she shall be entitled to the holiday pay if he/she worked 
+on the day immediately preceding the nonwork day or rest day. 
+F. Successive Regular Holidays  
+17 
+Where there are two (2) successive regular holidays, like Maundy 
+Thursday and Good Friday, an employee may not be paid for both holidays if 
+he/she absents himself/herself from work on the day immediately preceding 
+the first holiday, unless he/she works on the first holiday, in which case he/she 
+is entitled to his/her holiday pay on the second holiday.    
+G. Temporary or Periodic Shutdown/Cessation of Work 
+In cases of temporary or periodic shutdown and temporary cessation of 
+work of an establishment, as when a yearly inventory or when the repair or 
+cleaning of machineries and equipment is undertaken, the regular holidays 
+falling within the period shall be compensated in accordance with the Rules 
+Implementing the Labor Code, as amended. 
+H. Holiday Pay of Certain Employees 
+1. 
+Where the covered employee is paid on piece-rate basis, his / her 
+holiday pay shall not be less than his/her average daily earnings for 
+the last seven (7) actual work days preceding the regular holiday; 
+provided, however, that in no case shall the holiday pay be less than 
+the applicable statutory minimum wage rate. 
+2. Seasonal workers may not be paid the required holiday pay during 
+off-season when they are not at work. 
+3. Workers who do not have regular working days, such as stevedores, 
+shall be entitled to this benefit. 
+18 
+3 
+PREMIUM PAY 
+(Articles 91-93) 
+A. Definition 
+Premium pay refers to the additional compensation for work performed 
+within eight (8) hours on rest days and special days. 
+B. Coverage 
+This benefit applies to all employees except: 
+1. 
+Government employees, whether employed by the National 
+Government or any of its political subdivisions, including those 
+employed in government-owned and/or controlled corporations with 
+original charters or created under special laws; 
+2. Managerial employees, if they meet all of the following conditions: 
+2.1 Their primary duty is to manage the establishment in which they 
+are employed or of a department or subdivision thereof; 
+2.2 They customarily and regularly direct the work of two or more 
+employees therein; and 
+2.3 They have the authority to hire or fire other employees of lower 
+rank; or their suggestions and recommendations as to hiring, 
+firing, and promotion, or any other change of status of other 
+employees are given particular weight.  
+3. Officers or members of a managerial staff, if they perform the 
+following duties and responsibilities: 
+3.1 Primarily perform work directly related to management policies 
+of their employer; 
+3.2 Customarily and regularly exercise discretion and independent 
+judgment; 
+3.3 (a) Regularly and directly assist a proprietor or managerial 
+employee in the management of the establishment or subdivision 
+thereof in which he or she is employed; or (b) execute, under 
+general supervision, work along specialized or technical lines 
+requiring special training, experience, or knowledge; or (c) 
+execute, under general supervision, special assignments and 
+tasks; and 
+3.4 Do not devote more than twenty percent (20%) of their hours 
+worked in a workweek to activities which are not directly and
+closely related to the performance of the work described in 
+paragraphs 3.1, 3.2, and 3.3 above. 
+4. Kasambahay and persons in the personal service of another; 
+5. Workers who are paid by results, including those who are paid on 
+piece rate, takay, pakyaw, or task basis, and other non-time work, if 
+their output rates are in accordance with the standards prescribed in 
+the regulations, or where such rates have been fixed by the Secretary 
+of Labor and Employment; and 
+6. Field personnel, if they regularly perform their duties away   from the 
+principal or branch office or place of business of the employer and 
+whose actual hours of work in the field cannot be determined with 
+reasonable certainty. 
+C. Special Days 
+1. 
+Special (Non-Working) Days 
+Pursuant to Proclamation No. 42 s. 2022, as amended by Proclamation 
+No. 90 s. 2022, the following are the eight (8) special (non-working) days for 
+the year 2023: 
+Additional Special (Non-Working) Day - 02 January (Monday) 
+EDSA People Power Revolution 
+Anniversary 
+Black Saturday 
+Ninoy Aquino Day 
+All Saints’ Day - - - - 
+25 February (Saturday) 
+08 April (Saturday) 
+21 August (Monday) 
+01 November (Wednesday) 
+Additional Special (Non-Working) Day - 02 November (Thursday) 
+Feast of the Immaculate Conception 
+of Mary - 
+Last Day of the Year 
+2. Special (Working) Days - 
+08 December (Friday) 
+31 December (Sunday) 
+For work performed on a declared Special (Working) Day, an employee is 
+entitled only to his/her daily wage. No premium pay is required since work 
+performed on said day is considered work on an ordinary workday. 
+D. Premium Pay Rates 
+The “no work, no pay” principle applies during special days and on such 
+other special days as may be proclaimed by the President or by Congress. 
+Workers who are not required or permitted to work on special days are 
+not entitled to any compensation. This, however, is without prejudice to any 
+voluntary practice or provision in the Collective Bargaining Agreement (CBA) 
+providing for payment of wages and other benefits for days declared as 
+20 
+special days even if unworked. 
+On the other hand, work performed on special days merits additional 
+compensation of at least thirty percent (30%) of the basic wage or a total of 
+one hundred thirty percent (130%). Where the employee works on a special 
+day falling on his rest day, he/she shall be entitled to an additional 
+compensation of at least fifty percent (50%) of his/her basic wage or a total of 
+one hundred fifty percent (150%). 
+The minimum statutory premium pay rates are as follows: 
+---
+
+**Wage Computations for Work on Rest Days, Special Days, and Holidays**
+
+### 1. Work performed on rest days or on special days  
+*Plus 30% of the daily basic wage of 100% (Total: 130%)*
+
+| Sector/Industry               | Rate     | Amount                  |
+|------------------------------|----------|--------------------------|
+| Non-agriculture              | ₱610.00  | ₱610 × 130% = ₱793.00   |
+| Retail/Service Establishment | ₱573.00  | ₱573 × 130% = ₱744.90   |
+
+---
+
+### 2. Work performed on a rest day which is also a special day  
+*Plus 50% of the daily basic wage of 100% (Total: 150%)*
+
+| Sector/Industry               | Rate     | Amount                  |
+|------------------------------|----------|--------------------------|
+| Non-agriculture              | ₱610.00  | ₱610 × 150% = ₱915.00   |
+| Retail/Service Establishment | ₱573.00  | ₱573 × 150% = ₱859.50   |
+
+---
+
+### 3. Work performed on a regular holiday which is also the employee’s rest day  
+*(Not applicable to employees not covered by the holiday pay rule)*  
+*Plus 30% of the regular holiday rate of 200% (Total: 260%)*
+
+| Sector/Industry               | Rate     | Amount                          |
+|------------------------------|----------|----------------------------------|
+| Non-agriculture              | ₱610.00  | ₱610 × 260% = ₱1,586.00         |
+| Retail/Service Establishment | ₱573.00  | Not covered by holiday pay rule |
+
+---
+
+4 
+OVERTIME PAY 
+(Article 87) 
+A. Definition 
+Overtime pay refers to the additional compensation for work performed 
+beyond eight (8) hours a day. 
+B. Coverage 
+Same as those covered under 3. Premium Pay. 
+C. Overtime Pay Rates 
+The minimum overtime pay rates vary according to the day the overtime 
+work is performed, as follows: 
+1. Work in excess of eight (8) hours performed on ordinary working days
+Sector/Industry               Rate      Amount
+Non-agriculture               ₱610.00   ₱610/8 × 125% = ₱76.25 × 125% = ₱95.31/hour of OT work
+Retail/Service Establishment ₱573.00   ₱573/8 × 130% = ₱71.63 × 130% = ₱93.12/hour of OT work
+
+2. Work in excess of eight (8) hours performed on a scheduled rest day or a special day
+Sector/Industry               Rate      Amount
+Non-agriculture               ₱610.00   ₱610/8 × 130% × 130% = ₱76.25 × 130% × 130% = ₱128.74/hour of OT work
+Retail/Service Establishment ₱573.00   ₱573/8 × 130% × 130% = ₱71.63 × 130% × 130% = ₱121.63/hour of OT work
+
+
+3. Work in excess of eight (8) hours performed on a special day which falls on a scheduled rest day
+Sector/Industry               Rate      Amount
+Non-agriculture               ₱610.00   ₱610/8 × 150% × 130% = ₱76.25 × 150% × 130% = ₱148.69/hour of OT work
+Retail/Service Establishment ₱573.00   ₱573/8 × 150% × 130% = ₱71.63 × 150% × 130% = ₱139.68/hour of OT work
+
+Holiday Overtime Pay
+4. Work in excess of eight (8) hours performed on a regular holiday
+Plus 30% of the hourly rate on said day
+Sector/Industry               Rate      Amount
+Non-agriculture               ₱610.00   ₱610/8 × 200% × 130% = ₱76.25 × 200% × 130% × number of OT hours
+Retail/Service Establishment ₱573.00   Not covered by holiday pay rule
+
+5. Work in excess of eight (8) hours performed on a regular holiday which falls on a scheduled rest day
+Plus 30% of the hourly rate on said day
+Sector/Industry               Rate      Amount
+Non-agriculture               ₱610.00   ₱610/8 × 260% × 130% = ₱76.25 × 260% × 130% × number of OT hours
+Retail/Service Establishment ₱573.00   Not covered by holiday pay rule
+
+D. Stipulated Overtime Rates 
+Generally, the premium pay for work performed on rest days, special days, 
+or regular holidays is included as part of the regular rate of the employee in 
+the computation of overtime pay for overtime work rendered on said days, 
+especially if the employer pays only the minimum overtime rates prescribed 
+by law. 
+The employees and employer, however, may stipulate in their collective 
+agreement the payment for overtime work at rates higher than those 
+provided by law. 
+23 
+5 
+NIGHT SHIFT DIFFERENTIAL 
+(Article 86) 
+A. Definition 
+Night Shift Differential (NSD) refers to the additional compensation of ten 
+percent (10%) of an employee’s regular wage for each hour of work performed 
+between 10 p.m. and 6 a.m. 
+B. Coverage 
+This benefit applies to all employees except: 
+1. 
+Government employees, whether employed by the National 
+Government or any of its political subdivisions, including those 
+employed in government-owned and/or controlled corporations with 
+original charters or created under special laws; 
+2. Those of retail and service establishments regularly employing not 
+more than five (5) workers; 
+3. Kasambahay and persons in the personal service of another; 
+4. Managerial employees, if they meet all of the following conditions: 
+4.1 Their primary duty is to manage the establishment in which they 
+are employed or of a department or subdivision thereof; 
+4.2 They customarily and regularly direct the work of two or more 
+employees therein; and 
+4.3 They have the authority to hire or fire other employees of lower 
+rank; or their suggestions and recommendations as to hiring, 
+firing, and promotion, or any other change of status of other 
+employees are given particular weight.  
+5. Officers or members of a managerial staff, if they perform the 
+following duties and responsibilities: 
+5.1 Primarily perform work directly related to management policies 
+of their employer; 
+5.2 Customarily and regularly exercise discretion and independent 
+judgment;  
+5.3 (a) Regularly and directly assist a proprietor or managerial 
+employee in the management of the establishment or subdivision 
+thereof in which he or she is employed; or (b) execute, under 
+general supervision, work along specialized or technical lines 
+requiring special training, experience, or knowledge; or (c) 
+execute, under general supervision, special assignments and 
+tasks; and 
+24 
+5.4 Do not devote more than twenty percent (20%) of their hours 
+worked in a workweek to activities which are not directly and 
+closely related to the performance of the work described in 
+paragraphs 5.1, 5.2, and 5.3 above; and 
+6. Field personnel and those whose time and performance are 
+unsupervised by the employer. 
+
+C. Night Shift Differential Rate
+The minimum night shift differential rate varies according to the day the 
+night shift work is performed. 
+
+Sector/Industry               Rate      Amount
+Non-agriculture               ₱610.00   ₱610/8 × 110% = ₱76.25 × 110% × number of hours worked
+Retail/Service Establishment ₱573.00   ₱573/8 × 110% = ₱71.63 × 110% × number of hours worked
+ *This value may be substituted based on the above rates depending on the day the night shift work is 
+performed. 
+
+D. Guide Computations for Holiday Pay, Premium Pay, 
+Overtime Pay, and Night Shift Differential 
+The table below may be used to guide computations:
+
+Work on:                                          Equivalent pay:
+--------------------------------------------------------------------------------
+Ordinary day                                      1 or 100%
+Sunday or rest day                                1.3 or 130%
+Special (non-working) day                         1.3 or 130%
+Special (non-working) day falling on rest day     1.5 or 150%
+Double special (non-working) days                 1.5 or 150%
+Double special (non-working) days falling on      1.95 or 195%
+  rest day
+Regular holiday                                   2 or 200%
+Regular holiday falling on rest day               2.6 or 260%
+Double holiday                                    3 or 300%
+Double holiday falling on rest day                3.9 or 390%
+
+Ordinary day, night shift                         1 x 1.1 = 1.1 or 110%
+Rest day, night shift                             1.3 x 1.1 = 1.43 or 143%
+Special (non-working) day, night shift            1.3 x 1.1 = 1.43 or 143%
+Special (non-working) day, rest day, night shift  1.5 x 1.1 = 1.65 or 165%
+Double special (non-working) days, rest day,      1.95 x 1.1 = 2.145 or 214.5%
+  night shift
+Regular holiday, night shift                      2 x 1.1 = 2.2 or 220%
+Regular holiday, rest day, night shift            2.6 x 1.1 = 2.86 or 286%
+Double holiday, night shift                       3 x 1.1 = 3.3 or 330%
+Double holiday, rest day, night shift             3.9 x 1.1 = 4.29 or 429%
+
+Ordinary day, overtime (OT)                       1 x 1.25 = 1.25 or 125%
+Rest day, OT                                      1.3 x 1.3 = 1.69 or 169%
+Special (non-working), OT                         1.3 x 1.3 = 1.69 or 169%
+Special (non-working) day, rest day, OT           1.5 x 1.3 = 1.95 or 195%
+Double special (non-working) days, rest day, OT   1.95 x 1.3 = 2.535 or 253.5%
+Regular holiday, OT                               2 x 1.3 = 2.6 or 260%
+Regular holiday, rest day, OT                     2.6 x 1.3 = 3.38 or 338%
+Double holiday, OT                                3 x 1.3 = 3.9 or 390%
+Double holiday, rest day, OT                      3.9 x 1.3 = 5.07 or 507%
+
+Ordinary day, night shift, OT                     1 x 1.1 x 1.25 = 1.375 or 137.5%
+Rest day, night shift, OT                         1.3 x 1.1 x 1.3 = 1.859 or 185.9%
+Special (non-working) day, night shift, OT        1.3 x 1.1 x 1.3 = 1.859 or 185.9%
+Special (non-working) day, rest day, night        1.5 x 1.1 x 1.3 = 2.145 or 214.5%
+  shift, OT
+Double special (non-working) days, rest day,      1.95 x 1.1 x 1.3 = 2.7885 or
+  night shift, OT                                   278.85%
+Regular holiday, night shift, OT                  2 x 1.1 x 1.3 = 2.86 or 286%
+Reg. holiday, rest day, night shift, OT           2.6 x 1.1 x 1.3 = 3.718 or 371.8%
+Double holiday, night shift, OT                   3 x 1.1 x 1.3 = 4.29 or 429%
+Double holiday, rest day, night shift, OT         3.9 x 1.1 x 1.3 = 5.577 or 557.7%
+
+6 
+SERVICE CHARGES 
+(Article 96, as amended by RA No. 11360p) 
+A. Definition 
+Service charges refer to the amount collected by establishments, such as 
+hotels, restaurants and other similar establishments, that is added to the bills 
+for work or services rendered. 
+B. Coverage 
+This applies to all employees, except managerial employees as defined by 
+law, under the direct employ of the establishment, regardless of their 
+positions, designations or employment status, and irrespective of the 
+method by which their wages are paid. 
+C. Distribution of Service Chargesq  
+All service charges actually collected shall be distributed completely and 
+equally, based on actual hours or days of work or service rendered, among 
+the covered employees, including those already receiving the benefit of 
+sharing in the service charges. 
+D. Frequency of Distribution 
+The service charges collected shall be distributed and paid to the covered 
+employees once every two (2) weeks or twice a month at intervals not 
+exceeding sixteen (16) days. 
+E. Increase in Minimum Wage 
+In the event that the minimum wage is increased by law or wage order, 
+the service charges paid to the employees shall not be considered in 
+determining the establishment’s compliance with the increased minimum 
+wage. 
+pSee also DOLE Department Order No. 206, Series of 2019 or the Implementing Rules and Regulations of 
+Republic Act No. 11360 entitled “An Act Providing that Service Charges Collected by Hotels, Restaurants and 
+other Similar establishments be Distributed in Full to All Covered Employees Amending for the Purpose 
+Presidential Decree No. 442, As Amended, Otherwise Known as the “Labor Code of the Philippines.” Issued on 
+19 November 2019. See also DOLE Labor Advisory No. 10, Series of 2020 entitled Clarification on the Effectivity 
+Date of Republic Act. No. 11360 (issued on 28 February 2020). Republic Act 11360 was signed into law on 07 
+August 2019. It was published on 19 August 2019 in Manila Bulletin and Business Mirror, and took effect fifteen 
+days after its publication or on 04 September 2019. Its Implementing Rules and Regulations was signed on 19 
+November 2019 and published on 26 November 2019 in Manila Times. 
+qSee also DOLE Labor Advisory No. 14, Series of 2019 entitled Distribution of Collected Service Charge in 
+Relation to Non-Diminution of Benefits. Issued on 26 December 2019. 
+27 
+7 
+SERVICE INCENTIVE LEAVE 
+(Article 95) 
+A. Definition 
+Service incentive leave refers to the paid leave of five (5) days granted to 
+an employee who has rendered at least one (1) year of service that may be 
+used for sick, vacation, and other leave purposes. 
+B. Coverage 
+This benefit applies to every employee who has rendered at least one (1) 
+year of service, except the following: 
+1. 
+Government employees, whether employed by the National 
+Government or any of its political subdivisions, including those 
+employed in government-owned and/or controlled corporations with 
+original charters or created under special laws; 
+2. Persons in the personal service of another; 
+3. Managerial employees, if they meet all of the following conditions: 
+3.1 Their primary duty is to manage the establishment in which they 
+are employed or of a department or subdivision thereof;  
+3.2 They customarily and regularly direct the work of two or more 
+employees therein; and 
+3.3 They have the authority to hire or fire other employees   of lower 
+rank; or their suggestions and recommendations as to hiring, 
+firing, and promotion, or any other change of status of other 
+employees are given particular weight.  
+4. Officers or members of a managerial staff, if they perform the 
+following duties and responsibilities: 
+4.1 Primarily perform work directly related to management policies 
+of their employer; 
+4.2 Customarily and regularly exercise discretion and   independent 
+judgment;  
+4.3 (a) Regularly and directly assist a proprietor or managerial 
+employee in the management of the establishment or subdivision 
+thereof in which he or she is employed; or (b) execute, under 
+general supervision, work along specialized or technical lines 
+requiring special training, experience, or knowledge; or (c) 
+execute, under general supervision, special assignments and 
+tasks; and 
+28 
+4.4 Do not devote more than twenty percent (20%) of their hours 
+worked in a workweek to activities which are not directly and 
+closely related to the performance of the work described in 
+paragraphs 4.1, 4.2, and 4.3 above;  
+5. Field personnel and those whose time and performance is 
+unsupervised by the employer; 
+6. Those already enjoying this benefit; 
+7. Those enjoying vacation leave with pay of at least five (5) days; and 
+8. Those employed in establishments regularly employing less than ten 
+(10) employees. 
+C. Meaning of “one year of service” 
+The phrase “one year of service” of the employee means service within 
+twelve (12) months, whether continuous or broken, reckoned from the date 
+the employee started working.  The period includes authorized absences, 
+unworked weekly rest days, and paid regular holidays.  If through individual 
+or collective agreement, company practice or policy, the period of the 
+working days is less than twelve (12) months, said period shall be considered 
+as one year for the purpose of determining the entitlement to the service 
+incentive leave.r 
+D. Conversion 
+The employee may choose to either use his/her leave credits or commute 
+it to its monetary equivalent if not exhausted at the end of the year.  
+If the employee does not use or commute the service incentive leave, 
+he/she is entitled upon his/her resignation or separation from work to the 
+commutation of the same.s 
+In computing, the basis shall be the salary rate at the date of conversion. 
+The use and conversion of this benefit may be on a pro rata basis.t 
+Illustration: 
+An employee was hired on 1 January 2022 and resigned on 1 March 2023. 
+Assuming that he/she has not used or commuted any of his/her accrued SIL, 
+he/she is entitled to the conversion of his/her accrued SIL, upon his/her 
+resignation, as follows: 
+
+SIL earned as of 31 December 2022                    5.000 days
+Proportionate SIL for January and February 2023      0.833 day
+  (2/12) x 5 days
+                                                     _________
+Total accrued SIL as of 1 March 2023                 5.833 days
+
+Sec. 3, Rule V of the Omnibus Rules Implementing the Labor Code of the Philippines. 
+Auto Bus Transport System, Inc. v. Bautista, 497 Phil. 863 (2005). 
+5.000 days 
+0.833 days 
+5.833 days 
+DOLE Legal Service Opinion. 
+
+8 
+MATERNITY LEAVE 
+(RA 8282, as amended by RA 11210u) 
+A. Definition 
+Maternity leave refers to the paid leave granted to a female employee for 
+every instance of pregnancy, miscarriage, and emergency termination of 
+pregnancy, regardless of frequency, providing her an ample transition time 
+to regain health and overall wellness and to assume maternal roles. 
+B. Coverage 
+This benefit applies to female employees, regardless of civil status, 
+employment status, and the legitimacy of her child. 
+C. Duration 
+The maternity leave shall be for one hundred five (105) days with full pay, 
+and additional fifteen (15) days with full pay in case the female employee 
+qualifies as a solo parent under RA 8972, as amended by RA 11861. In cases of 
+live childbirth, an additional maternity leave of thirty (30) days without pay, 
+can be availed of, at the option of the female employee, provided that the 
+employer shall be given due notice. Further, this leave benefit may also be 
+credited as combinations of prenatal and postnatal leave as long as it does 
+not exceed one hundred five (105) days and provided that compulsory 
+postnatal leave shall not be less than sixty (60) days. 
+In case of miscarriage or emergency termination of pregnancy, the 
+maternity leave shall be for sixty (60) days with full pay.  
+In both cases, employers from the private sector shall pay for the 
+difference between the full salary and the actual cash benefits received from 
+the SSS.v 
+Nothing in RA 11210 and its IRR shall be construed as to diminish existing 
+maternity benefits currently enjoyed whether or not these are granted under 
+collective bargaining agreements (CBA) or present laws, if the same are more 
+beneficial to the female worker. Any other working arrangement which the 
+uEntitled An Act Increasing the Maternity Leave Period to One Hundred Five (105) Days for Female Workers 
+with an Option to Extend for an Additional Thirty (30) Days Without Pay, and Granting an Additional Fifteen 
+(15) Days for Solo Mothers, and for Other Purposes. Enacted on 20 February 2019 and was published in the 
+Manila Bulletin on 23 February 2019. RA 11210 took effect on 11 March 2019. See also the Implementing Rules 
+and Regulations of RA 11210 issued on 01 May 2019. 
+v See also DOLE Department Advisory No. 1, Series of 2019 or the Guidelines on the Computation of Salary 
+Differential of Female Workers during her Maternity Leave and its Criteria for Exemption Pursuant to Republic 
+Act No. 11210 and its Implementing Rules and Regulations. Issued on 09 July 2019. 
+30 
+female worker shall agree to, during the additional maternity leave period, 
+shall be allowed: Provided, that this shall be consented to in writing by the 
+female worker and shall primarily uphold her maternal functions and the 
+requirements of postnatal care. 
+D. Conditions for Entitlement 
+To qualify for the maternity leave, the female employee must have at least 
+three (3) monthly contributions to the SSS in the twelve-month period 
+immediately preceding the semester of childbirth, miscarriage, or 
+emergency termination of pregnancy,w and she shall have notified her 
+employer of her pregnancy and the probable date of her childbirth, which 
+notice shall be transmitted to SSS in accordance its rules and regulations. 
+E. Frequency of Availment 
+Maternity leave shall be granted to a qualified female worker in every 
+instance of pregnancy, miscarriage or emergency termination of pregnancy 
+regardless of frequency. 
+wYou 
+may 
+view 
+the 
+step-by-step 
+video 
+illustration 
+of 
+the 
+SSS 
+at 
+https://www.youtube.com/watch?v=qhwsbRR6OXc. 
+31 
+9 
+PATERNITY LEAVE 
+(RA 8187) 
+A. Definition 
+Paternity leave refers to the paid leave granted to a married male 
+employee allowing him to lend support to his lawful wife during her period 
+of recovery and/or in nursing of their newborn child, including miscarriage. 
+B. Coverage 
+This benefit applies to all married male employees, regardless of their 
+employment status (e.g., probationary, regular, contractual, project basis).  
+C. Duration 
+The paternity leave grants male employees his full pay for the seven (7) 
+days during which he is allowed not to report for work. 
+This is granted to an employee after the delivery by his wife, without 
+prejudice to an employer allowing an employee to avail of the benefit before 
+or during the delivery; Provided, that the total number of days shall not 
+exceed seven (7) days for each delivery.  
+In the event that the paternity leave is not availed of, said leave shall not 
+be convertible to cash. 
+Where a male employee is already enjoying the paternity leave benefits 
+by reason of contract, company policy or collective bargaining agreement, 
+the following rules shall apply: 
+a. If the existing paternity leave benefit is greater than the benefit 
+herein provided, the greater benefit shall prevail; and 
+b. If the existing paternity leave is less than that provided herein, such 
+existing benefit shall be adjusted to the extent of the difference. 
+However, where a contract, company policy or collective bargaining 
+agreement provides for an emergency or contingency leave without specific 
+provisions on paternity leave, the paternity leave as provided in RA 8187 shall 
+apply in full. 
+32 
+D. Conditions for Entitlement 
+A married male employee shall be entitled to paternity leave benefit 
+provided that he has met the following conditions: 
+1. 
+He is an employee at the time of delivery of his child; 
+2. He is cohabiting with his spouse at the time that she gives birth or 
+suffers a miscarriage; 
+3. He has applied for paternity leave with his employer within a 
+reasonable period of time from the expected date of delivery by his 
+pregnant spouse, or within such period as may be provided by 
+company rules and regulations or by collective bargaining 
+agreement, provided that prior application for leave shall not be 
+required in case of miscarriage; and 
+4. His wife has given birth or suffered a miscarriage. 
+For this purpose, “cohabiting” means the obligation of the husband and 
+wife to live together. If the spouses are not physically living together because 
+of the workstation or occupation, the male employee is still entitled to the 
+paternity leave benefit. 
+E. Frequency of Availment 
+Paternity leave benefit shall apply to the first four (4) deliveries of the 
+employee’s lawful wife with whom he is cohabiting. 
+
+10 
+33 
+PARENTAL LEAVE FOR SOLO PARENTS 
+(RA 8972, as amended by RA 11861x) 
+A. Definition 
+Parental leave refers to the paid leave granted to a qualified solo parent 
+to enable the performance of parental duties and responsibilities where 
+physical presence is required or beneficial to the child. 
+B. Coverage 
+This benefit applies to all employees who belong to the following 
+categories of solo parents:  
+1. 
+A parent who provides sole parental care and support of the child or 
+children due to – 
+a. Birth as a consequence of rape, even without final conviction: 
+Provided, That the mother has the sole parental care and support 
+of the child or children: Provided, further, That the solo parent 
+under this category may still be considered a solo parent under 
+any of the categories in this section; 
+b. Death of the spouse; 
+c. Detention of the spouse for at least three (3) months or service of 
+sentence for a criminal conviction; 
+d. Physical or mental incapacity of the spouse as certified by a public 
+or private medical practitioner; 
+e. Legal separation or de facto separation for at least six (6) months, 
+and the solo parent is entrusted with the sole parental care and 
+support of the child or children; 
+f. 
+Declaration of nullity or annulment of marriage, as decreed by a 
+court recognized by law, or due to divorce, subject to existing laws, 
+and the solo parent is entrusted with the sole parental care and 
+support of the child or children; or 
+g. Abandonment by the spouse for at least six (6) months; 
+2. Spouse or any family member of an Overseas Filipino Worker (OFW), 
+or the guardian of the child or children of an OFW: Provided, That the 
+said OFW belongs to the low/semi-skilled worker category and is 
+away from the Philippines for an uninterrupted period of twelve (12) 
+months: Provided, further, That the OFW, his or her spouse, family 
+x Known as the “Expanded Solo Parents Welfare Act.” Enacted on 04 June 2022. 
+34 
+member, or guardian of the child or children of an OFW falls under 
+the requirements of this section; 
+3. Unmarried mother or father who keeps and rears the child or 
+children; 
+4. Any legal guardian, adoptive or foster parent who solely provides 
+parental care and support to a child or children; 
+5. Any relative within the fourth (4th) civil degree of consanguinity or 
+affinity of the parent or legal guardian who assumes parental care and 
+support of the child or children as a result of the death, abandonment, 
+disappearance or absence of the parents or solo parent for at least six 
+(6) months: Provided, That in cases of solo grandparents who are 
+senior citizens but who have the sole parental care and support over 
+their grandchildren who are unmarried, or unemployed and twenty
+two (22) years old or below, or those twenty-two (22) years old or over 
+but who are unable to fully take care or protect themselves from 
+abuse, neglect, cruelty, exploitation, or discrimination because of a 
+physical or mental disability or condition, they shall be entitled to the 
+benefits of RA 8972, as amended in addition to the benefits granted 
+to them by Republic Act No. 9257, otherwise known as the ‘Expanded 
+Senior Citizens Act of 2003’; or 
+6. A pregnant woman who provides sole parental care and support to 
+the unborn child or children. 
+For the purpose of this leave benefit, the following terms shall mean: 
+“Child” or “dependents” refer to those living with and dependent upon 
+the solo parent for support who are unmarried, unemployed and twenty-two 
+(22) years old or below, or those over twenty-two (22) years old but who are 
+unable to fully take care or protect themselves from abuse, neglect, cruelty, 
+exploitation, or discrimination because of a physical or mental disability or 
+condition. 
+“Parental care and support” refer to the acts of providing for the basic 
+needs, health care, mental and physical safety, emotional support and 
+formation of the personality of the child. 
+C. Duration 
+In addition to leave privileges under existing laws, a forfeitable and 
+noncumulative parental leave of not more than seven (7) working days with 
+pay every year shall be granted to any solo parent employee, regardless of 
+employment status, who has rendered service of at least six (6) months. 
+35 
+Only a solo parent exercising sole parental care and support of the child 
+or children is entitled to claim the benefits of a solo parent under the law. A 
+solo parent shall not lose his or her status as solo parent if the other parent 
+provides occasional assistance and/or seasonal gifts that do not meet the 
+legal requirement of support under The Family Code of the Philippines. 
+Moreover, the absence of a valid and legal marriage between the mother 
+and father of a child or dependent does not automatically entitle either 
+individual to the benefits under the law if the factual circumstances 
+demonstrate that parental care and support are shared. 
+In the event that the parental leave is not availed of, said leave shall not 
+be convertible to cash unless specifically agreed upon previously by the 
+employer and the employee. 
+If there is an existing or similar benefit under a company policy or a 
+collective bargaining agreement, the same shall be credited as such.  If the 
+same is greater than the seven (7) days provided for in RA 8972, as amended, 
+the greater benefit shall prevail. 
+Emergency or contingency leave provided under a company policy or a 
+collective bargaining agreement shall not be credited as compliance with 
+the parental leave provided for under RA 8972, as amended. 
+D. Conditions for Entitlement 
+A solo parent shall be entitled to the parental leave provided that: 
+1. 
+They have rendered at least six (6) months of service, whether 
+continuous or broken, at the time of the effectivity of RA 11861y; 
+2. They have notified their employer of the availment thereof within a 
+reasonable time; and 
+3. They have presented a valid Solo Parent Identification Card (SPIC). 
+Qualified solo parents may apply for their SPIC at the Social Welfare and 
+Development Officer of the city or municipality of their residence. 
+E. Frequency of Availment 
+The parental leave of seven (7) working days with pay shall be granted 
+every year. 
+When a solo parent ceases to be such by reason of change of status and 
+circumstances, the said solo parent shall be ineligible to avail of the solo 
+parent benefits. 
+yRA 11861 was published on 30 June 2022 in Daily Tribune and took effect on 15 July 2022. 
+36 
+11 
+LEAVE FOR VICTIMS OF VIOLENCE AGAINST 
+WOMEN AND THEIR CHILDREN (VAWC) 
+(RA 9262) 
+A. Definition 
+Leave for victims of violence against women and their children refers to 
+the paid leave granted to a female employee who is a victim of violence 
+against women and their children allowing her to attend to medical and legal 
+concerns at any time during the application of any protection order, 
+investigation, prosecution and/or trial of the criminal case. 
+B. Coverage 
+This benefit applies to all female employees who are victims of VAWC. 
+VAWC, as used in RA9262, “refers to any act or a series of acts committed 
+by any person against a woman who is his wife, former wife, or against a 
+woman with whom the person has or had a sexual or dating relationship, or 
+with whom he has a common child, or against her child whether legitimate 
+or illegitimate, within or without the family abode, which result in or is likely 
+to result in physical, sexual, psychological harm or suffering, or economic 
+abuse including threats of such acts, battery, assault, coercion, harassment 
+or arbitrary deprivation of liberty.” 
+C. Duration 
+In addition to other paid leaves under existing labor laws, company 
+policies, and/or collective bargaining agreements, the qualified victim
+employee shall be entitled to a leave of up to ten (10) days with full pay, 
+consisting of basic salary and mandatory allowances fixed by the Regional 
+Wage Board, if any. The said leave shall be extended when the need arises, as 
+specified in the protection order issued by the barangay or the court. 
+D. Conditions for Entitlement 
+To be entitled to the leave benefit, the only requirement is for the victim
+employee to present to her employer a certification from the barangay 
+chairman (punong barangay), barangay councilor (barangay kagawad), 
+prosecutor, or Clerk of Court, as the case may be, that an action relative to the 
+matter is pending. 
+E. Frequency of Availment 
+37 
+The usage of the ten-day leave shall be at the option of the woman 
+employee. In the event that the leave benefit is not availed of, it shall not be 
+convertible into cash and shall not be cumulative.
+
+12 
+SPECIAL LEAVE FOR WOMEN 
+(RA 9710) 
+A. Definition 
+Special leave for women refers to the paid leave granted to a female 
+employee allowing her to recuperate following surgery caused by 
+gynecological disorders for a period of up to two (2) months. 
+B. Coverage 
+This benefit applies to all qualified female employees, regardless of age 
+and civil status, who have undergone surgery due to gynecological disorders. 
+C. Duration 
+Under the Magna Carta of Women, a female employee having rendered 
+continuous aggregate employment service of at least six (6) months for the 
+last twelve (12) months shall be entitled to a special leave benefit of two (2) 
+monthsz with full pay based on her gross monthly compensationaa following 
+surgery caused by gynecological disorders.bb  
+“Gynecological disorders” refers to disorders that would require surgical 
+procedures such as, but not limited to dilatation and curettage and those 
+involving female reproductive organs such as the vagina, cervix, uterus, 
+fallopian tubes, ovaries, breast, adnexa and pelvic floor, as certified by a 
+competent physician. It shall also include hysterectomy, ovariectomy and 
+mastectomy. 
+The special leave shall be non-cumulative and non-convertible to cash 
+unless otherwise provided by a collective bargaining agreement (CBA). 
+z The two (2) months special leave is the maximum period of leave with pay that a woman employee may avail 
+of under RA 9710. For purposes of determining the period of leave with pay that will be allowed to a woman 
+employee, the certification of a competent physician as to the required period of recuperation shall be 
+controlling. Please see DOLE Department Order No. 112-A, Series of 2012. 
+aa Gross monthly compensation refers to the monthly basic pay plus mandatory allowances fixed by the 
+regional wage boards. 
+bb See DOLE Department Order No. 112A, Series of 2012 entitled Amending the Guidelines on the 
+Implementation of the Special Leave. Issued on 22 May 2012. 
+D. Conditions for Entitlementcc  
+39 
+1. 
+She has rendered at least six (6) months continuous aggregate 
+employment service for the last twelve (12) months prior to surgery; 
+2. She has filed an application for special leave with her employer within 
+a reasonable period of time from the expected date of surgery or 
+within such period as may be provided by company rules and 
+regulations or collective bargaining agreement; and 
+3. She has undergone surgery due to gynecological disorders as 
+certified by a competent physician. 
+E. Frequency of Availment 
+The special leave may be availed for every instance of surgery due to 
+gynecological disorder for a maximum total period of two (2) months or sixty 
+(60) calendar days per year. 
+cc See DOLE Department Order No. 112, Series of 2011 or the Guidelines on the Implementation of the Special 
+Leave benefits for women Employees in the Private Sector. Issued on 11 March 2011. 
+40 
+13 
+THIRTEENTH-MONTH PAYdd 
+(PD 851) 
+A. Definition 
+Thirteenth-month pay refers to one-twelfth of the total basic salary 
+earned by an employee within a calendar. 
+B. Coverage 
+All employers are required to pay their rank-and-file employees 
+thirteenth-month pay, regardless of the nature of their employment and 
+irrespective of the methods by which their wages are paid, provided they 
+worked for at least one (1) month during a calendar year. 
+The Labor Code, as amended, distinguishes a rank-and-file employee 
+from a managerial employee.  A managerial employee is one who is vested 
+with powers or prerogatives to lay down and execute management policies 
+and/or to hire, transfer, suspend, layoff, recall, discharge, assign, or discipline 
+employees, or to effectively recommend such managerial actions.  All 
+employees not falling within this definition are considered rank-and-file 
+employees. The above distinction shall be used as guide for the purpose of 
+determining who are rank-and-file employees entitled to the thirteenth
+month pay. 
+The following employers are not covered by PD 851: 
+1. 
+The government and any of its political subdivisions, including 
+government-owned and controlled corporations, except those 
+corporations operating essentially as private subsidiaries of the 
+government; 
+2. Employers who are already paying their employees a thirteenth
+month pay or more in a calendar year or its equivalentee at the time of 
+the issuance of PD 851; 
+3. Employers of household helpers and persons in the personal service 
+of another in relation to such workers; and 
+dd See Revised Guidelines on the Implementation of the 13th Month Pay Law. See also DOLE Labor Advisory No. 
+18, Series of 2021 entitled Guidelines on the Payment of Thirteenth Month Pay. Issued on 25 October 2021. 
+eeThe term "its equivalent" shall include Christmas bonus, midyear bonus, cash bonuses, and other payments 
+amounting to not less than one-twelfth (1/12) of the basic salary but shall not include cash and stock dividends, 
+cost of living allowance, and all other allowances regularly enjoyed by the employee, as well as non-monetary 
+benefits. 
+41 
+4. Employers of those who are paid on purely commission, boundary, or 
+task basis, and those who are paid a fixed amount for performing 
+specific work, irrespective of the time consumed in the performance 
+thereof, except where the workers who are paid on piece-rate basis in 
+which case the employer shall grant them thirteenth-month pay to 
+such workers.ff 
+C. Amount 
+The thirteenth-month pay shall not be less than one-twelfth (1/12) of the 
+total basic salary earned by an employee in a calendar year. The "basic salary" 
+of an employee for the purpose of computing the thirteenth-month pay shall 
+include all remunerations or earnings paid by his or her employer for services 
+rendered. It does not include allowances and monetary benefits which are 
+not considered or integrated as part of the regular or basic salary, such as the 
+cash equivalent of unused vacation and sick leave credits, overtime, 
+premium, night shift differential and holiday pay, and cost of living allowance 
+(COLA).  However, these salary-related benefits should be included as part of 
+the basic salary in the computation of the thirteenth-month pay if these are 
+treated as part of the basic salary of the employees, through individual or 
+collective agreement, company practice or policy.  
+D. Computation 
+Total basic salary earned during the year   
+12 months
+ Illustration: 
+= proportionate 13th-month pay 
+Using the daily minimum wage in the National Capital Region at ₱570.00 
+from January 1 to July 15, 2023 and ₱610.00 from July 16 to December 31, 2023 
+for a six-day workweek with an equivalent Monthly Basic Salary of ₱14,867.50 
+( 570× 313
+ 12 months
+ )  and ₱15,910.83 ( 610× 313
+ 12 months
+ January 
+), respectively: 
+no absence  
+February 
+March 
+April 
+May 
+June 
+July 
+August 
+no absence  
+no absence 
+no absence 
+no absence 
+5 days leave with pay 
+no absence 
+no absence 
+₱ 14,867.50 
+14,867.50  
+14,867.50  
+14,867.50 
+14,867.50 
+14,867.50  
+15,389.17  
+15,910.83  
+ff “Workers paid on piece-rate basis” refer to those who are paid a standard amount for every piece or unit of 
+work produced that is more or less regularly replicated, without regard to the time spent in producing the 
+same. 
+42 
+September 10 days leave w/o pay 
+October 
+no absence 
+November 1 day leave w/o pay 
+December no absence 
+Total basic salary earned for the year           
+₽177,438.32  
+12 months
+ 9,810.83  
+15,910.83  
+15,300.83  
+15,910.83 
+₱177,438.32 
+= ₽14,786.53 is the proportionate 13th-month pay 
+E. Time of Payment 
+The thirteenth-month pay shall be paid not later than December 24 of 
+every year. An employer, however, may give to his or her employees one-half 
+(1/2) of the thirteenth-month pay before the opening of the regular school 
+year and the remaining half on or before December 24 of every year.  The 
+frequency of payment of this monetary benefit may be the subject of an 
+agreement between the employer and the recognized/collective bargaining 
+agent of the employees. 
+F.  Thirteenth-Month Pay for Certain Types of Employees 
+1. 
+Employees who are paid on piecework basis are entitled to the 
+thirteenth-month pay. 
+2. Employees who are paid a fixed or guaranteed wage plus commission 
+are also entitled to the thirteenth-month pay, based on their earnings 
+during the calendar year (i.e., on both their fixed or guaranteed wage 
+and commission). 
+In Boie-Takeda Chemicals, Inc. vs. De la Sernagg, the Supreme Court ruled 
+that commissions, while included in the generic term wage, are not part of 
+"basic salary/wage" and therefore should not be included in computing the 
+thirteenth-month pay. Thus: 
+In remunerative schemes consisting of a fixed or guaranteed 
+wage plus commission, the fixed or guaranteed wage is 
+patently the "basic salary" for this is what the employee 
+receives for a standard work period. Commissions are given 
+for extra efforts exerted in consummating sales or other 
+related transactions. They are, as such, additional pay, which 
+this Court has made clear do not form part of the "basic 
+salary". 
+gg G.R. No. 92174 & G.R. No. 102552, 10 December 1993. 
+3. Employees with multiple employers. 
+43 
+Government employees working part-time in a private enterprise, 
+including private educational institutions, as well as employees 
+working in two or more private firms, whether on full-time or part
+time basis, are entitled to the thirteenth-month pay from all their 
+private employers, regardless of their total earnings from each of their 
+employers. 
+G. Thirteenth-Month Pay of Resigned or Separated Employee 
+An employee who has resigned or whose services are terminated at any 
+time before the time of payment of the thirteenth-month pay is entitled to 
+this monetary benefit in proportion to the length of time he or she has 
+worked during the year, reckoned from the time he or she has started 
+working during the calendar year up to the time of his or her resignation or 
+termination from the service.  Thus, if he or she worked only from January to 
+September, his or her proportionate thirteenth-month pay should be equal 
+to one-twelfth (1/12) of his or her total basic salary earned during that period. 
+
+H. Thirteenth-Month Pay of Female Employee who is on 
+Maternity Leavehh 
+The salary differential shall be included as part of the basic salary for 
+purposes of computation of the 13th-month pay of the rank-and-file 
+employee. 
+I. 
+Non-inclusion in Regular Wage 
+The thirteenth-month pay is not part of the regular wage of employees 
+for purposes of determining overtime and premium payments, fringe 
+benefits, contributions to the State Insurance Fund, Social Security System, 
+National Health Insurance Program, and private retirement plans. 
+J. Coverage from Income Tax of Thirteenth-Month Pay and 
+Other Benefitsii 
+Pursuant to Section 2.78.1(B)(11) of BIR Revenue Regulation No. 2-98, as 
+amended, among other income payments, the following are exempted from 
+the requirement of withholding tax on compensation but may be subject to 
+income tax depending on the nature/sources of income earned by the 
+hh See Department Advisory No. 01, Series of 2019 or the Guidelines on the Computation of Salary Differential 
+of Female Workers during her Maternity Leave and its Criteria for Exemption Pursuant to Republic Act No. 
+11210 and its Implementing Rules and Regulations. Issued on 09 July 2019. 
+ii As amended by BIR Revenue Regulations No. 11-2018 [Amending Certain Provisions of Revenue Regulations 
+No. 2-98, as Amended, to Implement Further Amendments Introduced by Republic Act No. 10963, Otherwise 
+Known as the “Tax Reform for Acceleration and Inclusion (TRAIN)” Law, Relative to Withholding of Income Tax]. 
+Issued on 31 January 2018. 
+44 
+individual recipient: 
+(a) Thirteenth-month pay equivalent to the mandatory one (1) month 
+basic salary of official and employees of the government (whether 
+national or local), including government-owned or controlled 
+corporations, and/or private offices received after the twelfth month 
+pay; and 
+(b) Other benefits such as Christmas bonus, productivity incentives, 
+loyalty award, gift in cash or in kind, and other benefits of similar 
+nature actually received by officials and employees of both 
+government and private offices, including the Additional 
+Compensation Allowance (ACA) granted and paid to all officials and 
+employees of the National Government Agencies (NGAs) including 
+State Universities and Colleges (SUCs), Government-Owned and/or 
+Controlled Corporations (GOCCs), Government Financial Institutions 
+(GFIs) and Local Government Units (LGUs). 
+The above stated exclusions under (a) and (b) shall cover benefits paid or 
+accrued during the year, provided that the total amount shall not exceed 
+ninety thousand pesos (₱90,000.00), which may be increased through rules 
+and regulations issued by the Secretary of Finance, upon recommendation 
+of the Commissioner, after considering among others, the effect on the same 
+of the inflation rate at the end of the taxable year. 
+K. No Exemption or Deferment 
+No request or application for exemption from payment of 13th-month 
+pay, or for deferment of the payment thereof shall be accepted and allowed. 
+L. Report of Compliance 
+Employers shall make a report of their compliance via online through the 
+DOLE Establishment Report System at https://reports.dole.gov.ph/ not later 
+than January 15 of the following year. The report shall conform substantially 
+with the following: 
+1. 
+Name of establishment 
+2. Address 
+3. Principal product of business 
+4. Total employment 
+5. Total number of workers benefitted 
+6. Amount granted per employee 
+7. Total amount of benefits granted 
+8. Name, position and telephone number of person giving information 
+14 
+45 
+SEPARATION PAY 
+(Articles 298-299jj) 
+A. Definition 
+Separation pay is a compensation given to an employee who is 
+terminated from employment due to authorized causes provided in Articles 
+298 and 299 of the Labor Code of the Philippines, as renumbered. 
+B. Coverage 
+This benefit applies to an employee in instances of authorized 
+termination of employment covered by Articles 298 and 299  of the Labor 
+Code of the Philippines. An employee’s entitlement to separation pay 
+depends on the reason or ground for the termination of his or her services. 
+Where the termination is for authorized causes, separation pay is due. 
+C. Amount 
+1. 
+One-Half (1/2) Month Pay per Year of Service 
+An employee is entitled to receive a separation pay equivalent to one-half 
+(1/2) month pay for every year of service, a fraction of at least six (6) months 
+being considered as one (1) whole year, if his/her separation from the service 
+is due to any of the following authorized causes: 
+a. Retrenchment to prevent losses (i.e., reduction of personnel 
+effected by management to prevent losses); 
+b. Closure or cessation of operation of an establishment not due to 
+serious losses or financial reverses; 
+c. When the employee is suffering from a disease not curable                                                            
+within a period of six (6) months and his/her continued 
+employment is prejudicial to his/her health or to the health of 
+his/her co-employees; 
+d. Lack of service assignment of security guard for a continuous 
+period of six (6) months;kk and 
+e. Lack of service assignment of a worker in a contracting or 
+subcontracting arrangement for a continuous period of three (3) 
+jj Formerly Articles 283-284. Renumbered pursuant to DOLE Department Advisory No. 1, Series of 2015 issued 
+on 21 July 2015. 
+kk See DOLE Department Order No. 150, Series of 2016 or the Revised Guidelines Governing the Employment 
+and Working Conditions of Security Guards and Other Private Security Personnel in the Private Security 
+Industry. Issued on 09 February 2016. 
+46 
+months.ll 
+In no case will an employee get less than one (1) month separation pay if 
+the separation is due to the above stated causes. 
+2. One-Month Pay per Year of Service 
+An employee is entitled to separation pay equivalent to his/her one
+month pay for every year of service, a fraction of at least six (6) months being 
+considered as one whole year, if his/her separation from service is due to any 
+of the following: 
+a. Installation by employer of labor-saving devices; 
+b. Redundancy, as when the position of the employee has been 
+found to be excessive or unnecessary in the operation of the 
+enterprise; 
+c. Impossible reinstatement of the employee to his or her former 
+position or to a substantially equivalent position for reasons not 
+attributable to the fault of the employer, as when the 
+reinstatement ordered by a competent authority cannot be 
+implemented due to closure or cessation of operations of the 
+establishment/employer, or the position to which he or she is to 
+be reinstated no longer exists and there is no substantially 
+equivalent position in the establishment to which he or she can 
+be assigned;mm and 
+d. Lack of service assignment of security guard by reason of age.nn  
+D. Computation 
+The computation of separation pay of an employee shall be based on 
+his/her latest salary rate. 
+Moreover, it would be an error not to integrate the allowance with the 
+basic salary. The salary base properly used in computing the separation pay 
+should include not just the basic salary but also the regular allowances that 
+an employee has been receiving.oo 
+ll See Sec. 13 of Department Order No. 174, Series of 2017 or the Rules Implementing Articles 106 to 109 of the 
+Labor Code, as Amended. 
+mm Gaco vs. NLRC, et al., G.R. No. 104690, 23 February 1994.  
+nn Department Order No. 150 s. 2016 or the Revised Guidelines Governing the Employment and Working 
+Conditions of Security Guards and Other Private Security Personnel in the Private Security Industry. Issued on 
+09 February 2016. 
+ooPlanters’ Products, Inc. vs. NLRC, G.R. No. 78524, 20 January 1989. 
+E. Notice of Terminationpp 
+47 
+The employer may terminate the employment of an employee due to the 
+above-mentioned authorized causes by serving a written notice on the 
+employee and the Department of Labor and Employment through its 
+regional office having jurisdiction over the place of business at least one (1) 
+month before the intended date thereof. 
+Notice of termination may be done (a) by accomplishing RKS Form 5 of 
+2020qq and submitting the same to the DOLE Provincial/Field Office having 
+jurisdiction over the workplace or (b) by accomplishing and submitting an 
+online 
+report 
+at 
+the DOLE Establishment Report Systems 
+(https://reports.dole.gov.ph/) 
+F. Coverage from Income Tax of Separation Pay 
+Pursuant to Section 32(B)(6)(b) of the Tax Code of 1997, as amended, any 
+amount received by an official or employee or by his heirs from the employer 
+as a consequence of separation of such official or employee from the service 
+of the employer due to death, sickness or other physical disability or for any 
+cause beyond the control of the said official or employee shall not be 
+included in the gross income and shall be exempt from taxation under Title 
+II of the same Code.rr   
+pp See DOLE Department Order No. 147, Series of 2015 entitled Amending the Implementing Rules and 
+Regulations of Book VI of the Labor Code of the Philippines, as amended. Issued on 07 September 2015. 
+qq See DOLE Labor Advisory No. 17-A, Series of 2020 entitled Establishment Report Form. Issued on 11 June 
+2020. 
+rr See also BIR Ruling No. 057-2014. 
+48 
+15 
+RETIREMENT PAY 
+(Article 302ss) 
+A. Definition 
+Retirement pay refers to the compensation given to a retiring employee 
+pursuant to Article 302 of the Labor Code of the Philippines, as renumbered. 
+B. Coverage 
+Employees shall be retired upon reaching the age of sixty (60) years or 
+more but not beyond sixty-five (65) years old [and have served the 
+establishment for at least five (5) years]. 
+This benefit applies to all employees except: 
+1. 
+Government employees; and 
+2. Employees of retail, service and agricultural establishments/ 
+operations regularly employing not more than ten (10) employees. 
+C. Amount 
+The minimum retirement pay shall be equivalent to one-half (1/2)  month 
+salary for every year of service, a fraction of at least six (6) months being 
+considered as one (1) whole year. 
+D. Computation 
+For the purpose of computing retirement pay, "one-half month salary" 
+shall include all of the following: 
+1. 
+Fifteen (15) days salary based on the latest salary rate; 
+2. Cash equivalent of five (5) days of service incentive leave; and 
+3. One-twelfth (1/12) or 2.5 daystt of the thirteenth-month pay.                                                                                                                   
+Thus, “one-half month salary” is equivalent to 22.5 days.uu 
+The COLA shall not be included in the computation of retirement pay. 
+ss Formerly Article 287. Renumbered pursuant to DOLE Department Advisory No. 1, Series of 2015 issued on 21 
+July 2015. 
+tt 1/12 x 365/12 = .083 x 30.41 = 2.5 
+uuCapitol Wireless, Inc. v. Honorable Secretary Ma. Nieves R. Confesor, G. R. No. 117174, 13 November 1996. 
+Formula: 
+49 
+Minimum Retirement Pay = Daily Ratevv x 22.5 days x # of years in service 
+Other benefits may be included in the computation of the retirement pay 
+upon agreement of the employer and the employee or if provided in the 
+Collective Bargaining Agreement (CBA). 
+E. Retirement Benefit under a Collective Bargaining 
+Agreement or Applicable Contract 
+Any employee may retire or be retired by his or her employer upon 
+reaching the retirement age established in the collective bargaining 
+agreement (CBA) or other applicable agreement/contract and shall receive 
+the retirement benefit granted therein; Provided, however, that such 
+retirement benefit shall not be less than the retirement pay required under 
+RA 7641, and Provided further that if such retirement benefit under the 
+agreement is lesser, the employer shall pay the difference. 
+Where both the employer and the employee contribute to a retirement 
+fund pursuant to the applicable agreement, the employer's total 
+contributions and the accrued interest thereof should not be less than the 
+total retirement benefit to which the employee would have been entitled 
+had there been no such retirement benefits’ fund.  If such total portion from 
+the employer is lesser, the employer shall pay the deficiency. 
+F. Retirement Benefit of Workers who are Paid by Results 
+For covered workers who are paid by results and do not have a fixed 
+monthly salary rate, the basis for the determination of the salary for fifteen 
+(15) days shall be their average daily salary (ADS).  The ADS is derived by 
+dividing the total salary or earnings for the last twelve months reckoned from 
+the date of retirement by the number of actual working days in that 
+particular period, provided that the determination of rates of payment by 
+results are in accordance with the established regulations. 
+G. Retirement Benefit of Part-time Workers  
+Part-time workers are also entitled to retirement pay of “one-half month 
+salary” for every year of service under RA 7641 after satisfying the following 
+conditions precedent for optional retirement: (a) there is no retirement plan 
+between the employer and the employee and (b) the employee should have 
+reached the age of sixty (60) years, and should have rendered at least five (5) 
+vv Cebu Institute of Technology vs. Ople, GR No. 58870, Dec. 18, 1987- Existing laws exclude allowances from the 
+basic salary or wage in the computation of the amount of retirement and other benefits payable to an 
+employee. 
+50 
+years of service with the employer.  
+Applying the foregoing principle, the components of retirement benefit 
+of part-time workers may likewise be computed at least in proportion to the 
+salary and related benefits due them. 
+H. Retirement Benefit of Underground or Surface Mine 
+Employees under Republic Act No. 8558, as amended by 
+Republic Act No. 10757ww 
+The retirement age of underground or surface mine employees has been 
+reduced to a much lower age. For this purpose, an underground or surface 
+mine employee refers to any person employed to extract mineral deposits 
+underground or in the surface, or to work in excavations or workings such as 
+shafts, winzes, tunnels, drifts, crosscuts, raises, working places whether 
+abandoned or in use beneath or in the earth’s surface for the purpose of 
+searching for and extracting mineral deposits. Moreover, surface mine 
+workers shall only include mill-plant workers, electrical, mechanical and 
+tailings pond personnel. 
+In the absence of a retirement plan or other applicable agreement 
+providing for retirement benefit of underground mine employees in the 
+establishment, an employee may retire upon reaching the compulsory 
+retirement age of sixty (60) years or upon optional retirement at the age of 
+fifty (50) years, provided he/she has served for at least five (5) years as an 
+underground mine employee or in underground mine of the establishment. 
+I. 
+Retirement Benefit of Racehorse Jockeys 
+The compulsory retirement age of professional racehorse jockeys who are 
+duly licensed by the Philippine Racing Commission (PHILRACOM) is fifty-five 
+(55) years old, provided that he/she has served for at least five (5) years as 
+racehorse jockey and has paid additional premium to the SSS. 
+J. Other Benefits upon Retirement 
+The retirement benefits under RA 7641 and RA 8558 are separate and 
+distinct from those granted by the Social Security System. 
+Under the law, upon optional or compulsory retirement, the employee is 
+also entitled to the proportionate thirteenth-month pay for the calendar year 
+and to the cash equivalent of accrued leave benefits. 
+ww Entitled An Act Reducing the Retirement Age of Surface Mine Workers from Sixty (60) to Fifty (50) Years, 
+amending for the purpose Article 302 of PD 442, otherwise known as the “Labor Code of the Philippines.” 
+Enacted on 08 April 2016. 
+K. Coverage from Income Tax of Retirement Pay 
+51 
+Exempted from taxation are the retirement benefits received under RA 
+7641 (now Article 302 herein) and those received by officials and employees 
+of private firms, whether individual or corporate, in accordance with a 
+reasonable private benefit plan maintained by the employer: Provided, That 
+the retiring official or employee has been in the service of the same employer 
+for at least ten (10) years and is not less than fifty (50) years of age at the time 
+of his retirement: Provided, further, That the benefits granted under this 
+subparagraph shall be availed of by an official or employee only once.  
+For purposes herein, the term 'reasonable private benefit plan' means a 
+pension, gratuity, stock bonus or profit-sharing plan maintained by an 
+employer for the benefit of some or all of his officials or employees, wherein 
+contributions are made by such employer for the officials or employees, or 
+both, for the purpose of distributing to such officials and employees the 
+earnings and principal of the fund thus accumulated, and wherein it is 
+provided in said plan that at no time shall any part of the corpus or income 
+of the fund be used for, or be diverted to, any purpose other than for the 
+exclusive benefit of the said officials and employees.
+
+16 
+EMPLOYEES’ COMPENSATION PROGRAM 
+(PD 626) 
+A. Employees’ Compensation Program 
+The Employees’ Compensation Program (ECP) is a government program 
+that provides a package of benefits to all workers and/or their beneficiaries in 
+the event of a work-related sickness, injury, disability or death. The ECP is 
+implemented by the Employees’ Compensation Commission (ECC), a 
+government corporation attached to the Department of Labor and 
+Employment for policy coordination and guidance. 
+B. Coverage 
+The ECP covers the following workers:  
+1. 
+Private sector workers who are compulsory members of the Social 
+Security System (SSS) including sea-based Overseas Filipino Workers 
+(OFWs) and kasambahays. Employees shall be covered starting on 
+the first day of their employment. 
+2. Government sector employees who are mandatory members of the 
+Government Service Insurance System (GSIS), including uniformed 
+personnel from the Armed Forces of the Philippines, Philippine 
+National Police (PNP), Bureau of Jail and Management Penology 
+(BJMP), Bureau of Fire Protection (BFP), and Philippine Coast Guard 
+(PCG). 
+3. Active self-employed members of the SSS.yy 
+C. Conditions of Compensability 
+Any work-connected injury or sickness, resulting to disability or death of 
+a covered employee is compensable under the ECP. Compensable Diseases 
+1. 
+Compensable Diseases 
+A sickness is considered compensable if the same is included in the ECC’s 
+List of Occupational Diseases and the conditions for its compensability are 
+met. If the conditions were not satisfied and/or the claimed ailment is not 
+included in the list, proof must be shown that the risk of contracting the 
+disease is increased by the working conditions. This is known as the 
+increased-risk theory. 
+yy ECC Board Resolution No. 19-03-05 entitled Promulgating the Policy on Expanding the Coverage of the 
+Employee’ Compensation Program (ECP) to the Self-Employed Compulsory Members of the SSS. Issued on 
+06 March 2019. 
+The conditions for the compensability of COVID-19 are the following: 
+53 
+a. There must be a direct connection between the offending agent 
+or event and the worker based on epidemiologic criteria and 
+occupational risk (e.g., healthcare workers, screening and contact 
+tracing teams, etc.);  
+b. The tasks assigned to the worker would require frequent face-to
+face and close proximity interactions with the public or with 
+confirmed cases for healthcare workers;  
+c. Transmission occurred in the workplace; or  
+d. Transmission occurred while commuting to and from work. 
+2. Compensable Injuries 
+An injury is considered compensable when the same takes place within 
+the period of employment, at a place where the employee may reasonably 
+be in the performance of his duties, and while he is fulfilling those duties or 
+engaged in doing something incidental thereto, or where he is engaged in 
+the furtherance of the employer’s business.  
+An accident may be considered to have risen out of and in the course of 
+employment when it happened: 
+a. at the workplace; 
+b. while performing official functions;  
+c. outside of the workplace, but performing an order/ instruction of 
+the employer;  
+d. when going to or coming home from work; • while ministering to 
+personal comfort; 
+e. while in a company shuttle bus; or 
+f. 
+during a company sponsored activity. 
+1. 
+No compensation will be allowed to an employee or the dependents if 
+the injury, sickness, disability or death is due to: 
+Intoxication; 
+2. Willful intention to injure or kill himself or another; or 
+3. Notorious negligence. 
+D. Benefits 
+The following are the benefits under the EC Program: 
+1. 
+Sickness/disability benefits – Under the ECP, it is the disability, or the 
+incapacity to work, which is being compensated and not the illness or 
+the injury. There are three types of loss of income benefit, namely: 
+54 
+a. Temporary total disability (TTD) – For a disability that prevents 
+an employee from performing his work for a continuous period 
+not exceeding 120 days. The amount of daily income benefit shall 
+be ninety percent (90%) of the employee’s average daily salary 
+credit as determined by the Systems. 
+b. Permanent total disability (PTD) – A monthly income benefit 
+granted for disabilities, such as, but not limited to, complete loss 
+of sight of both eyes, loss and function loss of both limbs, and 
+brain injury resulting to imbecility or insanity. The amount of 
+monthly income benefit for PTD shall be determined by the 
+Systems based on the average monthly salary credit or average 
+monthly compensation (AMSC/AMC). 
+c. Permanent partial disability (PPD) – A monthly income benefit 
+is granted for disabilities that result in physical loss (amputation) 
+or functional loss of a body part. The number of monthly pensions 
+is based on the corresponding body part loss or functional loss, as 
+provided under Article 193 of PD No. 626, as amended, and EC 
+schedule of compensation. 
+2. Medical benefits – It includes reimbursement of the cost of 
+medicines for the illness or injury, payment to providers of medical 
+care, hospital care, surgical expenses, and the costs of rehabilitation 
+appliances and supplies. The medical services are limited to ward 
+services of hospitals duly accredited by the Department of Health 
+(DOH). 
+3. Carers’ allowance – A supplemental pension of P1,000/month is 
+provided to pensioners under the ECP who suffer from work
+connected PPD and PTD. 
+4. Rehabilitation services/KaGabay Program (Katulong at Gabay sa 
+Manggagawang May Kapansanan) – Provision of remedial 
+treatment, vocational assessment and preparation which is designed 
+to meet the individual needs of each handicapped employee to 
+restore him to suitable employment and to help each person with 
+work-related disability (PWRD) to develop his/her mental, vocational 
+or social potential. Availed directly at ECC once employee has an 
+approved EC claim from the Systems. 
+Rehabilitation services may be in the form of any of the following: 
+a. Medical-surgical management; 
+b. Hospitalization; 
+c. Necessary appliances and supplies; 
+d. Physical restoration; 
+e. Psychosocial counseling; 
+f. 
+Psychiatric evaluation; 
+55 
+g. Skills training; 
+h. Entrepreneur training; 
+i. 
+Hearing impairment evaluation; 
+j. 
+Visual impairment evaluation; and  
+k. Job referral. 
+5. Death benefit – The beneficiaries of the deceased employee are 
+entitled to an income benefit if the employee died as a result of a 
+work-related injury or sickness. They shall receive an income benefit 
+paid at the beginning of the month of death of the member and will 
+continue for as long as they are entitled thereto.  
+6. Funeral benefit – An amount of ₽30,000 may be granted for the 
+private and public sectors upon the death of an employee who died 
+as a result of a work-related accident or disease. 
+For workers who contracted COVID-19 may avail of the following benefits: 
+1. 
+Sickness/disability benefit; 
+2. Medical benefit; 
+3. Death benefit; and 
+4. Funeral benefit. 
+E. Notification and Filing of Claims 
+The employer should be notified of the employee’s sickness, injury or 
+death within five days from the occurrence of the contingency. Notice is not 
+necessary if the contingency occurred during working hours, at the place of 
+work and with the knowledge of the employer or representative. 
+For private sector employees, claims for EC benefits are filed at any SSS 
+branch or representative office nearest the employee’s residence or place of 
+work. 
+F. Contributionzz 
+Employers pay for the EC contributions of their employees. For a covered 
+employee in the private sector, his or her employer shall remit to the SSS a 
+monthly contribution in accordance with the following schedule: 
+Range of Compensation        Employers' Contribution
+---------------------------------------------------
+P1,000.00 - P 14,749.99      P10.00
+P14,750.00 and above         P30.00
+
+ECC Circular No. 2019-01 entitled Advisory on the Amount of EC Contribution Relative to the Increase in SS 
+Monthly Salary Credit (MSC). Issued on 01 April 2019. 
+
+When a covered employee dies during employment, or is separated from 
+employment, his employer’s obligation to pay the monthly contribution 
+arising from that employment shall cease on the last day of the month of 
+contingency. Likewise, when a covered employee becomes disabled during 
+employment, his employer’s obligation to pay the monthly contribution shall 
+be suspended during such months that he is not receiving salary or wages. 
+
+For questions regarding the ECP, please contact the 
+EMPLOYEES’ COMPENSATION COMMISSION 
+Address:4th & 5th Floors, ECC Building, 355 Sen. Gil J. Puyat 
+Avenue, Makati City 
+Tel. Nos.: (02) 8899-4251 loc. 227/228 or (02) 8896-7837 
+Website: https://ecc.gov.ph/ 
+Facebook: www.facebook.com/ecc.official 
+E-mail address: ipad@ecc.gov.ph 
+
+17 
+PHILHEALTH BENEFITS  
+(RA 7875, as amended by RA 9241 and RA 10606) 
+A. National Health Insurance Program  
+The National Health Insurance Program (NHIP) is a compulsory health 
+insurance program of the government established to provide universal 
+health insurance coverage and ensure affordable, acceptable, available and 
+accessible health care services for all citizens of the Philippines. 
+B. Coverage 
+The NHIP covers all Filipinos pursuant to Republic Act No. 11223 or the 
+Universal Health Care (UHC) Act. 
+C. Benefitsaaa 
+1. 
+Inpatient Benefits 
+2. Outpatient Benefits 
+3. Z Benefits 
+4. SDG Related 
+
+D. Contribution
+Pursuant to PhilHealth Circular No. 2020-0005, below is the premium 
+contribution table for direct contributors: 
+Year        Monthly Basic Salary        Premium Rate    Monthly Premium
+--------------------------------------------------------------------------------
+            P10,000.00                                  P400.00
+2022        P10,000.01 to P79,999.99    4.00%           P400.00 to P3,200.00
+            P80,000.00                                  P3,200.00
+
+            P10,000.00                                  P450.00
+2023        P10,000.01 to P89,999.99    4.50%           P450.00 to P4,050.00
+            P90,000.00                                  P4,050.00
+
+            P10,000.00                                  P500.00
+2024 to     P10,000.01 to P99,999.99    5.00%           P500.00 to P5,000.00
+2025        P100,000.00                                 P5,000.00
+
+Refer to the following link: https://www.philhealth.gov.ph/benefits/ 
+PhilHealth Circular No. 2020-0005 entitled Premium Contribution Schedule in the National Health 
+Insurance Program (NHIP) Pursuant to R.A. No. 11223 Known as the “Universal Health Care Act” (Revision 1). 
+Issued on 19 February 2020. 
+
+For 2023, premium rate remains at 4%. In a Statement released on 
+January 4, 2023, the Board of Directors of the PhilHealth affirmed its 
+compliance with the directive from the President of the Philippines to 
+suspend the premium rate increase from 4.0% to 4.5% and the increase of 
+income ceiling from ₽80,000.00 to ₽90,000.00 in CY 2023. 
+Direct Contributors are the following: 
+1. 
+Employees with formal employment; 
+2. Kasambahays; 
+3. Self-earning individuals and professional practitioners; 
+4. Overseas Filipino Workers; 
+5. Filipinos living abroad and those with dual citizenship; 
+6. Lifetime members; and 
+7. All Filipinos aged 21 years and above with capacity to pay. 
+The premium of employed members in the government and private 
+sector, including household help and sea based OFWs, shall be computed 
+straight based on the monthly basic salary of the employee to be equally 
+shared between the employee and employer. 
+For those whose basic monthly salary is below the income floor, the 
+premium contribution shall be computed based on the income floor, while 
+those whose basic monthly income is above the income ceiling, the premium 
+contribution shall be computed based on the income ceiling in accordance 
+with the DBM Circular Letter No. 2019-8. 
+Employers shall ensure that premium contribution of women who are on 
+maternity leave shall be regularly remitted to PhilHealth pursuant to DOLE 
+Department Advisory No. 1, Series of 2019. 
+For questions regarding the NHIP, please contact the 
+PHILIPPINE HEALTH INSURANCE CORPORATION 
+Address:  Citystate Centre, 709 Shaw Boulevard, Pasig City 
+Call Center Hotline: (02) 8441-7442 (PHIC) 
+Callback Channel: 0917-898-7442 (Text "PHICcallback [space] 
+Mobile No. or Metro Manila landline [space] details of your 
+concern." PHIC will call you during office hours. 
+Website: www.philhealth.gov.ph 
+Facebook: www.facebook.com/PhilHealthOfficial 
+
+18 
+59 
+SOCIAL SECURITY BENEFITS 
+(RA 1161, as amended by RA 11199) 
+A. Social Security Benefits 
+Social security benefits are composed of package of benefits under the 
+Social Security Program in the event of death, disability, sickness, maternity, 
+old age and unemployment. Work-related death, disability and sickness also 
+receive benefits under the Employees' Compensation (EC) Programs. 
+Basically, social security provides replacement for income lost on account of 
+the aforementioned contingencies. 
+B. Coverage 
+The Social Security System covers all employees including kasambahays 
+or domestic workers not over sixty (60) years of age and their employer.ccc 
+C. Benefits 
+If you are regularly paying your contributions, you will be entitled to these 
+social security benefits: 
+1. 
+Sickness – a daily cash allowance paid for the number of days a 
+member is unable to work due to sickness or injury. 
+2. Maternity – a daily cash allowance granted to a female who is unable 
+to work due to childbirth or miscarriage/emergency termination of 
+pregnancy (ETP). 
+3. Retirement – a cash benefit granted—either as a monthly pension or 
+a lump sum amount—to a member who can no longer work due to 
+old age. 
+4. Disability – a cash benefit granted—either as a monthly pension or a 
+lump sum amount—to a member who becomes permanently 
+disabled, either partially or totally. 
+5. Death – a cash benefit granted—either as a monthly pension or a 
+lump sum amount—to the beneficiaries of a deceased member or 
+pensioner. 
+6. Funeral – a cash benefit given to whomever paid for the burial 
+expenses of the deceased member or pensioner. 
+cccRepublic Act No. 11199, §9 (2019). 
+60 
+7. Unemploymentddd – a cash benefit granted to eligible employees – 
+including househelpers and OFWs – who were involuntarily 
+unemployed or separated from employment. 
+D. Contribution 
+Pursuant to SSS Circular No. 2022-033 dated 12 December 2022, the 
+minimum monthly salary credit (MSC) was increased to P4,000 and the 
+maximum MSC to P30,000, effective January 2023.  Refer to the attached 
+circular for the new schedule of contributions of the employer and employee 
+for the Social Security, the Employee’s Compensation and the Worker’s 
+Investment Savings Program. 
+For questions regarding SS benefits, please contact the: 
+SOCIAL SECURITY SYSTEM 
+Address:   SSS Building, East Avenue, Diliman, Quezon City 
+SSS Hotline: 1455 
+Website:  www.sss.gov.ph 
+Facebook: www.facebook.com/SSSPh  
+E-mail address:  member_relations@sss.gov.ph  
+
+See also DOLE Department Circular No. 1, Series of 2019 or the Guidelines on the Issuance of DOLE 
+Certification as a Requirement for Application for Payment of Unemployment Insurance or Involuntary 
+Separation Benefit. Issued on 29 July 2019. 
+
+19 
+61 
+PAG-IBIG BENEFITS 
+(RA 9679) 
+A. Home Development Mutual Fund 
+The Home Development Mutual Fund (HDMF), also known as Pag-IBIG 
+(Pagtutulungan sa Kinabukasan: Ikaw, Bangko, Industriya at Goberyno) 
+Fund, is a Government-Owned and Controlled Corporation (GOCC) that 
+provides the Filipino workers access to a secured savings and affordable 
+home financing to improve the quality of their lives. 
+B. Coverage 
+Pag-IBIG membership is mandatory for all employees covered by the 
+Social Security System (SSS) and the Government Service Insurance System 
+(GSIS); uniformed members of the Armed Forces of the Philippines, the 
+Bureau of Fire Protection, the Bureau of Jail Management and Penology, and 
+the Philippine National Police; and, Filipinos employed by foreign-based 
+employers. 
+C. Programs and Benefits 
+The Fund offers its members the following programs and benefits:  
+1. 
+Provident Savings 
+a. Pag-IBIG Regular Savings – The Pag-IBIG Regular Savings, or the 
+monthly mandatory membership savings, is a savings facility that 
+gives members high annual dividend earnings. Members who are 
+formally employed contribute a minimum of P100 from their 
+monthly income, while their employers also match their 
+contributions with a share of P100. Self-employed members can 
+contribute for as low as P100 per month. Members can withdraw 
+their Pag-IBIG Savings and its dividend earnings upon retirement, 
+or after 20 years, or equivalent to 240 monthly contributions. 
+b. Modified Pag-IBIG 2 (MP2) Savings – A special voluntary savings 
+facility that is open to all active Pag-IBIG Members who wish to 
+save more and earn higher dividends, in addition to their Pag-IBIG 
+Regular Savings.  The MP2 Savings is an easy and flexible savings 
+program with a 5-year maturity period. Members can start saving 
+for as low as P500 per remittance, making it more accessible. The 
+dividends earned in the MP2 Savings are tax-free and can be 
+withdrawn annually or after the 5-year maturity period. 
+62 
+2. Short-Term Loans 
+a. Pag-IBIG Multi-Purpose Loan – An affordable and easily 
+accessible cash loan program offered by Pag-IBIG Fund. Qualified 
+members can borrow up to 80% of their total Pag-IBIG Regular 
+Savings, which includes their monthly contributions, employer's 
+contributions, and accumulated dividends earned. The loan 
+proceeds can be used to pay for tuition fees, medical expenses, 
+minor home improvements, travel, or even as a capital for a small 
+business. The loan is payable in 24 or 36 monthly installments at a 
+low interest rate of 10.5% per year. 
+b. Pag-IBIG Calamity Loan – The Pag-IBIG Calamity Loan aims to 
+provide immediate financial assistance to Pag-IBIG members who 
+have been affected by calamities and are residing in areas 
+declared under a State of Calamity. Eligible members may borrow 
+up to 80% of their total Pag-IBIG Savings, which consist of their 
+monthly contributions, the counterpart employer’s contributions, 
+and accumulated dividends earned. Pag-IBIG Calamity Loan is 
+offered at a rate of 5.95% per annum, the lowest rate in the market 
+and is payable over a period of up to three years, with a grace 
+period of three months. 
+3. Home Financing 
+a. Retail 
+i. 
+Pag-IBIG Housing Loan – Allows Pag-IBIG members to 
+borrow up to P6 million at low interest rates with borrower
+friendly terms, and a maximum repayment period of up to 30 
+years. 
+ii. 
+iii. 
+Pag-IBIG Affordable Housing Loan for Minimum-Wage 
+Earners – Designed for minimum-wage and low-income 
+members who earn up to P15,000 a month within the 
+National Capital Region (NCR), and earn up to P12,000 per 
+month outside the NCR. Under the loan program, Pag-IBIG 
+Fund offers a subsidized rate of of 3% per annum for home 
+loans up to P580,000 in socialized subdivision projects and 
+special low rates for home loans of up to P750,000 for 
+socialized condominium projects. 
+Pag-IBIG Home Equity Appreciation Loan (HEAL) – A low
+interest loan available to all members with updated 
+payments for their Pag-IBIG Housing Loan. With the Pag-IBIG 
+HEAL, eligible members can borrow an amount based on the 
+net value of their mortgaged property with Pag-IBIG Fund to 
+help them fund their life goals – such as to renovate their 
+homes, buy a car or purchase furniture and appliances. 
+63 
+iv. Pag-IBIG Home Saver Programs – Provides options to Pag
+IBIG Housing Loan borrowers who have missed payments to 
+update their accounts and save their homes from foreclosure. 
+b. Institutional 
+i. 
+ii. 
+iii. 
+Direct Developmental Loan [DDL] – Provides loan financing 
+for property/real-estate developers/proponents to develop 
+residential subdivisions or medium-rise residential buildings, 
+and housing units eligible for mortgage financing under Pag
+IBIG Housing Loan. 
+Direct Developmental Loan Program for the Pambansang 
+Pabahay Para sa Pilipino Housing (4PH) Program [DDLP
+4PH] – Encourages public-private partnership by providing 
+access to affordable financing mechanism for property 
+developers, Local Government Units (LGUs), contractors, and 
+joint venture entities for the development of residential 
+subdivision/condominium 
+housing 
+projects, 
+and 
+construction of housing units. Aims to support the national 
+government and the Department of Human Settlements and 
+Urban Development (DHSUD) to reduce the 6 million 
+housing backlog of the country. 
+Rental Housing Construction Loan [RHCL] – A financing 
+facility which may be used to fund the site development and 
+construction of residential units meant for rental housing, 
+which may include staff houses, dormitories, and other 
+similar dwellings. This program is open to employers, 
+whether private or from the government sector. 
+4. Other Programs and Benefits 
+a. Pag-IBIG Loyalty Card Plus – The Pag-IBIG Loyalty Card Plus is a 
+discounts and rewards card that allows members to enjoy 
+exclusive offers from more than 380 Loyalty Card partner
+establishments nationwide.  Members can get discounts and 
+reward points on their grocery purchases, furniture upgrades, 
+tuition fees, hospital bills, fuel expenses, and many more.   The 
+Loyalty Card Plus can also be used as a Savings Account, and a 
+means for members to receive their savings claims and loan 
+proceeds more conveniently. 
+b. Virtual Pag-IBIG for Members – An online platform that allows 
+members to access Pag-IBIG services 24/7, anytime, anywhere. It 
+also includes a 24/7 chat service where members can go to for 
+their inquiries and concerns. 
+c. Virtual Pag-IBIG for Developers – An online facility that aids 
+partner-developers in evaluating borrowers’ eligibility. Through 
+the Virtual Pag-IBIG for Developers, Pag-IBIG Fund is able to 
+digitize and expedite housing loan applications. 
+64 
+d. Virtual Pag-IBIG for Employers – The Virtual Pag-IBIG for 
+Employers is an online facility that allows employers to enjoy Pag
+IBIG Fund services for their businesses and employees safely and 
+conveniently. 
+e. Virtual Pag-IBIG Mobile App – The official mobile application of 
+Pag-IBIG Fund that aims to bring its services closer to the 
+members. With just a few taps on their smartphone and with the 
+internet, members can conveniently access Pag-IBIG Fund’s 
+services, such as keeping track of their savings and loan records, 
+and online payments for their dues.  
+
+D. Membership Contribution
+
+Monthly Compensation    Contribution Rate
+                        Employee    Employer (if any)
+--------------------------------------------------------
+P1,500 and below        1.00%       2.00%
+Over P1,500             2.00%       2.00%
+
+“Monthly Compensation” shall refer to the basic salary and other 
+allowances, where basic salary includes, but is not limited to, fees, salaries, 
+wages, and similar items received in a month. It shall mean the remuneration 
+or earnings, however designated, capable of being expressed in terms of 
+money, whether fixed or ascertained on a time, task, or piece or commission 
+basis, or other method of calculating the same, which is payable by an 
+employer to an employee or by one person to another under a written or 
+unwritten contract of employment for work done or to be done, or for 
+services rendered or to be rendered.  
+The maximum monthly compensation to be used in computing the 
+employee and employer contributions shall not be more than P5,000. 
+Employers shall remit two percent (2%) of the monthly compensation of 
+the contributing member as counterpart contribution. The employer is not 
+entitled to deduct from the wages or remuneration of or, otherwise, to 
+recover from the employee the employer’s contribution. 
+Full-time spouses who volunteer to be covered by Pag-Fund 
+membership shall adopt as a basis of monthly contributions one-half (½) of 
+the monthly compensation income of the employed spouse. The full-time 
+spouse shall not be required to pay the employer’s contribution. 
+In cases where a member has two or more employers, such member shall 
+contribute monthly to the Fund a percentage of his or her monthly 
+compensation per employer, which shall be matched by the latter. 
+65 
+ 
+ 
+ 
+For questions regarding the programs and benefits of the 
+Fund, please contact the 
+ 
+HOME DEVELOPMENT MUTUAL FUND. 
+ 
+Address: JELP Business Solution Center, 409 Shaw Boulevard, 
+Brgy. Addition Hills, Mandaluyong City 
+Call Center Hotline: (02) 8724-4244  
+Website: https://www.pagibigfund.gov.ph/ 
+Facebook: www.facebook.com/PagIBIGFundOfficialPage 
+E-mail address:  contactus@pagibigfund.gov.ph 
+
+Here are both tables converted to text-spaced format:
+
+```
+DIRECTORY OF DOLE REGIONAL OFFICES
+
+National Capital Region (NCR)                    Cordillera Administrative Region
+DOLE-NCR Building, 967 Muralla Street,           (CAR)
+Intramuros, Manila 1002                          DOLE-CAR New Building, Cabinet Hill,
+                                                 Baguio City 2600
+☎ (02) 8400-6242                                 ☎ (074) 443-5329
+📠 ncro@dole.gov.ph                               📠 car@dole.gov.ph
+🌐 http://ncr.dole.gov.ph/                        🌐 https://car.dole.gov.ph/
+   Region I (Ilocos Region)                         Region II (Cagayan Valley)
+FSRK Bldg., Diversion Road, Brgy. Biday,        Regional Government Center, Carig
+City of San Fernando, La Union 2500             Sur, Tuguegarao City, Cagayan 3500
+☎ (072) 888-4charter                             ☎ (078) 844-1730
+📠 ro1@dole.gov.ph                                📠 dole02.ord@gmail.com
+🌐 https://region1.dole.gov.ph/                   🌐 http://ro2.dole.gov.ph/
+   Region III (Central Luzon)                       CALABARZON
+Ricolands Macapagal Regional                    3rd & 4th Floors, Athinson Building II,
+Government Center, Brgy. Maimpis, City          Pañan, Calamba City, Laguna 4027
+of San Fernando, Pampanga 2000
+☎ (045) 455-1613 ext 7                           ☎ (049) 545-7350
+📠 ro3@dole.gov.ph                                📠 dolero4@gmail.com
+🌐 https://region3.dole.gov.ph/                   🌐 http://calabarzon.dole.gov.ph/
+   Region IV-A (MIMAROPA Region)                    Region V (Bicol Region)
+3/F Confi Building, Roxas Avenue cor.           Doña Aurora St., Legaspi City
+Sampaguita St., Lumangcas, Cainta
+City, Oriental Mindoro 5200
+☎ (043) 288-2078                                 ☎ (052) 481-0768
+📠 ro4a@dole.gov.ph                               📠 dole05@yahoo.com
+🌐 http://mimaropa.dole.gov.ph/                   🌐 http://ro5.dole.gov.ph/
+   Region VI (Western Visayas Region)               Region VII (Central Visayas Region)
+Swan Rose Building, Commission Civil St.,       3rd and 4th Floor, DOLE VII Building,
+Jaro, Iloilo City 5000                          General Maxilom Avenue corner
+                                                M.C. Briones St., Cebu City 6000
+☎ (033) 320-8026, (033) 509-0400                 ☎ (032) 512-8133, 0915090313
+📠 doleregionixi@yahoo.com                        📠 ro7@dole.gov.ph
+🌐 http://ro6.dole.gov.ph/                        🌐 http://r07.dole.gov.ph/
+   Region VIII (Eastern Visayas Region)             Region IX (Zampen Region)
+DOLE Compound, Trece Martires St.,              Capitol Site
+Brgy. 68, Tacloban City 6500                    Tumaga Rd., Zamboanga City 7000
+☎ (053) 321-2613                                 ☎ (062) 991-2673, 0917724633
+📠 ro8@dole.gov.ph                                📠 dole9recordkeyhoo.com
+🌐 http://ro8.dole.gov.ph/                        🌐 http://ro9.dole.gov.ph/
+   Region X (Northern Mindanao Region)              Region XI (Davao Region)
+Trinidad Building, Corrales, Vesinni            Quimpo Boulevard, Brgy. 7-A, Matina
+Street, Cagayan de Oro City 9000                Davao City 8000
+☎ (088) 858-1658                                 ☎ (082) 227-4289
+📠 ro10@dole.gov.ph                               📠 ro11@dole.gov.ph
+🌐 http://ro10.dole.gov.ph/                       🌐 http://ro11.dole.gov.ph/
+   Region XII (SOCCSKSARGEN)                        Caraga Region
+102 Acupal Building, Mabini Extension,          Nutria Tui Bldg. III, JP Rosales Avenue,
+Koronadal City 9506                             Butuan City 8600
+☎ (083) 826-1227, (083) 228-2190,                ☎ (085) 817-2358, (085) 225-3229
+     0927728811
+📠 dole12ro@gmail.com                             📠 caraga@dole.gov.ph
+🌐 http://region12.dole.gov.ph/                   🌐 http://caraga.dole.gov.ph/
+```
+
+```
+DIRECTORY OF DOLE-NCR FIELD OFFICES
+
+CAMANAVA Field Office                           MPFO Field Office
+(Caloocan, Malabon, Navotas, and               (Makati and Pasay)
+Valenzuela)
+PPIA Building, 122 A. Del Mundo Street,         2/F, ECC Building, Sen. Gil J. Puyat
+between 10th and 11th Avenues, Grace            Avenue Extension, Makati City
+Park, Caloocan City
+☎ (02) 8282-1842, (02) 8283-5044                 ☎ (02) 8772-8210, (02) 8800-7211
+📠 (02) 8267-9449                                 📠 (02) 8896-4042
+🌐 ncr_camanava@dole.gov.ph                      🌐 ncr_makatipasay@dole.gov.ph
+   Manila Field Office                              MUNTAPARALA Field Office
+                                                (Muntinlupa, Taguig, Parañaque,
+4/F, DY International Building, 1650                Las Piñas)
+General Malvar corner San Marcelino             3/F, Valenzuela Building, Alabang-
+Street, Malate, Manila                          Zapote Road, Pamplona 3, Las Piñas
+☎ (02) 8244-1532, (02) 8244-1318                 ☎ (02) 8815-0086, (02) 8808-6165
+📠 (02) 5302-9369, (02) 5302-9270                 📠 (02) 8808-0422
+🌐 ncr_manila@dole.gov.ph                        🌐 ncr_muntaparala@dole.gov.ph
+   PASAMARISAN Field Office                        Quezon City Field Office
+(Pasig, Pateros, Mandaluyong, Marikina,
+San Juan)
+☎ JPPP, Blue Coral Road cor. Ruby                4/F, Arcadia Building, 860 Quezon
+   Boulevard, Barangay San Antonio,              Avenue, Quezon City
+   Pasig City
+☎ (02) 8477-3630                                 ☎ (02) 5921-4973, (02) 8376-5983
+📠 pasamarisan@dole.gov.ph                        📠 0956-962-09-82
+                                                🌐 ncr_quezoncity@dole.gov.ph
+```
+
+For inquiries, please call the DOLE Hotline at 1349 
+or the DOLE Regional Office having jurisdiction 
+over the workplace of the employee. 
+68 
+The BWC 
+The Bureau of Working Conditions (BWC) is responsible for the 
+formulation and development of labor standards in the areas of hours of 
+work, occupational safety and health, and other conditions of employment.  
+In May 1982, the Bureau of Labor Standards, which was created in June 
+1957 under Reorganization Plan No. 20-A, was renamed the Bureau of 
+Working Conditions. The BWC performs all functions in relation to the 
+formulation of policies and enforcement of labor standards performed by the 
+then Wage Administrative Service and the Industrial Safety Division of the 
+Bureau of Labor. 
+Vision 
+The Bureau of Working Conditions envisions well-guided employers and 
+workers committed to a safe, healthful, and productive work environment, 
+adaptive to industry trends and developments, and equitably enjoying the 
+gains of joint endeavors. 
+Mission 
+• To formulate policies and initiate legislations on labor standards, 
+based on relevant information culled from monitoring, consultations, 
+networking, and researches. 
+• To standardize the use of enforcement instruments and to clothe the 
+inspectorate system with strong enforcement authority to ensure 
+compliance with laws and regulations. 
+• To develop and sustain the capability of enterprises toward self
+management of safety and health in workplaces, thus, upholding the 
+principle of shared responsibility between workers and employers. 
+• To enhance the capability of small enterprises in implementing 
+practical and efficient methods of improving working conditions and 
+productivity. 
+• To inform and advise the public on labor standards, including 
+occupational safety and health, and on innovative work practices or 
+arrangements.
+
