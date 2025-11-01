@@ -19,6 +19,7 @@ from core import (
     rate_limiter,
 )
 from api.v1 import health_router, auth_router
+from api.v1.routes_chat import router as chat_router
 from app.containers import cleanup_services
 
 
@@ -100,6 +101,12 @@ def create_app() -> FastAPI:
         auth_router,
         prefix="/api/v1",
         tags=["Authentication"]
+    )
+    
+    app.include_router(
+        chat_router,
+        prefix="/api/v1",
+        tags=["Chat"]
     )
     
     return app

@@ -2,7 +2,7 @@
 Authentication middleware for validating session tokens.
 """
 from typing import Optional
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from core import get_logger, AppError
@@ -75,8 +75,7 @@ class AuthMiddleware:
 
 
 async def get_current_session(
-    credentials: HTTPAuthorizationCredentials = security,
-    session_service: SessionService = None
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> dict:
     """
     Dependency for getting current authenticated session.
@@ -92,7 +91,6 @@ async def get_current_session(
     
     Args:
         credentials: HTTP Bearer token credentials
-        session_service: Session service (injected via dependency)
         
     Returns:
         Validated session payload dict
@@ -100,9 +98,8 @@ async def get_current_session(
     Raises:
         HTTPException: If authentication fails
     """
-    if not session_service:
-        from app.containers import get_session_service
-        session_service = get_session_service()
+    from app.containers import get_session_service
+    session_service = get_session_service()
     
     middleware = AuthMiddleware(session_service)
     return await middleware(credentials)

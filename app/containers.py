@@ -22,6 +22,9 @@ from services.pipeline.generation import GenerationPipeline
 from services.pipeline.postprocess import PostprocessPipeline
 from services.pipeline.conversation import ConversationPipeline
 
+# Chat orchestration
+from services.chat_orchestrator import ChatOrchestrator
+
 logger = get_logger(__name__)
 
 
@@ -102,9 +105,8 @@ def get_vectorstore_adapter() -> SupabaseVectorStore:
         logger.info("Initializing Supabase vector store adapter")
         supabase_client = get_supabase_client()
         _vectorstore_adapter = SupabaseVectorStore(
-            client=supabase_client,
-            table_name=settings.vectorstore_table_name,
-            embedding_dimension=settings.embedding_dimension
+            supabase_client=supabase_client,
+            settings=settings
         )
     
     return _vectorstore_adapter
@@ -180,6 +182,24 @@ def get_conversation_pipeline() -> ConversationPipeline:
     )
 
 
+@lru_cache()
+def get_chat_orchestrator() -> ChatOrchestrator:
+    """Get or create chat orchestrator."""
+    conversation = get_conversation_pipeline()
+    retrieval = get_retrieval_pipeline()
+    grounding = get_grounding_pipeline()
+    generation = get_generation_pipeline()
+    postprocess = get_postprocess_pipeline()
+    
+    return ChatOrchestrator(
+        conversation_pipeline=conversation,
+        retrieval_pipeline=retrieval,
+        grounding_pipeline=grounding,
+        generation_pipeline=generation,
+        postprocess_pipeline=postprocess
+    )
+
+
 def cleanup_services():
     """
     Cleanup service instances and connections.
@@ -198,6 +218,7 @@ def cleanup_services():
     get_generation_pipeline.cache_clear()
     get_postprocess_pipeline.cache_clear()
     get_conversation_pipeline.cache_clear()
+    get_chat_orchestrator.cache_clear()
     
     # Reset singletons
     _supabase_client = None
