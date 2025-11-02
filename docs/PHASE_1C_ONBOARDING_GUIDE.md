@@ -2,7 +2,7 @@
 
 **Welcome to the LEO Backend Project!**  
 **Date**: January 2025  
-**Your Current Phase**: Between Phase 1.C ✅ and Phase 1.D 🚧
+**Your Current Phase**: Between Phase 1.C ✅ and Phase 1.D 
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### Q1: When can we test the actual LLM?
 
-**Answer**: **RIGHT NOW!** 🎉
+**Answer**: **RIGHT NOW!**
 
 You **already have** the LLM integrated and ready to test. Here's what's been implemented:
 
