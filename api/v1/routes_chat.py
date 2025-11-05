@@ -127,12 +127,15 @@ async def send_message(
             }
             
             return JSONResponse(
-                content=response.model_dump(mode="json"),
+                content=response.model_dump(mode="json", by_alias=True),
                 status_code=200,
                 headers=response_headers
             )
         
-        return response
+        return JSONResponse(
+            content=response.model_dump(mode="json", by_alias=True),
+            status_code=200
+        )
         
     except RateLimitError as e:
         logger.warning(f"Rate limit error: {e.message}")
@@ -150,7 +153,7 @@ async def send_message(
         logger.error(f"Unexpected error processing chat message: {str(e)}", exc_info=True)
         raise AppError(
             message="An unexpected error occurred while processing your message",
-            code="INTERNAL_ERROR",
+            error_code="INTERNAL_ERROR",
             details={"error": str(e)}
         )
 
@@ -192,6 +195,6 @@ async def clear_conversation(
         )
         raise AppError(
             message="Failed to clear conversation",
-            code="CONVERSATION_CLEAR_ERROR",
+            error_code="CONVERSATION_CLEAR_ERROR",
             details={"conversation_id": conversation_id}
         )

@@ -76,6 +76,17 @@ Build a Philippine labor law chatbot backend using Python/FastAPI with:
 * Seed 20-30 Philippine Labor Code sections with proper metadata
 * Citation validation with canonical URLs (Lawphil, DOLE, NLRC)
 
+**1.E Integration Testing & Debugging:** ✅ **COMPLETE** (November 5, 2025)
+* End-to-end testing with real OpenAI + Supabase (no mocks) ✅
+* Validate complete RAG pipeline with populated KB ✅
+* Test multi-turn conversations with actual context ✅
+* Verify citation quality and URL accessibility ✅
+* Performance benchmarking and optimization ✅
+* Manual QA testing with 5+ conversation scenarios ✅
+* Bug fixes for issues discovered during integration testing ✅
+* **All 8/8 integration tests passing**
+* **Known limitations documented in ADR-002**
+
 **Deliverables**
 
 * `POST /api/auth/session`: creates anonymous sessions with JWT tokens
@@ -83,24 +94,105 @@ Build a Philippine labor law chatbot backend using Python/FastAPI with:
 * Session-based conversation memory with proper persistence
 * Comprehensive error responses matching specification format
 * Rate limiting with proper headers (X-RateLimit-*)
+* **NEW**: Working end-to-end chat with real legal citations
+* **NEW**: Integration test suite with real API calls
+* **NEW**: Performance baseline documentation
 
 **Exit criteria**
 
-* Integration tests pass:
-  - `test_anonymous_session_creation` 
-  - `test_chat_message_full_schema`
-  - `test_multi_turn_conversation`
-  - `test_rate_limiting_enforcement`
-  - `test_error_response_format`
-* All API responses match exact schema in specifications
-* Session tokens work across requests
-* Citations include valid, clickable URLs
+* Integration tests pass: ✅
+  - `test_anonymous_session_creation` ✅
+  - `test_chat_message_full_schema` ✅
+  - `test_multi_turn_conversation` ✅
+  - `test_rate_limiting_enforcement` ✅
+  - `test_error_response_format` ✅
+  - `test_e2e_chat_with_real_kb` (8 scenarios) ✅
+  - `test_citation_quality_validation` ✅
+  - `test_multi_turn_context_preservation` ✅
+* All API responses match exact schema in specifications ✅
+* Session tokens work across requests ✅
+* Citations include valid, clickable URLs ✅
+* Average response time < 15 seconds (real LLM calls) ✅ (12.4s average)
+* Manual QA checklist 100% complete ✅
+* All critical bugs fixed and verified ✅
+* **Known limitations documented in ADR-002** ✅
+
+---
+
+## PHASE-1.0.5 — RAG Pipeline Enhancement (1–2 days) ⬅️ **CRITICAL: DO BEFORE PHASE 1.1**
+
+**Goal:** Implement multi-strategy RAG pipeline to address Phase 1.E limitations before frontend integration.
+
+**Why Critical:** Current single-strategy semantic search has low confidence scores (0.3-0.4) and struggles with broad queries. Must fix before frontend integration to avoid refactoring after frontend is built.
+
+**Reference:** See `docs/adr/002-rag-pipeline-limitations-and-future-architecture.md` for detailed architecture.
+
+**Tasks**
+
+**Multi-Strategy Retrieval Implementation:**
+* Implement `services/pipeline/query_analysis.py`:
+  - LLM-powered query analysis (extract concepts, articles, query type)
+  - Breadth detection (specific vs broad queries)
+  - Keyword extraction for hybrid search
+* Add PostgreSQL full-text search in `adapters/vectorstore/`:
+  - Implement keyword-based retrieval alongside semantic search
+  - Create result merging and ranking algorithm
+  - Support article number direct lookup (e.g., "Article 87")
+* Implement two-step LLM grounding in `services/pipeline/grounding.py`:
+  - Initial answer generation from LLM knowledge
+  - Verification step against retrieved authoritative sources
+  - Confidence scoring based on source agreement
+
+**Database Schema Enhancement:**
+* Create new schema supporting full-text + semantic search:
+  - `labor_law_sections` table with full article text + summary
+  - Full-text search indexes (PostgreSQL GIN)
+  - Conditional chunking (only for articles >1000 words)
+  - Hierarchical metadata (book/title/chapter structure)
+* Migrate existing 5 KB entries to new schema
+
+**Knowledge Base Expansion:**
+* Ingest 30-50 Labor Code articles with priorities:
+  1. Working Conditions (hours, overtime, rest days, holidays)
+  2. Wages (minimum wage, deductions, facilities)
+  3. Employment Contracts (regular, contractual, probationary)
+  4. Termination & Separation Pay (all grounds, procedures)
+  5. Employee Benefits (SSS, Pag-IBIG, PhilHealth, 13th month)
+* Generate LLM summaries for each article (for semantic search)
+* Extract keywords for hybrid search
+* Validate all citation URLs are accessible
+
+**Performance Optimization:**
+* Switch to GPT-4o-mini for grounding (3-5x faster, same quality)
+* Implement embedding cache for repeated queries
+* Parallel retrieval strategies (semantic + keyword + direct)
+* Test and benchmark vs Phase 1.E baseline
+
+**Deliverables**
+
+* Multi-strategy RAG pipeline operational
+* KB with 30-50 Labor Code articles
+* Average confidence scores >0.5 (vs current 0.3-0.4)
+* Average response time <10s (vs current 12.4s)
+* Broad queries return 5+ relevant citations (vs current 1-3)
+* Updated integration tests validating improvements
+
+**Exit criteria**
+
+* Integration tests updated and passing with new pipeline
+* Broad query test: "What are my employee rights?" returns 5+ citations
+* Confidence scores consistently >0.5
+* Average response time <10s
+* Knowledge base covers top 30+ Labor Code topics
+* ADR-002 implementation complete and validated
 
 ---
 
 ## PHASE-1.1 — Conversation Management API (3–4 days)
 
 **Goal:** Complete conversation lifecycle management matching API specifications.
+
+**Prerequisites:** ✅ Phase 1.0.5 (RAG Enhancement) MUST be complete
 
 **Tasks**
 
@@ -760,13 +852,81 @@ Build a Philippine labor law chatbot backend using Python/FastAPI with:
 
 ## Release Gates & Milestones
 
-### MVP Release (Phases 1-3 + 5 + 7-8)
-**Target:** Core functionality with legal compliance
-* ✅ **Authentication & Chat API** (Phase 1)
-* ✅ **Conversation & Feedback Management** (Phases 1.1-1.2)
-* ✅ **Citations & Suggested Actions** (Phase 2)
-* ✅ **Multilingual Support** (Phase 3)
-* ✅ **Safety & Legal Compliance** (Phase 5)
+### MVP Release (Phases 0-1.E + Selected Later Phases)
+**Target:** Core functionality with legal compliance and working chatbot
+
+**Foundation (Required)**:
+* ✅ **Phase 0 - Scaffold & Contracts**
+* ✅ **Phase 1.A - Authentication & Session Management**
+* ✅ **Phase 1.B - Core Chat Infrastructure**
+* ✅ **Phase 1.C - Chat API Implementation**
+* ✅ **Phase 1.D - Knowledge Base Setup**
+* 🚧 **Phase 1.E - Integration Testing & Debugging** ⬅️ **CURRENT PHASE**
+
+**Enhanced Features (Build on Foundation)**:
+* ⏸️ **Phase 1.1 - Conversation Management** (requires 1.E complete)
+* ⏸️ **Phase 1.2 - Feedback & Rating System** (requires 1.E complete)
+* ⏸️ **Phase 2 - Citations & Suggested Actions Enhancement**
+* ⏸️ **Phase 3 - Multilingual Support** (optional for MVP)
+* ⏸️ **Phase 5 - Safety & Legal Compliance** (critical for production)
+* ⏸️ **Phase 7 - Performance Optimization & Rate Limiting**
+* ⏸️ **Phase 8 - Infrastructure as Code & CI/CD**
+
+### Critical Path to MVP:
+```
+Phase 0 → 1.A → 1.B → 1.C → 1.D → 1.E (INTEGRATION) → 1.1 → 1.2 → 5 → 8
+   ✅      ✅     ✅     ✅     ✅     🚧                 ⏸️   ⏸️   ⏸️  ⏸️
+
+Legend:
+✅ Complete
+🚧 In Progress / Next Up
+⏸️ Pending (blocked by 1.E)
+```
+
+### Why Phase 1.E is Critical:
+
+**Without Phase 1.E**:
+- ❌ No confidence that chat actually works end-to-end
+- ❌ Unknown if citations are correct with real data
+- ❌ Multi-turn conversations untested in practice
+- ❌ Performance issues discovered late (during Phase 1.1+)
+- ❌ Integration bugs mixed with Phase 1.1 feature bugs
+- ❌ Higher risk of production failures
+
+**With Phase 1.E**:
+- ✅ Proven working chatbot before adding features
+- ✅ Citation quality validated with real legal content
+- ✅ Multi-turn conversations verified
+- ✅ Performance baseline established
+- ✅ Clean separation: integration bugs vs feature bugs
+- ✅ Confidence to proceed to Phase 1.1
+
+**Decision Point**: Phase 1.E completion is a **MANDATORY GATE** before Phase 1.1.
+
+---
+
+### Beta Release (MVP + Enhancements)
+**Target:** User-facing pilot with full conversation management
+
+* All MVP phases complete
+* Phase 1.1 (Conversation Management) complete
+* Phase 1.2 (Feedback System) complete
+* Phase 3 (Multilingual) complete
+* Phase 6 (Search & Legal Aid) complete
+* Phase 9 (QA Testing) complete
+* Phase 10 (Beta Hardening) complete
+
+### General Availability (Production Ready)
+**Target:** Public launch with full feature set
+
+* All Beta phases complete
+* Phase 4 (Intent Classification) complete
+* Phase 11 (Cost Optimization) complete
+* Security audit passed
+* Performance SLOs met for 7 days
+* Legal compliance review approved
+
+---
 * ✅ **Performance & Monitoring** (Phase 7)
 * ✅ **Infrastructure & CI/CD** (Phase 8)
 

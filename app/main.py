@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from typing import AsyncGenerator
 
 from core import (
@@ -119,6 +120,44 @@ def register_error_handlers(app: FastAPI) -> None:
     Args:
         app: FastAPI application
     """
+    
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(
+        request: Request, 
+        exc: RequestValidationError
+    ) -> JSONResponse:
+        """
+        Handle Pydantic validation errors.
+        
+        Converts FastAPI's default 422 to 400 to match API specification.
+        """
+        errors = exc.errors()
+        first_error = errors[0] if errors else {}
+        
+        # Extract field name and message
+        field = ".".join(str(loc) for loc in first_error.get("loc", []))
+        message = first_error.get("msg", "Validation error")
+        
+        logger.warning(
+            f"Validation error: {message}",
+            extra={
+                "field": field,
+                "path": request.url.path,
+                "errors": errors
+            }
+        )
+        
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": message,
+                    "field": field,
+                    "details": {"validation_errors": errors}
+                }
+            }
+        )
     
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:

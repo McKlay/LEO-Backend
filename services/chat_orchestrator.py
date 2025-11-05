@@ -140,13 +140,15 @@ class ChatOrchestrator:
             retrieval_results = await self.retrieval.retrieve(
                 query=user_message,
                 top_k=settings.retrieval_top_k,
-                min_similarity=settings.retrieval_similarity_threshold,
                 filters=None  # TODO: Add intent-based filtering in Phase 4
             )
             
+            # Calculate average score
+            avg_score = sum(r.score for r in retrieval_results) / len(retrieval_results) if retrieval_results else 0.0
+            
             logger.info(
-                f"Retrieved {len(retrieval_results.results)} chunks "
-                f"(avg_score={retrieval_results.avg_score:.3f})"
+                f"Retrieved {len(retrieval_results)} chunks "
+                f"(avg_score={avg_score:.3f})"
             )
             
             # Step 4: Get conversation history for context
@@ -159,7 +161,7 @@ class ChatOrchestrator:
             logger.info("Building grounded prompt with context")
             messages = self.grounding.build_grounded_prompt(
                 query=user_message,
-                context_results=retrieval_results.results,
+                context_results=retrieval_results,
                 language=language,
                 conversation_history=conversation_history
             )
@@ -175,8 +177,7 @@ class ChatOrchestrator:
             
             # Step 7: Extract citations from response
             citations_data = self.grounding.extract_citation_metadata(
-                response_text=generation_result.content,
-                context_results=retrieval_results.results
+                results=retrieval_results
             )
             
             # Step 8: Post-process response
@@ -185,8 +186,7 @@ class ChatOrchestrator:
                 response=generation_result.content,
                 citations=citations_data,
                 language=language,
-                apply_disclaimer=settings.enable_auto_disclaimer,
-                redact_pii=settings.enable_pii_redaction
+                add_disclaimer=settings.enable_auto_disclaimer
             )
             
             # Step 9: Add assistant message to conversation history
@@ -206,18 +206,14 @@ class ChatOrchestrator:
                 "role": "assistant",
                 "content": processed_result["content"],
                 "timestamp": datetime.utcnow(),
-                "citations": processed_result["citations"],
-                "suggestions": processed_result.get("suggested_actions", []),
+                "citations": citations_data,  # Use the extracted citations
+                "suggestions": [],  # TODO: Add suggested actions in Phase 4
                 "metadata": {
                     "processing_time": round(processing_time, 2),
                     "model": settings.openai_llm_model,
-                    "confidence": retrieval_results.avg_score,
-                    "disclaimer_required": settings.enable_auto_disclaimer,
-                    "tokens_used": (
-                        generation_result.token_usage.get("total_tokens")
-                        if generation_result.token_usage
-                        else None
-                    )
+                    "confidence": avg_score,  # Use the calculated avg_score
+                    "disclaimer_required": processed_result.get("has_disclaimer", False),
+                    "tokens_used": generation_result.tokens_used
                 }
             }
             
@@ -238,7 +234,7 @@ class ChatOrchestrator:
             )
             raise AppError(
                 message=f"Failed to process message: {str(e)}",
-                code="CHAT_PROCESSING_ERROR",
+                error_code="CHAT_PROCESSING_ERROR",
                 details={"processing_time": processing_time}
             )
     

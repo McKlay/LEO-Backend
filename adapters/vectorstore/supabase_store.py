@@ -2,10 +2,14 @@
 Supabase vector store adapter implementation.
 
 Uses Supabase pgvector extension for semantic search.
+Note: Uses direct PostgreSQL connection for vector search due to 
+Supabase Python client limitations with vector type RPC calls.
 """
 from typing import Optional
 from supabase import Client
 import json
+import psycopg2
+import os
 
 from core import get_logger, AppError
 from core.config import Settings
@@ -38,6 +42,10 @@ class SupabaseVectorStore(BaseVectorStore):
         self.settings = settings
         self.table_name = settings.vectorstore_table_name
         self.embedding_dimension = settings.embedding_dimension
+        
+        # Initialize direct PostgreSQL connection for vector search
+        # (Supabase Python client has issues with vector type in RPC calls)
+        self.db_url = settings.supabase_db_url
         
         logger.info(
             f"Supabase vector store initialized: "
@@ -122,44 +130,51 @@ class SupabaseVectorStore(BaseVectorStore):
                     status_code=400
                 )
             
-            # Call Supabase RPC function for similarity search
-            # This assumes you have a PostgreSQL function defined like:
-            # CREATE FUNCTION match_documents(query_embedding vector(1536), match_threshold float, match_count int)
-            rpc_params = {
-                "query_embedding": query_embedding,
-                "match_threshold": threshold or 0.0,
-                "match_count": limit,
-                "filter_metadata": json.dumps(filters) if filters else '{}'
-            }
+            # Use direct PostgreSQL connection for vector search
+            # The Supabase Python client has issues passing vector types to RPC functions
+            conn = psycopg2.connect(self.db_url)
+            cursor = conn.cursor()
             
-            logger.debug(f"Calling match_documents RPC with params: {rpc_params}")
-            
-            response = self.client.rpc(
-                "match_documents",
-                rpc_params
-            ).execute()
-            
-            logger.debug(f"RPC response data: {response.data if response else 'None'}")
-            
-            # Parse results
-            results = []
-            for row in response.data:
-                # Parse metadata JSON
-                metadata = json.loads(row.get("metadata", "{}"))
+            try:
+                # Convert embedding to PostgreSQL vector format
+                embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
                 
-                results.append(QueryResult(
-                    id=row["id"],
-                    content=row["content"],
-                    metadata=metadata,
-                    score=float(row.get("similarity", 0.0))
+                # Call match_documents function via direct SQL
+                cursor.execute("""
+                    SELECT * FROM match_documents(
+                        %s::vector,
+                        %s::float,
+                        %s::int,
+                        %s::jsonb
+                    )
+                """, (
+                    embedding_str,
+                    threshold or 0.0,
+                    limit,
+                    json.dumps(filters) if filters else '{}'
                 ))
-            
-            logger.info(
-                f"Vector search returned {len(results)} results "
-                f"(threshold: {threshold}, limit: {limit})"
-            )
-            
-            return results
+                
+                # Parse results
+                results = []
+                for row in cursor.fetchall():
+                    # row format: (id, content, metadata, similarity)
+                    results.append(QueryResult(
+                        id=row[0],
+                        content=row[1],
+                        metadata=row[2] if isinstance(row[2], dict) else json.loads(row[2]),
+                        score=float(row[3])
+                    ))
+                
+                logger.info(
+                    f"Vector search returned {len(results)} results "
+                    f"(threshold: {threshold}, limit: {limit})"
+                )
+                
+                return results
+                
+            finally:
+                cursor.close()
+                conn.close()
             
         except AppError:
             raise

@@ -18,7 +18,7 @@ class OpenAILLM(BaseLLM):
     """
     OpenAI LLM implementation with streaming support.
     
-    Uses GPT-4.1 or GPT-3.5 models for chat completion.
+    Uses GPT-4.1 model for chat completion.
     """
     
     def __init__(
@@ -42,7 +42,7 @@ class OpenAILLM(BaseLLM):
             self.default_max_tokens = settings.llm_max_tokens
         else:
             self.api_key = api_key
-            self.model = model or "gpt-4-turbo-preview"
+            self.model = model or "gpt-4.1"
             self.default_temperature = 0.3
             self.default_max_tokens = 1000
         

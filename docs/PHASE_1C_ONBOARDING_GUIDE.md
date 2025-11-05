@@ -17,7 +17,7 @@ You **already have** the LLM integrated and ready to test. Here's what's been im
 #### ✅ What's Already Working:
 
 1. **OpenAI LLM Integration** (`adapters/llm/openai_llm.py`)
-   - Fully functional adapter using GPT-4 (or GPT-3.5)
+   - Fully functional adapter using GPT-4.1 (or GPT-3.5)
    - Streaming support implemented
    - Async/await pattern for performance
    - Error handling and logging

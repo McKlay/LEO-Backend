@@ -43,6 +43,7 @@ class ChatMessageRequest(BaseModel):
     
     conversation_id: Optional[str] = Field(
         None,
+        alias="conversationId",
         description="Conversation ID (creates new if not provided)",
         min_length=1,
         max_length=100
@@ -60,6 +61,10 @@ class ChatMessageRequest(BaseModel):
     context: Optional[MessageContext] = Field(
         None,
         description="Optional context for the message"
+    )
+    
+    model_config = ConfigDict(
+        populate_by_name=True  # Allow both snake_case and camelCase
     )
     
     @field_validator('message')
@@ -172,8 +177,8 @@ class MessageMetadata(BaseModel):
 class ChatMessageResponse(BaseModel):
     """Response schema for chat message."""
     
-    message_id: str = Field(..., description="Unique message identifier")
-    conversation_id: str = Field(..., description="Conversation identifier")
+    message_id: str = Field(..., description="Unique message identifier", serialization_alias="messageId")
+    conversation_id: str = Field(..., description="Conversation identifier", serialization_alias="conversationId")
     role: Literal["assistant"] = Field(
         default="assistant",
         description="Message role (always assistant for responses)"
@@ -197,10 +202,11 @@ class ChatMessageResponse(BaseModel):
     )
     
     model_config = ConfigDict(
+        populate_by_name=True,
         json_schema_extra={
             "example": {
-                "message_id": "msg-123e4567-e89b-12d3-a456-426614174000",
-                "conversation_id": "conv-123e4567-e89b-12d3-a456-426614174000",
+                "messageId": "msg-123e4567-e89b-12d3-a456-426614174000",
+                "conversationId": "conv-123e4567-e89b-12d3-a456-426614174000",
                 "role": "assistant",
                 "content": "Under Article 279 of the Labor Code...",
                 "timestamp": "2025-10-31T10:30:00Z",

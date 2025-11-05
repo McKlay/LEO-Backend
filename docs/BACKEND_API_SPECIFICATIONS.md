@@ -78,14 +78,14 @@ POST /api/auth/register
 
 #### 2. Anonymous Session Creation (Current Priority)
 ```http
-POST /api/auth/session
+POST /api/v1/auth/session
 ```
 
 **Request Body:**
 ```json
 {
-  "preferredLanguage": "en",
-  "deviceInfo": {
+  "language": "en",
+  "metadata": {
     "userAgent": "Mozilla/5.0...",
     "timezone": "Asia/Manila"
   }
@@ -97,7 +97,34 @@ POST /api/auth/session
 {
   "sessionId": "anonymous-session-uuid",
   "token": "temporary-jwt-token",
-  "expiresIn": 86400
+  "expiresAt": "2025-11-12T10:30:00Z",
+  "expiresIn": 604800,
+  "language": "en",
+  "createdAt": "2025-11-05T10:30:00Z"
+}
+```
+
+#### 3. Refresh Session
+```http
+POST /api/v1/auth/session/refresh
+```
+
+**Request Body:**
+```json
+{
+  "refreshToken": "refresh-token-string"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "sessionId": "anonymous-session-uuid",
+  "token": "new-jwt-token",
+  "expiresAt": "2025-11-12T10:30:00Z",
+  "expiresIn": 604800,
+  "language": "en",
+  "createdAt": "2025-11-05T10:30:00Z"
 }
 ```
 
@@ -110,7 +137,7 @@ POST /api/auth/session
 #### Send Message and Get AI Response
 
 ```http
-POST /api/chat/message
+POST /api/v1/chat/message
 ```
 
 **Request Headers:**
@@ -226,10 +253,26 @@ Accept-Language: en | fil | ceb
 
 ### 2. Conversation Management API
 
-#### Create New Conversation
+> **⚠️ IMPLEMENTATION STATUS: NOT YET IMPLEMENTED**  
+> The endpoints below are planned but not currently available in the backend.  
+> Only the "Clear Conversation History" endpoint is implemented.
+
+#### Clear Conversation History (IMPLEMENTED)
 
 ```http
-POST /api/conversations
+DELETE /api/v1/chat/conversations/{conversationId}
+```
+
+**Description:** Delete all messages in a conversation. Cannot be undone.
+
+**Response:** `204 No Content`
+
+---
+
+#### Create New Conversation (PLANNED - NOT IMPLEMENTED)
+
+```http
+POST /api/v1/conversations
 ```
 
 **Request Body:**

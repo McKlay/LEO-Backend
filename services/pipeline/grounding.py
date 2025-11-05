@@ -151,21 +151,22 @@ Please answer the user's question based on the above context."""
             results: List of query results
             
         Returns:
-            List of citation metadata dictionaries
+            List of citation metadata dictionaries matching API spec
         """
+        import uuid
         citations = []
         for idx, result in enumerate(results, 1):
             metadata = result.metadata or {}
             
+            # Build citation matching API specification
+            # Required fields: id, text, source, article, url, confidence
             citation = {
-                "id": idx,
-                "citation_key": f"[{idx}]",
-                "source": metadata.get("source", "Unknown Source"),
-                "section": metadata.get("section"),
-                "article": metadata.get("article"),
-                "url": metadata.get("url"),
-                "relevance_score": round(result.score, 3),
-                "content_preview": result.content[:200] + "..." if len(result.content) > 200 else result.content
+                "id": str(uuid.uuid4()),  # UUID string as per API spec
+                "text": result.content[:200] + "..." if len(result.content) > 200 else result.content,  # Citation text
+                "source": metadata.get("source", "Labor Code of the Philippines"),  # Source name
+                "article": metadata.get("article") or metadata.get("section") or "N/A",  # Article/section number
+                "url": metadata.get("url", "https://www.dole.gov.ph/labor-code/"),  # URL to source
+                "confidence": round(result.score, 3)  # Confidence score (0-1)
             }
             
             citations.append(citation)

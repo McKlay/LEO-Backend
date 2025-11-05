@@ -26,7 +26,7 @@ class RetrievalPipeline:
         embeddings: BaseEmbeddings,
         vectorstore: BaseVectorStore,
         default_top_k: int = 5,
-        similarity_threshold: float = 0.7
+        similarity_threshold: float = 0.3  # Lowered to 0.3 for better recall with small KB
     ):
         """
         Initialize retrieval pipeline.
@@ -88,23 +88,19 @@ class RetrievalPipeline:
             
             # 3. Perform vector search
             results = await self.vectorstore.query(
-                query_vector=query_vector,
-                top_k=k,
-                filters=search_filters if search_filters else None
+                query_embedding=query_vector,
+                limit=k,
+                filters=search_filters if search_filters else None,
+                threshold=self.similarity_threshold
             )
             
-            # 4. Filter by similarity threshold
-            filtered_results = [
-                r for r in results
-                if r.score >= self.similarity_threshold
-            ]
-            
+            # Results are already filtered by threshold in the vector store
             logger.info(
-                f"Retrieved {len(filtered_results)}/{len(results)} results "
+                f"Retrieved {len(results)} results "
                 f"above threshold {self.similarity_threshold}"
             )
             
-            return filtered_results
+            return results
             
         except Exception as e:
             logger.error(f"Retrieval failed: {str(e)}", exc_info=True)

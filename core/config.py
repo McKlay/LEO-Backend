@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     # OpenAI Settings
     openai_api_key: str = Field(..., description="OpenAI API key")
     openai_llm_model: str = Field(
-        default="gpt-4-turbo-preview",
+        default="gpt-4.1",
         description="OpenAI chat model"
     )
     openai_embedding_model: str = Field(
@@ -111,7 +111,7 @@ class Settings(BaseSettings):
         description="Number of chunks to retrieve"
     )
     retrieval_similarity_threshold: float = Field(
-        default=0.7,
+        default=0.3,  # Lowered to 0.3 for better recall with small KB
         ge=0.0,
         le=1.0,
         description="Minimum similarity score for retrieval"
