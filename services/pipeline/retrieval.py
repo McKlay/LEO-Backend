@@ -1,9 +1,11 @@
 """
-Retrieval pipeline module for semantic search and context retrieval.
+Retrieval pipeline module for multi-strategy search and context retrieval.
 
-Handles query embedding, vector search, and result ranking.
+Handles query embedding, vector search, keyword search, and direct article lookup
+with intelligent routing based on query analysis.
 """
 from typing import List, Optional, Dict, Any
+import time
 
 from core import get_logger, AppError
 from adapters.embeddings.base import BaseEmbeddings
@@ -52,16 +54,25 @@ class RetrievalPipeline:
         query: str,
         top_k: Optional[int] = None,
         filters: Optional[Dict[str, Any]] = None,
-        intent_category: Optional[str] = None
+        intent_category: Optional[str] = None,
+        keywords: Optional[List[str]] = None,
+        articles: Optional[List[str]] = None
     ) -> List[QueryResult]:
         """
-        Retrieve relevant context for a query.
+        Retrieve relevant context using smart multi-strategy retrieval.
+        
+        Automatically routes to optimal retrieval strategy based on inputs:
+        - Direct article lookup if article references provided
+        - Keyword search if keywords provided
+        - Semantic search if no specific indicators
         
         Args:
             query: User query text
             top_k: Number of results to retrieve (uses default if None)
             filters: Metadata filters for the search
             intent_category: Optional intent category to filter by
+            keywords: Optional extracted keywords for keyword search
+            articles: Optional article references for direct lookup
             
         Returns:
             List of query results with content and metadata
@@ -70,34 +81,35 @@ class RetrievalPipeline:
             AppError: If retrieval fails
         """
         try:
+            start_time = time.time()
+            
             # Use default top_k if not specified
             k = top_k or self.default_top_k
             
             logger.debug(f"Retrieving context for query: {query[:100]}...")
             
-            # 1. Generate query embedding
+            # 1. Generate query embedding (always needed for fallback)
             embedding_response = await self.embeddings.embed_text(query)
             query_vector = embedding_response.embedding
             
             logger.debug(f"Generated query embedding (dim={len(query_vector)})")
             
-            # 2. Build metadata filters
-            search_filters = filters or {}
-            if intent_category:
-                search_filters["category"] = intent_category
-            
-            # 3. Perform vector search
-            results = await self.vectorstore.query(
+            # 2. Use smart_retrieve for multi-strategy approach
+            results = await self.vectorstore.smart_retrieve(
                 query_embedding=query_vector,
+                query_text=query,
+                keywords=keywords,
+                articles=articles,
                 limit=k,
-                filters=search_filters if search_filters else None,
                 threshold=self.similarity_threshold
             )
             
-            # Results are already filtered by threshold in the vector store
+            elapsed = time.time() - start_time
+            
             logger.info(
-                f"Retrieved {len(results)} results "
-                f"above threshold {self.similarity_threshold}"
+                f"Smart retrieval completed in {elapsed:.2f}s: "
+                f"{len(results)} results "
+                f"(articles={bool(articles)}, keywords={bool(keywords)})"
             )
             
             return results

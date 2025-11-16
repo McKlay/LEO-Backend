@@ -1,81 +1,19 @@
--- LEO Backend - Supabase Schema
+-- LEO Backend - Complete Schema for Phase 1.0.5
 -- PostgreSQL + pgvector for semantic search
+-- Includes: Day 4 KB Enhancement with LLM-driven chunking and summarization
 
--- Enable pgvector extension
+-- ============================================================
+-- EXTENSIONS
+-- ============================================================
+
+-- Enable pgvector extension for vector embeddings
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Create labor_law_embeddings table for knowledge base chunks
-CREATE TABLE IF NOT EXISTS labor_law_embeddings (
-    id TEXT PRIMARY KEY,
-    content TEXT NOT NULL,
-    embedding vector(1536) NOT NULL,
-    metadata JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
+-- ============================================================
+-- CORE TABLES (Original Phase 1.0)
+-- ============================================================
 
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS labor_law_embeddings_embedding_idx 
-    ON labor_law_embeddings 
-    USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 100);
-
-CREATE INDEX IF NOT EXISTS labor_law_embeddings_metadata_idx 
-    ON labor_law_embeddings 
-    USING GIN (metadata);
-
-CREATE INDEX IF NOT EXISTS labor_law_embeddings_created_at_idx 
-    ON labor_law_embeddings (created_at DESC);
-
--- Create updated_at trigger
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = TIMEZONE('utc'::text, NOW());
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_labor_law_embeddings_updated_at 
-    BEFORE UPDATE ON labor_law_embeddings
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Create function for similarity search
-CREATE OR REPLACE FUNCTION match_documents(
-    query_embedding vector(1536),
-    match_threshold float DEFAULT 0.0,
-    match_count int DEFAULT 10,
-    filter_metadata jsonb DEFAULT '{}'::jsonb
-)
-RETURNS TABLE (
-    id text,
-    content text,
-    metadata jsonb,
-    similarity float
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
-        labor_law_embeddings.id,
-        labor_law_embeddings.content,
-        labor_law_embeddings.metadata,
-        1 - (labor_law_embeddings.embedding <=> query_embedding) as similarity
-    FROM labor_law_embeddings
-    WHERE 
-        (1 - (labor_law_embeddings.embedding <=> query_embedding)) >= match_threshold
-        AND (
-            filter_metadata = '{}'::jsonb 
-            OR labor_law_embeddings.metadata @> filter_metadata
-        )
-    ORDER BY labor_law_embeddings.embedding <=> query_embedding
-    LIMIT match_count;
-END;
-$$;
-
--- Create sessions table for anonymous session management
+-- Sessions table for anonymous session management
 CREATE TABLE IF NOT EXISTS sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_token TEXT UNIQUE NOT NULL,
@@ -88,7 +26,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS sessions_session_token_idx ON sessions (session_token);
 CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions (expires_at);
 
--- Create conversations table
+-- Conversations table
 CREATE TABLE IF NOT EXISTS conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
@@ -104,12 +42,7 @@ CREATE INDEX IF NOT EXISTS conversations_session_id_idx ON conversations (sessio
 CREATE INDEX IF NOT EXISTS conversations_created_at_idx ON conversations (created_at DESC);
 CREATE INDEX IF NOT EXISTS conversations_archived_idx ON conversations (archived);
 
-CREATE TRIGGER update_conversations_updated_at 
-    BEFORE UPDATE ON conversations
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Create messages table
+-- Messages table
 CREATE TABLE IF NOT EXISTS messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -123,7 +56,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS messages_conversation_id_idx ON messages (conversation_id);
 CREATE INDEX IF NOT EXISTS messages_created_at_idx ON messages (created_at DESC);
 
--- Create citations table (many-to-many with messages)
+-- Citations table (many-to-many with messages)
 CREATE TABLE IF NOT EXISTS citations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
@@ -137,7 +70,7 @@ CREATE TABLE IF NOT EXISTS citations (
 
 CREATE INDEX IF NOT EXISTS citations_message_id_idx ON citations (message_id);
 
--- Create suggested_actions table
+-- Suggested actions table
 CREATE TABLE IF NOT EXISTS suggested_actions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
@@ -150,7 +83,7 @@ CREATE TABLE IF NOT EXISTS suggested_actions (
 
 CREATE INDEX IF NOT EXISTS suggested_actions_message_id_idx ON suggested_actions (message_id);
 
--- Create feedback table
+-- Feedback table
 CREATE TABLE IF NOT EXISTS feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
@@ -164,18 +97,307 @@ CREATE TABLE IF NOT EXISTS feedback (
 CREATE INDEX IF NOT EXISTS feedback_message_id_idx ON feedback (message_id);
 CREATE INDEX IF NOT EXISTS feedback_rating_idx ON feedback (rating);
 
--- Row Level Security (RLS) - Optional for future multi-tenancy
--- For now, using service role key bypasses RLS
--- ALTER TABLE labor_law_embeddings ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+-- ============================================================
+-- KNOWLEDGE BASE TABLES (Phase 1.0.5 Multi-Table Schema)
+-- ============================================================
 
--- Grant necessary permissions (adjust based on your Supabase role setup)
--- GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
--- GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+-- Labor law sources (documents/statutes metadata)
+CREATE TABLE IF NOT EXISTS labor_law_sources (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_type VARCHAR(50) NOT NULL,  -- 'statute', 'irr', 'order', 'primer'
+    title TEXT NOT NULL,
+    reference VARCHAR(100) UNIQUE NOT NULL,  -- 'PD 442', 'RA 11058', etc.
+    url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Create view for conversation summaries
+-- Labor law sections (main KB table - articles/sections)
+CREATE TABLE IF NOT EXISTS labor_law_sections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_id UUID REFERENCES labor_law_sources(id) ON DELETE CASCADE,
+    article_number VARCHAR(50),  -- 'Article 123', 'Section 5', etc.
+    article_title TEXT,
+    full_text TEXT NOT NULL,
+    summary TEXT,  -- LLM-generated summary for better semantic search
+    keywords TEXT[],  -- Extracted keywords for hybrid search
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Hierarchical structure
+    book VARCHAR(100),
+    title_name VARCHAR(200),
+    chapter VARCHAR(100),
+    
+    -- Format flags for LLM-driven chunking (Day 4 enhancement)
+    has_table BOOLEAN DEFAULT FALSE,
+    has_formula BOOLEAN DEFAULT FALSE,
+    has_list BOOLEAN DEFAULT FALSE,
+    
+    -- Vector embedding (for semantic search)
+    embedding vector(1536),
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Labor law chunks (for very long articles that need splitting)
+-- Day 4: Enhanced with summary and keywords columns
+CREATE TABLE IF NOT EXISTS labor_law_chunks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    section_id UUID REFERENCES labor_law_sections(id) ON DELETE CASCADE,
+    chunk_index INT NOT NULL,
+    chunk_text TEXT NOT NULL,
+    summary TEXT,  -- Day 4: GPT-4o-mini generated summary
+    keywords TEXT[],  -- Day 4: Extracted legal keywords
+    embedding vector(1536),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ingestion history (Day 4: Incremental ingestion tracking)
+CREATE TABLE IF NOT EXISTS ingestion_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    file_name VARCHAR(255) NOT NULL UNIQUE,
+    file_path TEXT NOT NULL,
+    file_hash VARCHAR(64) NOT NULL,  -- SHA-256 hash for change detection
+    chunk_count INT NOT NULL,
+    token_count INT,
+    ingestion_method VARCHAR(50),  -- 'llm_chunking' or 'regex_chunking'
+    status VARCHAR(20) NOT NULL,  -- 'success', 'failed', 'in_progress'
+    error_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- LEGACY TABLE (Backward Compatibility)
+-- ============================================================
+
+-- Keep old labor_law_embeddings table for backward compatibility
+-- This will be deprecated in future versions
+CREATE TABLE IF NOT EXISTS labor_law_embeddings (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    embedding vector(1536) NOT NULL,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ============================================================
+-- INDEXES
+-- ============================================================
+
+-- === Conversations/Messages Indexes (Already defined above) ===
+
+-- === Knowledge Base Indexes ===
+
+-- Full-text search on labor_law_sections
+CREATE INDEX IF NOT EXISTS idx_sections_fts 
+ON labor_law_sections 
+USING GIN(to_tsvector('english', full_text || ' ' || COALESCE(article_title, '')));
+
+-- B-tree indexes for fast lookups
+CREATE INDEX IF NOT EXISTS idx_sections_article 
+ON labor_law_sections(article_number);
+
+CREATE INDEX IF NOT EXISTS idx_sections_source 
+ON labor_law_sections(source_id);
+
+-- GIN index on keywords for efficient array search
+CREATE INDEX IF NOT EXISTS idx_sections_keywords
+ON labor_law_sections
+USING GIN (keywords);
+
+-- Note: HNSW indexes for vector search are created separately
+-- See: infra/supabase/create_hnsw_indexes.sql
+-- (Requires maintenance_work_mem >= 64MB)
+
+-- Chunks table indexes
+CREATE INDEX IF NOT EXISTS idx_chunks_section 
+ON labor_law_chunks(section_id);
+
+-- Day 4: GIN index on chunk keywords for efficient search
+CREATE INDEX IF NOT EXISTS labor_law_chunks_keywords_idx
+ON labor_law_chunks
+USING GIN (keywords);
+
+-- Ingestion history indexes
+CREATE INDEX IF NOT EXISTS idx_ingestion_history_filename 
+ON ingestion_history(file_name);
+
+CREATE INDEX IF NOT EXISTS idx_ingestion_history_hash 
+ON ingestion_history(file_hash);
+
+-- Legacy table indexes
+-- Note: Vector indexes commented out to avoid memory issues
+-- Uncomment if needed or create separately
+-- CREATE INDEX IF NOT EXISTS labor_law_embeddings_embedding_idx 
+-- ON labor_law_embeddings 
+-- USING ivfflat (embedding vector_cosine_ops)
+-- WITH (lists = 100);
+
+CREATE INDEX IF NOT EXISTS labor_law_embeddings_metadata_idx 
+ON labor_law_embeddings 
+USING GIN (metadata);
+
+CREATE INDEX IF NOT EXISTS labor_law_embeddings_created_at_idx 
+ON labor_law_embeddings (created_at DESC);
+
+-- ============================================================
+-- TRIGGERS
+-- ============================================================
+
+-- Updated_at trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::text, NOW());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Apply trigger to relevant tables
+DROP TRIGGER IF EXISTS update_conversations_updated_at ON conversations;
+CREATE TRIGGER update_conversations_updated_at 
+    BEFORE UPDATE ON conversations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_labor_law_embeddings_updated_at ON labor_law_embeddings;
+CREATE TRIGGER update_labor_law_embeddings_updated_at 
+    BEFORE UPDATE ON labor_law_embeddings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_labor_law_sources_updated_at ON labor_law_sources;
+CREATE TRIGGER update_labor_law_sources_updated_at
+    BEFORE UPDATE ON labor_law_sources
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_labor_law_sections_updated_at ON labor_law_sections;
+CREATE TRIGGER update_labor_law_sections_updated_at
+    BEFORE UPDATE ON labor_law_sections
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_ingestion_history_updated_at ON ingestion_history;
+CREATE TRIGGER update_ingestion_history_updated_at
+    BEFORE UPDATE ON ingestion_history
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- FUNCTIONS
+-- ============================================================
+
+-- Legacy match_documents function (for backward compatibility)
+CREATE OR REPLACE FUNCTION match_documents(
+    query_embedding vector(1536),
+    match_threshold float DEFAULT 0.0,
+    match_count int DEFAULT 10,
+    filter_metadata jsonb DEFAULT '{}'::jsonb
+)
+RETURNS TABLE (
+    id text,
+    content text,
+    metadata jsonb,
+    similarity float
+)
+LANGUAGE sql STABLE
+AS $$
+    SELECT
+        labor_law_embeddings.id,
+        labor_law_embeddings.content,
+        labor_law_embeddings.metadata,
+        1 - (labor_law_embeddings.embedding <=> query_embedding) as similarity
+    FROM labor_law_embeddings
+    WHERE 
+        (1 - (labor_law_embeddings.embedding <=> query_embedding)) >= match_threshold
+        AND (
+            filter_metadata::text = '{}'
+            OR labor_law_embeddings.metadata @> filter_metadata
+        )
+    ORDER BY labor_law_embeddings.embedding <=> query_embedding
+    LIMIT match_count;
+$$;
+
+-- New function for searching sections (Phase 1.0.5)
+CREATE OR REPLACE FUNCTION match_sections(
+    query_embedding vector(1536),
+    match_threshold float DEFAULT 0.0,
+    match_count int DEFAULT 10,
+    filter_metadata jsonb DEFAULT '{}'::jsonb
+)
+RETURNS TABLE (
+    id uuid,
+    article_number varchar,
+    article_title text,
+    full_text text,
+    summary text,
+    keywords text[],
+    metadata jsonb,
+    similarity float
+)
+LANGUAGE sql STABLE
+AS $$
+    SELECT
+        labor_law_sections.id,
+        labor_law_sections.article_number,
+        labor_law_sections.article_title,
+        labor_law_sections.full_text,
+        labor_law_sections.summary,
+        labor_law_sections.keywords,
+        labor_law_sections.metadata,
+        1 - (labor_law_sections.embedding <=> query_embedding) as similarity
+    FROM labor_law_sections
+    WHERE 
+        labor_law_sections.embedding IS NOT NULL
+        AND (1 - (labor_law_sections.embedding <=> query_embedding)) >= match_threshold
+        AND (
+            filter_metadata::text = '{}'
+            OR labor_law_sections.metadata @> filter_metadata
+        )
+    ORDER BY labor_law_sections.embedding <=> query_embedding
+    LIMIT match_count;
+$$;
+
+-- Function for searching chunks (Day 4 enhancement)
+CREATE OR REPLACE FUNCTION match_chunks(
+    query_embedding vector(1536),
+    match_threshold float DEFAULT 0.0,
+    match_count int DEFAULT 10
+)
+RETURNS TABLE (
+    id uuid,
+    section_id uuid,
+    chunk_text text,
+    summary text,
+    keywords text[],
+    similarity float
+)
+LANGUAGE sql STABLE
+AS $$
+    SELECT
+        labor_law_chunks.id,
+        labor_law_chunks.section_id,
+        labor_law_chunks.chunk_text,
+        labor_law_chunks.summary,
+        labor_law_chunks.keywords,
+        1 - (labor_law_chunks.embedding <=> query_embedding) as similarity
+    FROM labor_law_chunks
+    WHERE 
+        labor_law_chunks.embedding IS NOT NULL
+        AND (1 - (labor_law_chunks.embedding <=> query_embedding)) >= match_threshold
+    ORDER BY labor_law_chunks.embedding <=> query_embedding
+    LIMIT match_count;
+$$;
+
+-- ============================================================
+-- VIEWS
+-- ============================================================
+
+-- Conversation summaries view
 CREATE OR REPLACE VIEW conversation_summaries AS
 SELECT 
     c.id,
@@ -191,8 +413,15 @@ FROM conversations c
 LEFT JOIN messages m ON c.id = m.conversation_id
 GROUP BY c.id, c.session_id, c.title, c.language, c.archived, c.created_at, c.updated_at;
 
--- Comments for documentation
-COMMENT ON TABLE labor_law_embeddings IS 'Vector store for Philippine labor law knowledge base chunks';
+-- ============================================================
+-- COMMENTS (Documentation)
+-- ============================================================
+
+COMMENT ON TABLE labor_law_embeddings IS 'Legacy vector store (deprecated - use labor_law_sections/chunks)';
+COMMENT ON TABLE labor_law_sources IS 'Philippine labor law documents metadata';
+COMMENT ON TABLE labor_law_sections IS 'Labor law articles/sections with embeddings and summaries';
+COMMENT ON TABLE labor_law_chunks IS 'Chunks from very long articles (Day 4: with summaries and keywords)';
+COMMENT ON TABLE ingestion_history IS 'Tracks file ingestion for incremental updates (Day 4)';
 COMMENT ON TABLE sessions IS 'Anonymous user sessions with JWT token management';
 COMMENT ON TABLE conversations IS 'Multi-turn conversation threads';
 COMMENT ON TABLE messages IS 'Individual messages in conversations';
@@ -200,4 +429,17 @@ COMMENT ON TABLE citations IS 'Legal citations linked to assistant messages';
 COMMENT ON TABLE suggested_actions IS 'Context-aware action suggestions for users';
 COMMENT ON TABLE feedback IS 'User feedback on message quality';
 
-COMMENT ON FUNCTION match_documents IS 'Semantic search function using cosine similarity on embeddings';
+COMMENT ON FUNCTION match_documents IS 'Legacy semantic search (deprecated - use match_sections/match_chunks)';
+COMMENT ON FUNCTION match_sections IS 'Semantic search on labor law sections with summaries';
+COMMENT ON FUNCTION match_chunks IS 'Semantic search on labor law chunks with summaries (Day 4)';
+
+-- ============================================================
+-- GRANTS (Permissions)
+-- ============================================================
+
+-- Grant execute permissions on functions
+GRANT EXECUTE ON FUNCTION match_documents TO authenticated, anon, service_role;
+GRANT EXECUTE ON FUNCTION match_sections TO authenticated, anon, service_role;
+GRANT EXECUTE ON FUNCTION match_chunks TO authenticated, anon, service_role;
+
+-- Note: Table permissions should be configured based on your Supabase RLS policies

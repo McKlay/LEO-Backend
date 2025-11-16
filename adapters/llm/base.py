@@ -59,7 +59,7 @@ class BaseLLM(ABC):
         pass
     
     @abstractmethod
-    async def stream(
+    async def stream_generate(
         self,
         messages: list[Message],
         temperature: float = 0.3,
@@ -82,6 +82,44 @@ class BaseLLM(ABC):
             LLMError: If streaming fails
         """
         pass
+    
+    async def analyze_query(
+        self,
+        messages: list[Message],
+        temperature: float = 0.1,
+        max_tokens: int = 500,
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Analyze a query for structured output (e.g., JSON).
+        
+        Optimized for:
+        - Low temperature for deterministic, structured output
+        - Fewer tokens (JSON responses are compact)
+        - Fast model selection (e.g., GPT-4o-mini)
+        
+        Default implementation delegates to generate() with optimized params.
+        Subclasses can override for model-specific optimizations.
+        
+        Args:
+            messages: Conversation history (typically system + user query)
+            temperature: Very low temp for structured output (default: 0.1)
+            max_tokens: Tokens for JSON response (default: 500)
+            **kwargs: Additional provider-specific parameters
+            
+        Returns:
+            LLM response with structured content (e.g., JSON)
+            
+        Raises:
+            LLMError: If analysis fails
+        """
+        # Default implementation - subclasses should override for optimization
+        return await self.generate(
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
+        )
     
     @abstractmethod
     async def count_tokens(self, text: str) -> int:

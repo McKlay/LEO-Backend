@@ -16,6 +16,7 @@ from adapters.vectorstore.supabase_store import SupabaseVectorStore
 from adapters.memory.langchain_memory import LangChainMemory
 
 # Pipeline services
+from services.pipeline.query_analysis import QueryAnalysisPipeline
 from services.pipeline.retrieval import RetrievalPipeline
 from services.pipeline.grounding import GroundingPipeline
 from services.pipeline.generation import GenerationPipeline
@@ -32,6 +33,7 @@ logger = get_logger(__name__)
 _supabase_client: Client = None
 _embeddings_adapter = None
 _llm_adapter = None
+_query_analysis_llm = None
 _vectorstore_adapter = None
 _memory_adapter = None
 
@@ -84,17 +86,31 @@ def get_embeddings_adapter() -> OpenAIEmbeddings:
 
 
 def get_llm_adapter() -> OpenAILLM:
-    """Get or create OpenAI LLM adapter."""
+    """Get or create OpenAI LLM adapter for main generation."""
     global _llm_adapter
     
     if _llm_adapter is None:
-        logger.info("Initializing OpenAI LLM adapter")
+        logger.info("Initializing OpenAI LLM adapter (GPT-4 Turbo)")
         _llm_adapter = OpenAILLM(
             api_key=settings.openai_api_key,
             model=settings.openai_llm_model
         )
     
     return _llm_adapter
+
+
+def get_query_analysis_llm() -> OpenAILLM:
+    """Get or create OpenAI LLM adapter for query analysis (GPT-4o-mini)."""
+    global _query_analysis_llm
+    
+    if _query_analysis_llm is None:
+        logger.info("Initializing query analysis LLM adapter (GPT-4o-mini)")
+        _query_analysis_llm = OpenAILLM(
+            api_key=settings.openai_api_key,
+            model=settings.query_analysis_model
+        )
+    
+    return _query_analysis_llm
 
 
 def get_vectorstore_adapter() -> SupabaseVectorStore:
@@ -126,6 +142,14 @@ def get_memory_adapter() -> LangChainMemory:
 
 
 # Pipeline service factories
+@lru_cache()
+def get_query_analysis_pipeline() -> QueryAnalysisPipeline:
+    """Get or create query analysis pipeline."""
+    llm = get_query_analysis_llm()
+    
+    return QueryAnalysisPipeline(llm=llm)
+
+
 @lru_cache()
 def get_retrieval_pipeline() -> RetrievalPipeline:
     """Get or create retrieval pipeline."""
@@ -184,8 +208,9 @@ def get_conversation_pipeline() -> ConversationPipeline:
 
 @lru_cache()
 def get_chat_orchestrator() -> ChatOrchestrator:
-    """Get or create chat orchestrator."""
+    """Get or create chat orchestrator with smart query analysis."""
     conversation = get_conversation_pipeline()
+    query_analysis = get_query_analysis_pipeline()
     retrieval = get_retrieval_pipeline()
     grounding = get_grounding_pipeline()
     generation = get_generation_pipeline()
@@ -193,6 +218,7 @@ def get_chat_orchestrator() -> ChatOrchestrator:
     
     return ChatOrchestrator(
         conversation_pipeline=conversation,
+        query_analysis_pipeline=query_analysis,
         retrieval_pipeline=retrieval,
         grounding_pipeline=grounding,
         generation_pipeline=generation,
@@ -207,12 +233,13 @@ def cleanup_services():
     Should be called during application shutdown.
     """
     global _supabase_client, _embeddings_adapter, _llm_adapter
-    global _vectorstore_adapter, _memory_adapter
+    global _query_analysis_llm, _vectorstore_adapter, _memory_adapter
     
     logger.info("Cleaning up service instances")
     
     # Clear LRU caches
     get_session_service.cache_clear()
+    get_query_analysis_pipeline.cache_clear()
     get_retrieval_pipeline.cache_clear()
     get_grounding_pipeline.cache_clear()
     get_generation_pipeline.cache_clear()
@@ -224,6 +251,7 @@ def cleanup_services():
     _supabase_client = None
     _embeddings_adapter = None
     _llm_adapter = None
+    _query_analysis_llm = None
     _vectorstore_adapter = None
     _memory_adapter = None
     

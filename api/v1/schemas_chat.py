@@ -155,7 +155,17 @@ class MessageMetadata(BaseModel):
     processing_time: float = Field(
         ...,
         ge=0.0,
-        description="Processing time in seconds"
+        description="Total processing time in seconds"
+    )
+    retrieval_time: float = Field(
+        ...,
+        ge=0.0,
+        description="Vector data retrieval time in seconds"
+    )
+    generation_time: float = Field(
+        ...,
+        ge=0.0,
+        description="LLM response generation time in seconds"
     )
     model: str = Field(..., description="LLM model used")
     confidence: float = Field(

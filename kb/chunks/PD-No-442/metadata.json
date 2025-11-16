@@ -1,0 +1,12 @@
+{
+  "source": "Presidential Decree No. 442 (Labor Code of the Philippines)",
+  "reference": "PD 442",
+  "short_name": "Labor Code",
+  "doc_type": "statute",
+  "year": "1974",
+  "url": "https://lawphil.net/statutes/presdecs/pd1974/pd_442_1974.html",
+  "total_chunks": 15,
+  "chunking_strategy": "manual",
+  "last_updated": "2025-11-14",
+  "notes": "Large document (265K chars, 2059 lines) chunked by Books and major Titles. Preliminary + 7 Books = 8-15 chunks estimated."
+}

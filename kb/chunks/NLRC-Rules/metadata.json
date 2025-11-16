@@ -1,0 +1,12 @@
+{
+  "source": "NLRC Rules of Procedure",
+  "reference": "NLRC Rules 2011",
+  "short_name": "NLRC Procedure",
+  "doc_type": "procedural_rules",
+  "year": "2011",
+  "url": "https://lawphil.net/judjuris/juri2011/may2011/nlrc_rules_2011.html",
+  "total_chunks": 0,
+  "chunking_strategy": "manual",
+  "last_updated": "2025-11-16",
+  "structure_note": "Procedural rules with Rules (I-XII). Use rule-based chunking: Rule I-III (title, definitions, pleadings), Rule IV-VI (venue, proceedings), Rule VII-XII (appeals, execution, special proceedings)"
+}

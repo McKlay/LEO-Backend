@@ -209,11 +209,11 @@ class PostprocessPipeline:
             Text with disclaimer appended
         """
         disclaimers = {
-            "en": "\n\n---\n\n**📌 Disclaimer**: This information is for general guidance only and does not constitute legal advice. For specific legal concerns, please consult with a qualified labor law attorney or contact the Department of Labor and Employment (DOLE).",
+            "en": "\n\n---\n\n**⚠️ Disclaimer**: This information is for general guidance only and does not constitute legal advice. For specific legal concerns, please consult with a qualified labor law attorney or contact the Department of Labor and Employment (DOLE).",
             
-            "fil": "\n\n---\n\n**📌 Paalala**: Ang impormasyong ito ay para sa pangkalahatang gabay lamang at hindi legal na payo. Para sa partikular na legal na usapin, makipag-ugnayan sa isang kwalipikadong abogado o sa Department of Labor and Employment (DOLE).",
+            "fil": "\n\n---\n\n**⚠️ Paalala**: Ang impormasyong ito ay para sa pangkalahatang gabay lamang at hindi legal na payo. Para sa partikular na legal na usapin, makipag-ugnayan sa isang kwalipikadong abogado o sa Department of Labor and Employment (DOLE).",
             
-            "ceb": "\n\n---\n\n**📌 Pahinumdom**: Kining impormasyon alang sa kinatibuk-ang giya lamang ug dili legal nga tambag. Para sa piho nga legal nga mga kabalaka, pakigsulti sa usa ka kwalipikado nga abogado o sa Department of Labor and Employment (DOLE)."
+            "ceb": "\n\n---\n\n**⚠️ Pahinumdom**: Kining impormasyon alang sa kinatibuk-ang giya lamang ug dili legal nga tambag. Para sa piho nga legal nga mga kabalaka, pakigsulti sa usa ka kwalipikado nga abogado o sa Department of Labor and Employment (DOLE)."
         }
         
         disclaimer = disclaimers.get(language, disclaimers["en"])

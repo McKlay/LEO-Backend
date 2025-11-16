@@ -120,7 +120,7 @@ class OpenAILLM(BaseLLM):
                 details={"error": str(e)}
             )
     
-    async def stream(
+    async def stream_generate(
         self,
         messages: list[Message],
         temperature: Optional[float] = None,
@@ -128,10 +128,11 @@ class OpenAILLM(BaseLLM):
         **kwargs
     ) -> AsyncGenerator[str, None]:
         """
-        Stream response from the LLM.
+        Stream response generation with improved settings for conversational tone.
         
-        Yields response chunks as they are generated, enabling
-        real-time streaming to clients.
+        Optimized for GPT-4 Turbo with rich-context grounding:
+        - Higher max_tokens for comprehensive responses (1500 vs 1000)
+        - Balanced temperature for natural yet precise tone (0.7 vs 0.3)
         
         Args:
             messages: Conversation history
@@ -146,12 +147,11 @@ class OpenAILLM(BaseLLM):
             AppError: If streaming fails
         """
         try:
-            # Use defaults if not specified
-            temperature = temperature if temperature is not None else self.default_temperature
-            max_tokens = max_tokens if max_tokens is not None else self.default_max_tokens
+            # Use optimized defaults for conversational responses
+            temperature = temperature if temperature is not None else 0.7  # More natural
+            max_tokens = max_tokens if max_tokens is not None else 1500  # Comprehensive
             
             # Convert Message objects to OpenAI format
-            # Handle both dict and Message objects
             openai_messages = []
             for msg in messages:
                 if isinstance(msg, dict):
@@ -267,6 +267,82 @@ class OpenAILLM(BaseLLM):
             raise AppError(
                 message="Failed to generate LLM response with functions",
                 error_code="LLM_FUNCTION_CALL_FAILED",
+                status_code=500,
+                details={"error": str(e)}
+            )
+    
+    async def analyze_query(
+        self,
+        messages: list[Message],
+        temperature: float = 0.1,
+        max_tokens: int = 500,
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Analyze query using GPT-4o-mini for fast, structured analysis.
+        
+        Optimized specifically for query analysis:
+        - Uses GPT-4o-mini model (faster, cheaper than GPT-4 Turbo)
+        - Very low temperature (0.1) for deterministic JSON output
+        - Lower max_tokens (500) for compact structured responses
+        - Separate from main response generation pipeline
+        
+        Args:
+            messages: Analysis prompt (system + user query)
+            temperature: Very low for structured output (default: 0.1)
+            max_tokens: Tokens for JSON response (default: 500)
+            **kwargs: Additional OpenAI-specific parameters
+            
+        Returns:
+            LLM response with JSON analysis
+            
+        Raises:
+            AppError: If analysis fails
+        """
+        try:
+            # Convert Message objects to OpenAI format
+            openai_messages = []
+            for msg in messages:
+                if isinstance(msg, dict):
+                    openai_messages.append({"role": msg["role"], "content": msg["content"]})
+                else:
+                    openai_messages.append({"role": msg.role, "content": msg.content})
+            
+            logger.debug(
+                f"Query analysis with GPT-4o-mini: "
+                f"{len(messages)} messages, temp={temperature}, max_tokens={max_tokens}"
+            )
+            
+            # Use GPT-4o-mini for fast, cost-effective structured analysis
+            response = await self.client.chat.completions.create(
+                model="gpt-4o-mini",  # Fast model for analysis
+                messages=openai_messages,
+                temperature=temperature,  # Very low for deterministic output
+                max_tokens=max_tokens,  # Compact JSON response
+                response_format={"type": "json_object"},  # Force JSON output
+                **kwargs
+            )
+            
+            choice = response.choices[0]
+            
+            logger.debug(
+                f"Query analysis complete: "
+                f"tokens={response.usage.total_tokens}, "
+                f"model={response.model}"
+            )
+            
+            return LLMResponse(
+                content=choice.message.content or "{}",
+                model=response.model,
+                tokens_used=response.usage.total_tokens,
+                finish_reason=choice.finish_reason
+            )
+            
+        except Exception as e:
+            logger.error(f"Query analysis error: {str(e)}", exc_info=True)
+            raise AppError(
+                message="Failed to analyze query",
+                error_code="QUERY_ANALYSIS_FAILED",
                 status_code=500,
                 details={"error": str(e)}
             )

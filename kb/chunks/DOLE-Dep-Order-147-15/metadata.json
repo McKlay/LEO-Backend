@@ -1,0 +1,12 @@
+{
+  "source": "DOLE Department Order No. 147-15",
+  "reference": "DO 147-15",
+  "short_name": "Termination of Employment Rules",
+  "doc_type": "department_order",
+  "year": "2015",
+  "url": "https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/10/71535",
+  "total_chunks": 0,
+  "chunking_strategy": "manual",
+  "last_updated": "2025-11-16",
+  "structure_note": "Department Order with Rules (I-A to VI). Use rule-based chunking: preamble, Rule I-A (application), Rule I-B (just causes), Rule I-C (authorized causes), Rule II-VI (procedures, special cases)"
+}

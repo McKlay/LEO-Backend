@@ -1,0 +1,12 @@
+{
+  "source": "Republic Act No. 11058",
+  "reference": "RA 11058",
+  "short_name": "OSH Standards Law",
+  "doc_type": "statute",
+  "year": "2017",
+  "url": "https://lawphil.net/statutes/repacts/ra2018/ra_11058_2018.html",
+  "total_chunks": 0,
+  "chunking_strategy": "manual",
+  "last_updated": "2025-11-16",
+  "structure_note": "Republic Act with Chapters (I-VII). Use chapter-based chunking: preamble, chapter I (policy), chapter II (definitions), chapter III (duties), chapter IV-VII (enforcement, penalties, final provisions)"
+}

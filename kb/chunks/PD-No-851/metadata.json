@@ -1,0 +1,12 @@
+{
+  "source": "Presidential Decree No. 851",
+  "reference": "PD 851",
+  "short_name": "13th Month Pay Law",
+  "doc_type": "statute",
+  "year": "1975",
+  "url": "https://lawphil.net/statutes/presdecs/pd1975/pd_851_1975.html",
+  "total_chunks": 5,
+  "chunking_strategy": "manual",
+  "last_updated": "2024-11-13",
+  "notes": "Manually chunked to preserve hierarchical structure: decree preamble+sections, implementing rules, supplementary rules"
+}

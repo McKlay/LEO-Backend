@@ -119,72 +119,159 @@ Build a Philippine labor law chatbot backend using Python/FastAPI with:
 
 ---
 
-## PHASE-1.0.5 — RAG Pipeline Enhancement (1–2 days) ⬅️ **CRITICAL: DO BEFORE PHASE 1.1**
+## PHASE-1.0.5 — RAG Pipeline Enhancement (2–3 days) ⬅️ **CRITICAL: DO BEFORE PHASE 1.1**
 
-**Goal:** Implement multi-strategy RAG pipeline to address Phase 1.E limitations before frontend integration.
+**Goal:** Implement multi-strategy RAG pipeline with direct rich-context grounding to address Phase 1.E limitations before frontend integration.
 
-**Why Critical:** Current single-strategy semantic search has low confidence scores (0.3-0.4) and struggles with broad queries. Must fix before frontend integration to avoid refactoring after frontend is built.
+**Why Critical:** Current single-strategy semantic search has low confidence scores (0.3-0.4), struggles with broad queries, and has 3-4s Supabase retrieval bottleneck. Must fix before frontend integration to avoid refactoring after frontend is built.
 
 **Reference:** See `docs/adr/002-rag-pipeline-limitations-and-future-architecture.md` for detailed architecture.
+
+**Architecture Summary:**
+```
+Query → GPT-4o-mini Analysis + Clarification Check (1.0s) 
+  ├─→ [Needs Clarification] → Return clarification response (STOP)
+  └─→ [Clear Query] → Smart Parallel Retrieval (2.0s) 
+      → GPT-4.1 Direct Grounding with Streaming (4.5s, perceived 2-3s) 
+      → Total: 8.5s actual (clear queries), 1.0s (vague queries), 2-3s perceived
+```
 
 **Tasks**
 
 **Multi-Strategy Retrieval Implementation:**
 * Implement `services/pipeline/query_analysis.py`:
-  - LLM-powered query analysis (extract concepts, articles, query type)
+  - **Smart clarification detection** (NEW - LLM-based vagueness detection)
+  - **Context-aware analysis** using conversation history
+  - **Specific follow-up question generation** for vague queries
+  - GPT-4o-mini for structured extraction (concepts, articles, keywords, query type)
+  - JSON response format for reliability
+  - Parallel execution with embedding generation
   - Breadth detection (specific vs broad queries)
-  - Keyword extraction for hybrid search
-* Add PostgreSQL full-text search in `adapters/vectorstore/`:
-  - Implement keyword-based retrieval alongside semantic search
-  - Create result merging and ranking algorithm
-  - Support article number direct lookup (e.g., "Article 87")
-* Implement two-step LLM grounding in `services/pipeline/grounding.py`:
-  - Initial answer generation from LLM knowledge
-  - Verification step against retrieved authoritative sources
-  - Confidence scoring based on source agreement
+  - **Early pipeline exit for vague queries** (saves 87% cost and 6.5s latency)
+* Add smart retrieval routing in `adapters/vectorstore/supabase_store.py`:
+  - PostgreSQL full-text search (keyword-based, 0.6-0.8s)
+  - Direct article lookup via SQL (0.1-0.2s, bypasses vector search)
+  - Semantic vector search (only when no direct article match)
+  - Parallel execution using asyncio.gather
+  - Result merging, deduplication, and ranking algorithm
+* Implement single-step rich-context grounding in `services/pipeline/grounding.py`:
+  - **REMOVE two-step verification** (mini models too robotic)
+  - Use GPT-4 Turbo (latest) for conversational, empathetic responses
+  - Natural citation integration within narrative flow
+  - Support for streaming responses (SSE/chunked)
+  - Comprehensive prompts with full document context
+* Update `services/chat_orchestrator.py`:
+  - **Remove deterministic `is_clarification_needed` check**
+  - Use query analysis results for smart clarification
+  - Stop pipeline early when clarification needed
+  - Build clarification response with specific follow-up questions
+  - Pass conversation history to query analyzer for context awareness
+
+**Streaming Response Support:**
+* Update `api/v1/routes_chat.py` to support Server-Sent Events (SSE):
+  - Implement chunked streaming from LLM
+  - Frontend-compatible event format
+  - Graceful error handling mid-stream
+  - Fallback to non-streaming for clients that don't support SSE
+* Add streaming to `adapters/llm/openai_llm.py`:
+  - Async generator for token streaming
+  - Proper cleanup and connection management
+  - Token-by-token yield for real-time display
+
+**Database Performance Optimization:**
+* Replace IVFFlat with HNSW vector index:
+  - Drop old index, create HNSW with optimized parameters
+  - Target: 50% faster vector search (1.8-2.0s vs 3-4s)
+  - Configure m=16, ef_construction=64 for current KB size
+* Implement connection pooling for Supabase:
+  - Use psycopg2 ThreadedConnectionPool
+  - Configure minconn=5, maxconn=20
+  - Update all vectorstore methods to use pool
+  - Target: 0.3-0.5s latency reduction
+* Add embedding cache:
+  - LRU cache for 1000 most recent queries
+  - Saves 0.5s on cache hits
+  - Implement cache invalidation on KB updates
 
 **Database Schema Enhancement:**
 * Create new schema supporting full-text + semantic search:
+  - `labor_law_sources` table (source registry)
   - `labor_law_sections` table with full article text + summary
-  - Full-text search indexes (PostgreSQL GIN)
-  - Conditional chunking (only for articles >1000 words)
+  - GIN index for PostgreSQL full-text search
+  - HNSW index for vector similarity
   - Hierarchical metadata (book/title/chapter structure)
+  - Conditional chunking (only for articles >1000 words)
 * Migrate existing 5 KB entries to new schema
 
 **Knowledge Base Expansion:**
-* Ingest 30-50 Labor Code articles with priorities:
-  1. Working Conditions (hours, overtime, rest days, holidays)
-  2. Wages (minimum wage, deductions, facilities)
-  3. Employment Contracts (regular, contractual, probationary)
-  4. Termination & Separation Pay (all grounds, procedures)
-  5. Employee Benefits (SSS, Pag-IBIG, PhilHealth, 13th month)
-* Generate LLM summaries for each article (for semantic search)
-* Extract keywords for hybrid search
-* Validate all citation URLs are accessible
+* Ingest 25-45 Labor Code articles (30-50 total) with priorities:
+  1. Working Conditions (hours, overtime, rest days, holidays, night shift)
+  2. Wages (minimum wage, deductions, facilities, wage orders)
+  3. Employment Contracts (regular, contractual, probationary, fixed-term)
+  4. Termination & Separation Pay (just causes, authorized causes, procedures)
+  5. Employee Benefits (SSS, Pag-IBIG, PhilHealth, 13th month pay)
+* Generate LLM summaries for each article (for semantic search):
+  - Use GPT-4o-mini for cost-effective summarization
+  - 100-200 word summaries capturing key concepts
+  - Store in `summary` column for embedding
+* Extract keywords for hybrid search:
+  - Automated extraction using NLP (spaCy or GPT-4o-mini)
+  - Store in `keywords` array column
+  - Include legal terminology and common phrases
+* Validate all citation URLs are accessible:
+  - Lawphil.net for Labor Code articles
+  - DOLE website for issuances/advisories
+  - Official Gazette for presidential decrees
 
-**Performance Optimization:**
-* Switch to GPT-4o-mini for grounding (3-5x faster, same quality)
-* Implement embedding cache for repeated queries
-* Parallel retrieval strategies (semantic + keyword + direct)
-* Test and benchmark vs Phase 1.E baseline
+**Performance Optimization & Monitoring:**
+* Add retrieval performance logging:
+  - Log latency for each retrieval strategy
+  - Track which strategy provided best results
+  - Monitor cache hit/miss ratios
+  - Log query analysis performance
+* Benchmark vs Phase 1.E baseline:
+  - Test 10+ broad queries (e.g., "employee rights", "termination process")
+  - Measure end-to-end latency improvements
+  - Validate confidence scores >0.5
+  - Test streaming UX (time to first token)
+  - Compare response quality (tone, completeness, citations)
 
 **Deliverables**
 
-* Multi-strategy RAG pipeline operational
-* KB with 30-50 Labor Code articles
+* Multi-strategy RAG pipeline operational with smart routing
+* **Smart LLM-based clarification system** (replaces deterministic checks)
+* Streaming chat API for improved perceived performance
+* KB with 30-50 Labor Code articles (full text + summaries)
+* Optimized Supabase queries (HNSW index, connection pooling)
 * Average confidence scores >0.5 (vs current 0.3-0.4)
-* Average response time <10s (vs current 12.4s)
+* Average response time: 8.5s (clear queries), 1.0s (vague queries), 2-3s perceived
 * Broad queries return 5+ relevant citations (vs current 1-3)
+* Natural, conversational responses (vs robotic mini-model outputs)
+* **Context-aware clarification handling** for multi-turn conversations
 * Updated integration tests validating improvements
 
 **Exit criteria**
 
-* Integration tests updated and passing with new pipeline
-* Broad query test: "What are my employee rights?" returns 5+ citations
-* Confidence scores consistently >0.5
-* Average response time <10s
+* Integration tests updated and passing with new pipeline:
+  - Test smart retrieval routing (direct lookup vs semantic)
+  - Validate streaming response format
+  - Test multi-strategy result merging
+  - Verify cache functionality
+  - **Test smart clarification detection** (vague vs clear queries)
+  - **Validate context-aware follow-up handling**
+* Broad query test: "What are my employee rights?" returns 5+ citations with comprehensive explanation
+* **Vague query test**: "What about my rights?" triggers clarification with 3-4 specific follow-up questions
+* **Follow-up query test**: "How is it calculated?" after "What is 13th month pay?" proceeds directly (no false clarification)
+* Confidence scores consistently >0.5 (target: 0.6-0.7)
+* Average total response time for clear queries <9s
+* Average response time for vague queries <1.5s (clarification only)
+* Average perceived response time <3s (time to first token for clear queries)
+* Streaming works correctly on both web and mobile clients
+* Supabase retrieval latency <2.5s (down from 3-4s)
 * Knowledge base covers top 30+ Labor Code topics
-* ADR-002 implementation complete and validated
+* Response tone is conversational and empathetic (validated by manual testing)
+* **Clarification responses are specific and helpful** (not generic "please clarify")
+* ADR-002 revised architecture complete and validated
 
 ---
 

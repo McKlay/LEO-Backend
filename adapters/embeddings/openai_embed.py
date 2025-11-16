@@ -13,6 +13,7 @@ from adapters.embeddings.base import (
     EmbeddingResponse,
     BatchEmbeddingResponse
 )
+from utils.embedding_cache import get_embedding_cache
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,8 @@ class OpenAIEmbeddings(BaseEmbeddings):
         self,
         api_key: Optional[str] = None,
         model: Optional[str] = None,
-        settings: Optional[Settings] = None
+        settings: Optional[Settings] = None,
+        enable_cache: bool = True
     ):
         """
         Initialize OpenAI embeddings adapter.
@@ -38,19 +40,30 @@ class OpenAIEmbeddings(BaseEmbeddings):
             api_key: OpenAI API key (or provide settings)
             model: Model name (or provide settings)
             settings: Application settings (alternative to individual params)
+            enable_cache: Enable embedding caching (default: True)
         """
         if settings:
             self.api_key = settings.openai_api_key
             self.model = settings.openai_embedding_model
             self.dimension = settings.embedding_dimension
+            self.enable_cache = getattr(settings, 'enable_embedding_cache', enable_cache)
+            cache_size = getattr(settings, 'embedding_cache_size', 1000)
         else:
             self.api_key = api_key
             self.model = model or "text-embedding-3-small"
             self.dimension = 1536
+            self.enable_cache = enable_cache
+            cache_size = 1000
         
         self.client = AsyncOpenAI(api_key=self.api_key)
         
-        logger.info(f"OpenAI embeddings initialized with model: {self.model}")
+        # Initialize cache if enabled
+        self.cache = get_embedding_cache(max_size=cache_size) if self.enable_cache else None
+        
+        logger.info(
+            f"OpenAI embeddings initialized with model: {self.model}, "
+            f"cache_enabled: {self.enable_cache}"
+        )
     
     async def embed_text(self, text: str) -> EmbeddingResponse:
         """
@@ -75,6 +88,17 @@ class OpenAIEmbeddings(BaseEmbeddings):
                     status_code=400
                 )
             
+            # Check cache first
+            if self.cache:
+                cached_embedding = self.cache.get(text)
+                if cached_embedding is not None:
+                    logger.debug("Using cached embedding")
+                    return EmbeddingResponse(
+                        embedding=cached_embedding,
+                        model=self.model,
+                        tokens_used=0  # No tokens used for cached result
+                    )
+            
             # Generate embedding
             response = await self.client.embeddings.create(
                 input=text,
@@ -82,6 +106,10 @@ class OpenAIEmbeddings(BaseEmbeddings):
             )
             
             embedding_data = response.data[0]
+            
+            # Cache the result
+            if self.cache:
+                self.cache.set(text, embedding_data.embedding)
             
             return EmbeddingResponse(
                 embedding=embedding_data.embedding,

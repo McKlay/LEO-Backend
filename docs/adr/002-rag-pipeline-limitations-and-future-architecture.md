@@ -106,154 +106,320 @@ cursor.execute("""
 - ✅ Set similarity threshold to 0.3 (relaxed from 0.5)
 - ✅ Use direct psycopg2 for vector operations
 
-**For Phase 1.1+ (PLANNED - Before Frontend Integration)**:
-Implement **Multi-Strategy Hybrid RAG Pipeline** with the following architecture:
+**For Phase 1.0.5+ (PLANNED - Before Frontend Integration)**:
+Implement **Multi-Strategy Hybrid RAG Pipeline with Direct Rich-Context Grounding** with the following architecture:
 
 ### Proposed Architecture
 
 ```mermaid
 graph TD
-    A[User Query] --> B[Stage 1: LLM Analysis]
-    B --> C[Extract Legal Concepts & Article Refs]
-    C --> D[Stage 2: Multi-Strategy Retrieval]
+    A[User Query] --> B[Stage 1: Query Analysis + Clarification - GPT-4o-mini]
+    B --> C{Needs Clarification?}
+    C -->|YES| D[Return Clarification with Follow-up Questions]
+    D --> E[User Clarifies]
+    E --> A
+    C -->|NO - Extract Legal Concepts, Articles, Keywords| F[Stage 2: Smart Parallel Multi-Strategy Retrieval]
     
-    D --> E[Strategy 1: Keyword Search]
-    D --> F[Strategy 2: Semantic Search]
-    D --> G[Strategy 3: Direct Article Lookup]
+    F --> G[Strategy 1: Keyword Search - PostgreSQL FTS]
+    F --> H[Strategy 2: Semantic Search - pgvector]
+    F --> I[Strategy 3: Direct Article Lookup - SQL]
     
-    E --> H[Merge & Rank Results]
-    F --> H
-    G --> H
+    G --> J[Merge, Deduplicate & Rank Results]
+    H --> J
+    I --> J
     
-    H --> I[Stage 3: LLM Grounding with Verification]
-    I --> J[Initial Answer from LLM Knowledge]
-    J --> K[Verify & Refine Against Retrieved Sources]
-    K --> L[Final Response + Citations + Confidence Score]
+    J --> K[Stage 3: Direct Rich-Context Grounding - GPT-4.1]
+    K --> L[Stream Conversational Response with Natural Citations]
+    L --> M[Final Response + Citations + Suggested Actions]
 ```
 
-### Stage 1: LLM Query Analysis
+### Stage 1: Query Analysis + Smart Clarification (GPT-4o-mini)
 
-**Purpose**: Use LLM's legal knowledge to enhance retrieval strategy
+**Purpose**: Use lightweight LLM for fast, intelligent query analysis with built-in vagueness detection
+
+**Model Choice**: GPT-4o-mini (~1.0-1.5s)
+- Optimized for structured extraction tasks
+- 10x cheaper than GPT-4
+- Context-aware (uses conversation history)
+- Runs in parallel with embedding generation
+
+**Key Innovation**: **LLM-based clarification detection** instead of deterministic rules
+- Understands nuanced vagueness ("What about my rights?" vs "What is 13th month pay?")
+- Context-aware (handles pronouns and follow-up questions correctly)
+- Multilingual vagueness detection (works in English, Filipino, Cebuano)
+- Generates specific clarifying questions, not generic "please clarify"
 
 **Implementation**:
 ```python
-async def analyze_query(query: str) -> QueryAnalysis:
+async def analyze_query(
+    query: str, 
+    conversation_history: List[Message]
+) -> QueryAnalysis:
     """
-    Extract:
-    - Legal concepts (e.g., "overtime pay", "illegal dismissal")
-    - Specific laws/articles mentioned (e.g., "Article 87", "PD 851")
-    - Query type: definition | procedure | rights | calculation | comparison
-    - Query breadth: specific | moderate | broad
+    Analyze query for clarity and extract legal information.
+    
+    Returns QueryAnalysis with:
+    - needs_clarification: bool (NEW - smart vagueness detection)
+    - clarification_reason: str (NEW - why it's vague)
+    - clarification_questions: List[str] (NEW - specific follow-ups)
+    - suggested_topics: List[str] (NEW - common labor law areas)
+    - legal_concepts: List[str] (extracted even if vague)
+    - articles: List[str] (e.g., ["Article 87", "PD 851"])
+    - keywords: List[str] (for full-text search)
+    - query_type: str (definition | procedure | rights | calculation)
+    - breadth: str (specific | moderate | broad)
     """
     prompt = f"""
-    Analyze this Philippine labor law query:
-    "{query}"
+    Analyze this Philippine labor law query to determine if clarification is needed.
     
-    Extract:
-    1. Legal concepts mentioned
-    2. Specific law/article references (if any)
-    3. Query type and breadth
-    4. Keywords for search
+    Query: "{query}"
+    
+    Conversation History:
+    {format_conversation_history(conversation_history)}
+    
+    Task 1 - Clarification Detection:
+    A query needs clarification if:
+    • Missing critical context (e.g., "What about my case?" - what case?)
+    • Ambiguous pronouns without referents (e.g., "Can they do this?")
+    • Too broad without specific topic (e.g., "Tell me my rights")
+    • Unclear intent (e.g., "I have a problem")
+    
+    Do NOT request clarification if:
+    • Query is specific (e.g., "What is 13th month pay?")
+    • Context is clear from conversation history
+    • It's a clear follow-up to previous question
+    
+    Task 2 - Generate Clarification (if needed):
+    If vague, provide:
+    1. Brief reason why it's vague
+    2. 3-4 specific follow-up questions
+    3. Common labor law topics user might mean
+    
+    Task 3 - Extract Legal Info (always):
+    Extract what you can even if vague:
+    • Legal concepts, articles, keywords
+    • Query type and breadth
+    
+    Return JSON with all fields.
     """
-    return await llm.generate(prompt)
+    
+    response = await gpt4o_mini.generate(
+        prompt,
+        response_format={"type": "json_object"},
+        temperature=0
+    )
+    return QueryAnalysis.parse_obj(json.loads(response))
 ```
 
 **Benefits**:
-- Identifies relevant legal domains before retrieval
-- Extracts article numbers for direct lookup
-- Determines query complexity for retrieval strategy selection
+- **Stops pipeline early for vague queries** (saves 6.5s and 87% cost)
+- **Smart clarification**: Asks specific follow-ups, not generic "please clarify"
+- **Context-aware**: Handles multi-turn conversations correctly
+- **Better UX**: Users get helpful guidance instead of generic answers
+- **Identifies relevant legal domains** for clear queries before retrieval
+- **Extracts article numbers** for direct lookup (bypasses slow vector search)
+- **Determines query complexity** for smart retrieval routing
+- **Fast and cost-effective**: GPT-4o-mini excels at this task
 
-### Stage 2: Multi-Strategy Retrieval
+**Performance Impact**:
+- Vague queries (~30%): 1.0s vs 7.5s (87% faster, 87% cheaper)
+- Clear queries (~70%): 1.0s overhead (acceptable for better accuracy)
 
-#### Strategy 1: Full-Text Keyword Search (PostgreSQL)
+### Stage 2: Smart Parallel Multi-Strategy Retrieval
 
-**Best for**: Broad queries, specific terminology
+**Key Optimization**: Route queries intelligently to avoid unnecessary vector search overhead.
+
+```python
+async def retrieve_documents(
+    query: str,
+    analysis: QueryAnalysis
+) -> List[Document]:
+    """
+    Smart retrieval routing based on query analysis.
+    All strategies run in parallel for maximum speed.
+    """
+    tasks = []
+    
+    # Strategy 3: Direct Article Lookup (PRIORITY)
+    # If query mentions specific articles, use direct SQL lookup
+    if analysis.articles:
+        tasks.append(direct_article_lookup(analysis.articles))
+        # Skip semantic search to save 2-3 seconds!
+    else:
+        # Strategy 2: Semantic Vector Search (ONLY if no direct match)
+        tasks.append(semantic_search(query, analysis.concepts))
+    
+    # Strategy 1: Keyword Search (ALWAYS - fast and high precision)
+    tasks.append(keyword_search(analysis.keywords))
+    
+    # Execute all strategies in parallel
+    results = await asyncio.gather(*tasks)
+    
+    # Merge, deduplicate, and rank results
+    return merge_and_rank(results, analysis)
+```
+
+#### Strategy 1: Full-Text Keyword Search (PostgreSQL FTS)
+
+**Best for**: Broad queries, specific legal terminology, high precision
 
 ```sql
 -- Use PostgreSQL full-text search for keyword matching
-SELECT *, ts_rank(to_tsvector('english', content), query) as rank
-FROM labor_code_articles
-WHERE to_tsvector('english', content) @@ plainto_tsquery('english', $keywords)
+SELECT 
+    id,
+    article_number,
+    full_text,
+    ts_rank(to_tsvector('english', full_text), query) as rank
+FROM labor_law_sections
+WHERE to_tsvector('english', full_text || ' ' || article_title) 
+      @@ plainto_tsquery('english', $keywords)
 ORDER BY rank DESC
 LIMIT 10;
 ```
 
 **Advantages**:
-- Fast keyword matching
-- Works well with legal terminology
-- Complements semantic search
+- Fast execution (0.6-0.8s with proper GIN index)
+- Works excellently with legal terminology
+- High precision for exact phrase matching
+- Complements semantic search effectively
 
-#### Strategy 2: Semantic Vector Search (Current Approach)
+**Optimization**: Pre-built GIN index on full_text + article_title
 
-**Best for**: Nuanced queries, conceptual matching
+#### Strategy 2: Semantic Vector Search (Enhanced)
+
+**Best for**: Nuanced queries, conceptual matching, synonym handling
 
 ```sql
--- Current pgvector approach
-SELECT * FROM match_documents($embedding, 0.3, 10, $filters);
+-- Enhanced pgvector approach with HNSW index for faster search
+SELECT 
+    id,
+    article_number,
+    full_text,
+    summary,
+    1 - (embedding <=> $query_embedding) as similarity
+FROM labor_law_sections
+WHERE 1 - (embedding <=> $query_embedding) > $threshold
+ORDER BY embedding <=> $query_embedding
+LIMIT 10;
 ```
 
-**Keeps**: Existing semantic capabilities for concept matching
+**Optimizations**:
+- **HNSW index** instead of IVFFlat (50% faster for current KB size)
+- **Embedding cache** for repeated queries (saves 0.5s)
+- **Connection pooling** to reduce overhead (saves 0.3-0.5s)
+- Search on **summaries** not full text (better semantic representation)
 
-#### Strategy 3: Direct Article/Law Lookup
+**Expected Performance**: 1.8-2.0s (down from 3-4s)
 
-**Best for**: Queries mentioning specific articles
+#### Strategy 3: Direct Article/Law Lookup (PRIORITY)
+
+**Best for**: Queries explicitly mentioning articles/laws (fastest path)
 
 ```sql
--- When LLM identifies "Article 87" or "PD 851"
-SELECT * FROM labor_code_articles 
+-- When LLM identifies "Article 87", "PD 851", etc.
+SELECT 
+    id,
+    article_number,
+    full_text,
+    summary,
+    metadata
+FROM labor_law_sections 
 WHERE article_number = ANY($identified_articles)
-   OR source_reference ILIKE ANY($identified_laws);
+   OR source_reference ILIKE ANY($identified_laws)
+ORDER BY article_number;
 ```
 
 **Advantages**:
-- Perfect precision when article is known
-- Bypasses similarity scoring
-- Guaranteed retrieval of referenced laws
+- **Perfect precision** when article is known
+- **Ultra-fast** (0.1-0.2s) - no vector computation needed
+- **Guaranteed retrieval** of referenced laws
+- **Bypasses** slow semantic search entirely
 
-### Stage 3: LLM Grounding with Verification
+**Impact**: Saves 2-3 seconds for ~40% of queries that mention specific articles
 
-**Two-step process**:
+### Stage 3: Direct Rich-Context Grounding with Streaming (GPT-4.1)
 
-1. **Initial Response**: LLM generates answer from its knowledge
-2. **Verification**: Cross-check against retrieved authoritative sources
+**REVISED APPROACH**: Single-step comprehensive response generation with natural citation integration.
 
+**Why Not Two-Step Verification?**
+- Two-step with mini models produces **robotic, terse responses**
+- Labor law queries are **emotionally charged** and need empathetic tone
+- Verification feels like "checking homework" rather than enhancing quality
+- GPT-4.1 handles legal reasoning + personality better in one pass
+
+**Model Choice**: GPT-4 Turbo (latest) with streaming
+- Superior legal reasoning and context handling (128k context)
+- Natural, conversational tone maintenance
+- Better citation integration within narrative flow
+- Streaming provides perceived low latency (~2-3s to first token)
+
+**Implementation**:
 ```python
-async def ground_with_verification(
+async def generate_response_with_streaming(
     query: str,
-    retrieval_results: List[Document]
-) -> GroundedResponse:
-    # Step 1: Initial answer
-    initial_response = await llm.generate(f"""
-        As a Philippine labor law expert, answer: {query}
-        Mention specific laws/articles you're referencing.
-    """)
+    analysis: QueryAnalysis,
+    documents: List[Document],
+    conversation_history: List[Message]
+) -> AsyncIterator[str]:
+    """
+    Generate conversational response with natural citations.
+    Streams tokens to client for improved perceived performance.
+    """
     
-    # Step 2: Verification
-    final_response = await llm.generate(f"""
-        Your initial answer: {initial_response}
-        
-        Verify against these authoritative sources:
-        {format_documents(retrieval_results)}
-        
-        Tasks:
-        1. Confirm accuracy
-        2. Add specific citations
-        3. Correct inaccuracies
-        4. Flag contradictions
-    """)
+    # Build rich context prompt
+    prompt = f"""You are LEO, a knowledgeable and empathetic Philippine labor law assistant.
+
+**User's Question**: {query}
+
+**Legal Context Identified**: {', '.join(analysis.concepts)}
+
+**Retrieved Authoritative Legal Sources**:
+{format_full_documents_with_hierarchy(documents)}
+
+**Conversation History**:
+{format_conversation_history(conversation_history)}
+
+**Instructions**:
+1. Provide a warm, conversational response that addresses the user's concern
+2. Integrate citations naturally within your explanation (not "According to Article X...")
+   Example: "The law requires employers to pay 13th month pay (PD 851, Section 1)..."
+3. Use clear paragraph structure and bullet points for lists
+4. If the situation is sensitive (termination, harassment), acknowledge emotions
+5. Provide actionable next steps or guidance
+6. Maintain legal precision while being human and supportive
+7. If multiple articles apply, explain each clearly
+8. Use examples when helpful to clarify complex concepts
+
+**Format**:
+- Opening: Acknowledge the question empathetically
+- Body: Explain the law with natural citations
+- Closing: Summarize key points and suggest next steps
+"""
     
-    return GroundedResponse(
-        content=final_response,
-        citations=extract_citations(retrieval_results),
-        confidence=calculate_confidence(initial_response, final_response)
-    )
+    # Stream response for better UX
+    async for chunk in gpt4_turbo.stream_generate(
+        prompt,
+        max_tokens=1500,  # Allow comprehensive responses
+        temperature=0.7,  # Balanced: precise yet conversational
+        stream=True
+    ):
+        yield chunk
+
 ```
 
-**Benefits**:
-- Leverages LLM's broad legal knowledge
-- Grounds answers in authoritative sources
-- Provides confidence scoring based on source agreement
-- Handles queries even when retrieval is incomplete
+**Streaming Benefits**:
+- **Perceived latency**: 2-3s (time to first token) vs 4-5s total wait
+- User sees response building in real-time
+- Better engagement during LLM processing
+- Frontend can show "LEO is typing..." indicator immediately
+
+**Benefits Over Two-Step**:
+- Single LLM call: **4-5 seconds total** (streaming starts at ~2s)
+- **Conversational, empathetic tone** (critical for labor law)
+- Natural citation integration within narrative
+- Handles emotional nuance and sensitive situations
+- More comprehensive responses (1200-1500 tokens vs 150-200)
+- Lower hallucination risk (GPT-4.1 better reasoning)
 
 ---
 
@@ -277,12 +443,16 @@ CREATE TABLE labor_law_embeddings (
 
 ### Proposed Schema (Phase 1.1+)
 
+**Implementation Note**: Schema has been implemented in `schema.sql` with some deviations from original plan. See migration script `001_add_missing_columns.sql` for additional columns added.
+
 ```sql
 -- Source registry
 CREATE TABLE labor_law_sources (
     id UUID PRIMARY KEY,
-    source_type TEXT, -- 'labor_code' | 'presidential_decree' | 'RA' | 'IRR'
-    source_name TEXT,
+    source_type TEXT, -- 'statute' | 'department_order' | 'procedural_rules' | 'guidelines' | 'handbook'
+    title TEXT,       -- Full official name
+    reference VARCHAR(50), -- Short code: 'PD 851', 'RA 11058' (added via migration)
+    year INT,         -- Year enacted (added via migration)
     official_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -292,21 +462,34 @@ CREATE TABLE labor_law_sections (
     id UUID PRIMARY KEY,
     source_id UUID REFERENCES labor_law_sources(id),
     
-    -- Hierarchical metadata
-    book_number INT,
-    title_number INT,
-    chapter_number INT,
-    section_number INT,
-    article_number TEXT, -- 'Article 87', 'Section 1'
+    -- Hierarchical metadata (flexible text-based, not INT)
+    book VARCHAR(100),           -- "Book One", "Preliminary Title", etc.
+    title_name VARCHAR(200),     -- Title or major section name
+    chapter VARCHAR(100),        -- Chapter name if applicable
+    section_number INT,          -- Optional numeric section (added via migration)
+    article_number TEXT,         -- 'Article 87', 'Section 1', 'Rule I-A'
     article_title TEXT,
     
     -- Content
-    full_text TEXT,           -- FULL article text (not chunked)
-    summary TEXT,             -- LLM-generated summary for semantic search
-    keywords TEXT[],          -- Extracted key terms
+    full_text TEXT NOT NULL,     -- FULL article text (not chunked)
+    summary TEXT,                -- LLM-generated summary
+    keywords TEXT[],             -- Extracted key terms
+    semantic_type VARCHAR(50),   -- decree, statute, rules, etc. (added via migration)
     
-    -- Vector embedding (of summary, not full text)
+    -- Format flags for smart processing
+    has_table BOOLEAN DEFAULT FALSE,
+    has_formula BOOLEAN DEFAULT FALSE,
+    has_list BOOLEAN DEFAULT FALSE,
+    
+    -- Vector embedding
+    -- IMPLEMENTATION DECISION: Embedding from full_text (not summary)
+    -- Rationale: Simpler pipeline, avoids summary quality dependency
+    -- Trade-off: Slightly slower semantic search vs better accuracy
     embedding vector(1536),
+    
+    -- Additional metadata stored as JSONB for flexibility
+    -- Includes original hierarchy structure (part/sections, rule/sections, etc.)
+    metadata JSONB DEFAULT '{}'::jsonb,
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -318,6 +501,8 @@ CREATE TABLE labor_law_chunks (
     section_id UUID REFERENCES labor_law_sections(id),
     chunk_index INT,
     chunk_text TEXT,
+    summary TEXT,
+    keywords TEXT[],
     embedding vector(1536),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -327,18 +512,39 @@ CREATE INDEX idx_sections_fts ON labor_law_sections
     USING GIN(to_tsvector('english', full_text || ' ' || article_title));
 CREATE INDEX idx_sections_article ON labor_law_sections(article_number);
 CREATE INDEX idx_sections_source ON labor_law_sections(source_id);
-CREATE INDEX idx_sections_embedding ON labor_law_sections 
-    USING ivfflat (embedding vector_cosine_ops);
+CREATE INDEX idx_sections_keywords ON labor_law_sections USING GIN (keywords);
+CREATE INDEX idx_sources_reference ON labor_law_sources(reference);
+
+-- Vector index: Use HNSW for better performance on current KB size
+-- Deployed via separate script: infra/supabase/create_hnsw_indexes.sql
+CREATE INDEX idx_sections_embedding_hnsw ON labor_law_sections 
+    USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64);
 ```
 
-**Key Improvements**:
+**Key Implementation Decisions**:
 
-1. **Full Text Preservation**: Entire articles stored intact, no fragmentation
-2. **Summary Embeddings**: Semantic search on LLM-generated summaries (better semantic representation than raw legal text)
-3. **Keyword Extraction**: For hybrid full-text + semantic search
-4. **Hierarchical Metadata**: Book/Title/Chapter structure for contextual retrieval
-5. **Conditional Chunking**: Only chunk articles >1000 words
-6. **Multiple Indexes**: Full-text search, article lookup, vector similarity
+1. **Embedding Source: Full Text (NOT Summary)**
+   - Original plan called for summary embeddings for better semantic representation
+   - **Decision**: Use `full_text` embeddings to simplify pipeline and avoid LLM dependency
+   - **Trade-off**: Accept slightly slower semantic search for higher accuracy and simpler maintenance
+   - **Rationale**: Summary quality varies; full text ensures comprehensive coverage
+
+2. **Flexible Hierarchy Structure**
+   - Original plan: Numeric types (`book_number INT`, `title_number INT`, `chapter_number INT`)
+   - **Actual**: Text types (`book VARCHAR`, `title_name VARCHAR`, `chapter VARCHAR`)
+   - **Rationale**: Labor law documents have inconsistent hierarchy (some use Books, others use Chapters, Articles, Rules)
+   - **Solution**: Store original hierarchy in `metadata JSONB`, use text fields for common access
+
+3. **Hierarchy Key Adaptation**
+   - Documents use different structures: `part`/`sections`, `chapter`/`sections`, `rule`/`sections`, `article`/`sections`
+   - All stored in `metadata JSONB` preserving original structure
+   - Extraction to columns happens for common fields only (`book`, `title_name`, `chapter`)
+
+4. **Summary Generation**
+   - Summaries generated via ChunkSummarizer (GPT-4o-mini) during ingestion
+   - Stored in `summary` column for potential future use (e.g., search on summaries, display in UI)
+   - Currently NOT used for embeddings (using full_text instead)
 
 ---
 
@@ -351,28 +557,72 @@ CREATE INDEX idx_sections_embedding ON labor_law_sections
 - ✅ Integration tests passing
 - ✅ Known limitations documented
 
-### Phase 1.1 (Before Frontend Integration - 1-2 days)
+### Phase 1.0.5 (Before Frontend Integration - 2-3 days)
 
-#### Day 1: Multi-Strategy Retrieval
-- [ ] Implement LLM query analysis module
-- [ ] Add PostgreSQL full-text search alongside vector search
-- [ ] Implement article number direct lookup
-- [ ] Create result merging and ranking algorithm
-- [ ] Test on 10+ broad queries
+#### Day 1: Multi-Strategy Retrieval Infrastructure
+- [ ] Implement query analysis module (`services/pipeline/query_analysis.py`)
+  - GPT-4o-mini for structured extraction
+  - JSON response parsing
+  - Parallel execution with embedding generation
+- [ ] Add PostgreSQL full-text search in `adapters/vectorstore/supabase_store.py`
+  - Implement keyword-based retrieval method
+  - Add article number direct lookup method
+  - Create result merging and ranking algorithm
+- [ ] Implement smart retrieval routing logic
+  - Skip semantic search when articles are explicitly mentioned
+  - Always run keyword search (fast, high precision)
+  - Parallel execution with asyncio.gather
 
-#### Day 2: Schema Migration & KB Enhancement
+#### Day 2: Database Optimization & Schema Migration
+- [ ] Create HNSW vector index for faster similarity search
+  - Drop old IVFFlat index
+  - Create HNSW index with optimized parameters
+  - Test performance improvement (target: <2s vs current 3-4s)
+- [ ] Implement connection pooling for Supabase
+  - Configure psycopg2 ThreadedConnectionPool
+  - Update all vector store methods to use pool
+  - Measure latency reduction
 - [ ] Create new schema with full-text + summary approach
-- [ ] Generate LLM summaries for existing 5 KB entries
-- [ ] Ingest 30-50 additional Labor Code articles with full text
-- [ ] Extract keywords for hybrid search
-- [ ] Migrate vector embeddings to summary-based approach
+  - `labor_law_sources` table
+  - `labor_law_sections` table with full_text + summary
+  - GIN index for full-text search
+  - Migrate existing 5 KB entries
 
-#### Day 3: LLM Verification & Testing
-- [ ] Implement two-step grounding (initial → verification)
-- [ ] Add confidence scoring based on source agreement
-- [ ] Test edge cases (contradictory sources, missing content)
-- [ ] Benchmark performance vs Phase 1.E baseline
+#### Day 3: LLM Integration & KB Enhancement
+- [ ] Implement direct rich-context grounding (`services/pipeline/grounding.py`)
+  - Single-step GPT-4 Turbo generation
+  - Streaming response support
+  - Natural citation integration in prompt
+  - Remove two-step verification code
+- [ ] Add streaming support to chat API
+  - Update `api/v1/routes_chat.py` for SSE (Server-Sent Events)
+  - Implement chunked response handling
+  - Frontend-friendly streaming format
+- [ ] Generate LLM summaries for KB entries
+  - Batch process existing 5 entries
+  - Ingest 25-45 additional Labor Code articles with priorities:
+    1. Working Conditions (hours, overtime, rest days)
+    2. Wages (minimum wage, 13th month, deductions)
+    3. Termination & Separation Pay
+    4. Employee Benefits (SSS, PhilHealth, Pag-IBIG)
+  - Extract keywords for each article
+  - Validate all citation URLs
+
+#### Day 4: Performance Optimization & Testing
+- [ ] Implement embedding cache (LRU cache, 1000 entries)
+- [ ] Add retrieval performance monitoring
+  - Log latency for each retrieval strategy
+  - Track cache hit/miss ratios
+  - Monitor query analysis performance
+- [ ] Benchmark vs Phase 1.E baseline
+  - Test 10+ broad queries
+  - Measure latency improvements
+  - Validate confidence scores >0.5
+  - Verify streaming UX improvement
 - [ ] Update integration tests for enhanced pipeline
+  - Test smart retrieval routing
+  - Validate streaming responses
+  - Test multi-strategy merging
 
 ---
 
@@ -381,46 +631,73 @@ CREATE INDEX idx_sections_embedding ON labor_law_sections
 ### Positive
 
 1. **Improved Retrieval Quality**
-   - Handles broad queries effectively
-   - Combines multiple retrieval strategies
+   - Handles broad queries effectively (5+ relevant citations vs current 1-3)
+   - Smart routing: skips slow semantic search when article is known
+   - Multiple retrieval strategies increase coverage
    - Higher precision and recall
 
 2. **Better Context Preservation**
-   - Full articles stored intact
+   - Full articles stored intact (no fragmentation)
    - Hierarchical navigation possible
    - Related sections easily retrievable
+   - Summary embeddings provide better semantic representation
 
 3. **Enhanced Answer Quality**
-   - LLM verification reduces hallucination
-   - Confidence scoring for transparency
-   - Better citation grounding
+   - Natural, conversational tone (GPT-4.1 vs mini models)
+   - Empathetic responses for sensitive labor law situations
+   - Better citation integration within narrative
+   - Comprehensive responses (1200-1500 tokens)
+   - Streaming provides immediate engagement
 
-4. **Scalability**
+4. **Significant Performance Improvement**
+   - **Average latency: 7-8s** (down from 12.4s = 40% faster)
+   - **Perceived latency: 2-3s** (time to first streamed token)
+   - Smart routing saves 2-3s on 40% of queries
+   - Parallel retrieval doesn't add latency
+   - HNSW index + connection pooling saves 1-2s
+
+5. **Cost Efficiency**
+   - **73% cheaper** than current GPT-4 only approach
+   - GPT-4o-mini for extraction: $0.001/query
+   - GPT-4 Turbo for grounding: $0.007/query
+   - Total: ~$0.008/query vs $0.03 current
+
+6. **Better User Experience**
+   - Streaming responses feel instantaneous
+   - Natural, human-like conversation
+   - Emotionally appropriate for labor law context
+   - Higher user trust and satisfaction
+
+7. **Scalability**
    - Hybrid approach handles growing KB
    - Multiple retrieval paths reduce single-point failure
-   - Extensible for future strategies
+   - Extensible for future strategies (e.g., case law, IRRs)
 
 ### Negative
 
 1. **Increased Complexity**
-   - More components to maintain
+   - More components to maintain (3 retrieval strategies)
    - Multi-strategy coordination overhead
-   - Higher development time
+   - Streaming adds complexity to API
+   - **Mitigation**: Modular adapters, clear separation of concerns
 
-2. **Performance Impact**
-   - LLM called 2x per query (analysis + verification)
-   - Multiple retrieval strategies increase latency
-   - **Mitigation**: Parallel retrieval, caching, async processing
-
-3. **Storage Overhead**
-   - Full text + summary + chunks = 3x storage
-   - Multiple indexes increase disk usage
-   - **Mitigation**: Selective chunking, compressed storage
-
-4. **Migration Cost**
+2. **Development Time**
    - Schema migration required
    - KB content re-ingestion needed
-   - **Effort**: ~1-2 days before Phase 1.1
+   - Streaming implementation in API
+   - **Effort**: 2-3 days (vs original 1-2 days)
+
+3. **Storage Overhead**
+   - Full text + summary + chunks = up to 3x storage
+   - Multiple indexes increase disk usage
+   - **Mitigation**: Selective chunking (only >1000 words), disk is cheap
+   - **Actual impact**: Minimal for 30-50 articles (~50MB total)
+
+4. **Streaming Complexity**
+   - Requires SSE (Server-Sent Events) support
+   - Frontend must handle chunked responses
+   - Error handling mid-stream
+   - **Mitigation**: Well-documented streaming protocol, graceful fallback
 
 ---
 
@@ -428,19 +705,34 @@ CREATE INDEX idx_sections_embedding ON labor_law_sections
 
 ### Alternative 1: Just Add More KB Content
 
-**Rejected Reason**: Doesn't solve chunking/retrieval strategy problems. More fragmented content = harder to retrieve relevant pieces.
+**Rejected Reason**: Doesn't solve chunking/retrieval strategy problems. More fragmented content = harder to retrieve relevant pieces. Doesn't address the 3-4s Supabase latency issue.
 
 ### Alternative 2: Increase Chunk Size to 500-1000 Words
 
-**Rejected Reason**: Larger chunks introduce noise, lower similarity scores, harder to cite specific passages.
+**Rejected Reason**: Larger chunks introduce noise, lower similarity scores, harder to cite specific passages. Doesn't improve personality/tone of responses.
 
 ### Alternative 3: Use Only LLM Knowledge (No RAG)
 
-**Rejected Reason**: High hallucination risk, no citation grounding, can't update with new laws/amendments.
+**Rejected Reason**: High hallucination risk, no citation grounding, can't update with new laws/amendments. Violates core requirement for authoritative legal information.
 
-### Alternative 4: Hybrid RAG (SELECTED)
+### Alternative 4: Two-Step Verification with GPT-4o-mini (Original ADR-002)
 
-**Selected Reason**: Combines strengths of keyword search, semantic search, direct lookup, and LLM verification while maintaining citation grounding.
+**Rejected Reason**: 
+- Mini models produce **robotic, terse responses** (150-200 tokens)
+- Inappropriate tone for emotionally charged labor law queries
+- Feels like "validating homework" rather than expert guidance
+- Doesn't leverage GPT-4's superior legal reasoning
+- User testing showed lower satisfaction vs conversational responses
+
+### Alternative 5: Hybrid RAG with Direct Rich-Context Grounding (SELECTED)
+
+**Selected Reason**: 
+- Combines strengths of keyword search, semantic search, direct lookup
+- Single-step GPT-4.1 grounding provides superior personality and tone
+- Streaming responses improve perceived performance dramatically
+- Smart routing optimizes latency (skip vector search when possible)
+- Maintains citation grounding while enhancing user experience
+- 40% faster than current approach with better quality
 
 ---
 
@@ -458,5 +750,10 @@ CREATE INDEX idx_sections_embedding ON labor_law_sections
 
 - This ADR was created based on real issues discovered during Phase 1.E integration testing
 - The proposed architecture is informed by current RAG best practices in legal/medical domains
-- Implementation timeline (1-2 days) is aggressive but achievable given modular codebase
+- **REVISED** (November 11, 2025): Removed two-step verification based on user testing feedback showing mini models produce robotic responses inappropriate for labor law context
+- Single-step GPT-4 Turbo grounding provides superior tone, personality, and legal reasoning
+- Streaming responses critical for perceived performance (2-3s to first token vs 7-8s total)
+- Smart retrieval routing (skip vector search for direct article queries) saves significant latency
+- HNSW index + connection pooling addresses Supabase 3-4s bottleneck
+- Implementation timeline: 2-3 days (achievable given modular codebase)
 - **Critical**: Must implement before frontend integration to avoid refactoring after frontend is built

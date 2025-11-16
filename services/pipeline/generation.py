@@ -140,7 +140,7 @@ class GenerationPipeline:
             
             # Stream from LLM
             chunk_count = 0
-            async for chunk in self.llm.stream(
+            async for chunk in self.llm.stream_generate(
                 messages=messages,
                 temperature=temp,
                 max_tokens=tokens,

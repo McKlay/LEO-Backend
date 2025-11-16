@@ -65,7 +65,11 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(..., description="OpenAI API key")
     openai_llm_model: str = Field(
         default="gpt-4.1",
-        description="OpenAI chat model"
+        description="OpenAI chat model for pipeline response generation"
+    )
+    openai_ingestion_model: str = Field(
+        default="gpt-4o",
+        description="OpenAI model for KB ingestion (chunking, analysis)"
     )
     openai_embedding_model: str = Field(
         default="text-embedding-3-small",
@@ -97,8 +101,8 @@ class Settings(BaseSettings):
     
     # Vector Store Settings
     vectorstore_table_name: str = Field(
-        default="labor_law_embeddings",
-        description="Vector store table name"
+        default="labor_law_sections",
+        description="Vector store table name (new schema)"
     )
     embedding_dimension: int = Field(
         default=1536,
@@ -179,6 +183,31 @@ class Settings(BaseSettings):
         description="Minimum confidence for intent-based filtering"
     )
     
+    # Query Analysis Settings
+    enable_query_analysis: bool = Field(
+        default=True,
+        description="Enable LLM-based query analysis"
+    )
+    enable_smart_clarification: bool = Field(
+        default=True,
+        description="Enable smart clarification detection for vague queries"
+    )
+    query_analysis_model: str = Field(
+        default="gpt-4o-mini",
+        description="LLM model for query analysis"
+    )
+    analysis_timeout: float = Field(
+        default=5.0,
+        gt=0.0,
+        description="Timeout for query analysis in seconds"
+    )
+    max_clarification_questions: int = Field(
+        default=4,
+        ge=1,
+        le=10,
+        description="Maximum number of clarification questions to generate"
+    )
+    
     # Chat Settings
     max_message_length: int = Field(
         default=2000,
@@ -210,6 +239,29 @@ class Settings(BaseSettings):
         default=3600,
         gt=0,
         description="Cache time-to-live in seconds"
+    )
+    enable_embedding_cache: bool = Field(
+        default=True,
+        description="Enable embedding caching to reduce API calls"
+    )
+    embedding_cache_size: int = Field(
+        default=1000,
+        gt=0,
+        description="Maximum number of embeddings to cache (LRU)"
+    )
+    enable_connection_pooling: bool = Field(
+        default=True,
+        description="Enable database connection pooling"
+    )
+    db_pool_min_connections: int = Field(
+        default=2,
+        gt=0,
+        description="Minimum database connections in pool"
+    )
+    db_pool_max_connections: int = Field(
+        default=10,
+        gt=0,
+        description="Maximum database connections in pool"
     )
     
     def get_cors_origins(self) -> list[str]:

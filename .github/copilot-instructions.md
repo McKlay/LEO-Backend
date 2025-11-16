@@ -9,11 +9,13 @@ to deliver a scalable, modular **RAG (retrieval-augmented generation)** pipeline
 
 ## Tech Stack
 
-- **FastAPI** – REST API and minimal WebSocket chat  
-- **Supabase Postgres + pgvector** – persistent, cloud-hosted embeddings and semantic search  
-- **OpenAI GPT-4.1** – grounded generation, strictly using retrieved citations  
-- **OpenAI text-embedding-3-small** – for embeddings (swappable via adapter)  
+- **FastAPI** – REST API with Server-Sent Events (SSE) for streaming chat  
+- **Supabase Postgres + pgvector** – persistent, cloud-hosted embeddings with HNSW indexes  
+- **OpenAI GPT-4 Turbo** – conversational grounding with streaming, natural citations  
+- **OpenAI GPT-4o-mini** – fast query analysis with smart clarification detection
+- **OpenAI text-embedding-3-small** – for embeddings (swappable via adapter) with LRU cache  
 - **LangChain** – multi-turn chat memory (conversation history only)  
+- **PostgreSQL Full-Text Search** – keyword-based retrieval with GIN indexes
 - **Google Cloud Translation API v3** – conditional fallback for Cebuano/low-confidence detection  
 - **Google Maps Places API** *(optional)* – for legal aid referrals  
 - **DistilBERT** – intent classifier (confidence-gated, improves retrieval focus)  
@@ -23,9 +25,12 @@ to deliver a scalable, modular **RAG (retrieval-augmented generation)** pipeline
 
 ## Features
 
-- Multi-turn chat with memory and clarification for vague queries  
+- Multi-turn chat with memory and **smart LLM-based clarification** for vague queries  
+- **Streaming responses** via Server-Sent Events (SSE) for improved perceived performance
+- **Multi-strategy retrieval**: keyword search + semantic search + direct article lookup
 - Multilingual input normalization and output (English, Filipino, Cebuano)  
 - Citation-driven answers with strict context grounding  
+- **Context-aware conversation handling** with pronoun resolution and follow-up detection
 - Optional location-based legal aid referrals  
 - Modular adapters for easy provider/model swaps  
 
@@ -124,28 +129,30 @@ leo-backend/
 │  └─ middleware/
 │     ├─ request_id.py
 │     └─ cors.py
-├─ services/                      # “Use-cases” (pure business flow, no HTTP or SDK specifics)
+├─ services/                      # "Use-cases" (pure business flow, no HTTP or SDK specifics)
 │  ├─ pipeline/
 │  │  ├─ conversation.py           # manages chat history, memory state
+│  │  ├─ query_analysis.py         # GPT-4o-mini: smart clarification + concept extraction
 │  │  ├─ nlp_ingress.py            # lang detect → (optional) translate → (optional) intent
-│  │  ├─ retrieval.py              # build query, filters from intent; call vector store
-│  │  ├─ grounding.py              # construct prompt w/ snippets + citation schema
-│  │  ├─ generation.py             # call LLM (stream/non-stream)
+│  │  ├─ retrieval.py              # multi-strategy: keyword + semantic + direct article lookup
+│  │  ├─ grounding.py              # construct rich-context prompt for GPT-4.1 streaming
+│  │  ├─ generation.py             # call LLM with streaming support (SSE)
 │  │  └─ postprocess.py            # disclaimers, linkify, redaction
-│  ├─ maps_referral.py            # high-level “find nearest legal aid”
+│  ├─ chat_orchestrator.py        # coordinates full RAG pipeline with smart clarification
+│  ├─ maps_referral.py            # high-level "find nearest legal aid"
 │  ├─ moderation.py               # policy guardrails + model moderation result mapping
 │  └─ __init__.py
 ├─ adapters/                      # All external I/O; each has base interface + impl
 │  ├─ llm/
 │  │  ├─ base.py                  # interface: generate(), stream()
-│  │  └─ openai_llm.py
+│  │  └─ openai_llm.py            # GPT-4.1 with streaming support
 │  ├─ embeddings/
 │  │  ├─ base.py                  # embed_text(), embed_batch()
-│  │  └─ openai_embed.py
+│  │  └─ openai_embed.py          # text-embedding-3-small with LRU cache
 │  ├─ vectorstore/
 │  │  ├─ base.py                  # upsert(), query(), delete()
-│  │  └─ supabase_store.py
-│  │  └─ memory/
+│  │  └─ supabase_store.py        # multi-strategy: keyword + semantic + direct lookup
+│  │  └─ memory/                  # HNSW index, connection pooling, embedding cache
 │  │     ├─ base.py              # abstract MemoryStore interface (get, append)
 │  │     ├─ redis_memory.py      # optional runtime cache
 │  │     └─ langchain_memory.py  # wrapper around LangChain ConversationBuffer
@@ -168,8 +175,8 @@ leo-backend/
 │  │  └─ taxonomy.py              # Table-1 categories, id↔label map
 │  └─ heuristics.py               # quick domain/out-of-scope checks
 ├─ retrieval/
-│  ├─ chunking.py                 # KB splitting rules (100–300w), IDs
-│  └─ ranking.py                  # optional reranker hook (swap later)
+│  ├─ chunking.py                 # KB splitting rules (conditional: only for >1000 word articles)
+│  └─ ranking.py                  # result merging, deduplication, and ranking algorithm
 ├─ kb/
 │  ├─ docs/                       # raw legal texts/handbooks
 │  ├─ ingest/
@@ -189,7 +196,7 @@ leo-backend/
 │  ├─ Dockerfile
 │  ├─ cloudrun.yaml               # service config (CPU=OnDemand, concurrency, min instances)
 │  ├─ supabase/
-│  │  ├─ schema.sql               # tables, pgvector ext, RLS
+│  │  ├─ schema.sql               # tables with HNSW indexes, GIN for FTS, pgvector ext, RLS
 │  │  └─ seed.sql                 # optional
 │  └─ terraform/
 │     ├─ modules/

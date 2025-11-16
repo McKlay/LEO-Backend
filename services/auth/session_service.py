@@ -3,6 +3,7 @@ Session management service using Supabase anonymous authentication.
 
 Handles session creation, token generation, and session validation.
 """
+import asyncio
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
@@ -39,90 +40,135 @@ class SessionService:
     async def create_anonymous_session(
         self,
         language: Optional[str] = "en",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        max_retries: int = 3,
+        initial_delay: float = 1.0
     ) -> Dict[str, Any]:
         """
-        Create a new anonymous session using Supabase.
+        Create a new anonymous session using Supabase with retry logic.
+        
+        Implements exponential backoff for rate limit handling (429 errors).
         
         Args:
             language: User's preferred language (en, fil, ceb)
             metadata: Optional session metadata
+            max_retries: Maximum number of retry attempts (default: 3)
+            initial_delay: Initial delay in seconds before first retry (default: 1.0)
             
         Returns:
             Dict containing sessionId, token, and expiry information
             
         Raises:
-            AppError: If session creation fails
+            AppError: If session creation fails after all retries
         """
-        try:
-            # Sign in anonymously with Supabase
-            auth_response = self.supabase.auth.sign_in_anonymously()
-            
-            if not auth_response or not auth_response.user:
-                logger.error("Supabase anonymous sign-in failed: No user returned")
-                raise AppError(
-                    message="Failed to create anonymous session",
-                    error_code="SESSION_CREATION_FAILED",
-                    status_code=500
-                )
-            
-            user = auth_response.user
-            session = auth_response.session
-            
-            # Calculate token expiry
-            expires_at = datetime.utcnow() + timedelta(minutes=self.token_expiry_minutes)
-            
-            # Create JWT payload with session information
-            jwt_payload = {
-                "sub": user.id,  # Subject (user ID)
-                "session_id": session.access_token[:32] if session else user.id,  # Session identifier
-                "language": language,
-                "exp": expires_at,
-                "iat": datetime.utcnow(),
-                "type": "anonymous",
-                "metadata": metadata or {}
-            }
-            
-            # Generate our own JWT token for API authentication
-            access_token = jwt.encode(
-                jwt_payload,
-                self.jwt_secret,
-                algorithm=self.jwt_algorithm
-            )
-            
-            logger.info(
-                "Anonymous session created",
-                extra={
-                    "user_id": user.id,
+        last_error = None
+        
+        for attempt in range(max_retries + 1):
+            try:
+                # Sign in anonymously with Supabase
+                auth_response = self.supabase.auth.sign_in_anonymously()
+                
+                if not auth_response or not auth_response.user:
+                    logger.error("Supabase anonymous sign-in failed: No user returned")
+                    raise AppError(
+                        message="Failed to create anonymous session",
+                        error_code="SESSION_CREATION_FAILED",
+                        status_code=500
+                    )
+                
+                user = auth_response.user
+                session = auth_response.session
+                
+                # Calculate token expiry
+                expires_at = datetime.utcnow() + timedelta(minutes=self.token_expiry_minutes)
+                
+                # Create JWT payload with session information
+                jwt_payload = {
+                    "sub": user.id,  # Subject (user ID)
+                    "session_id": session.access_token[:32] if session else user.id,  # Session identifier
                     "language": language,
-                    "expires_at": expires_at.isoformat()
+                    "exp": expires_at,
+                    "iat": datetime.utcnow(),
+                    "type": "anonymous",
+                    "metadata": metadata or {}
                 }
-            )
-            
-            return {
-                "sessionId": user.id,
-                "token": access_token,
-                "expiresAt": expires_at.isoformat(),
-                "expiresIn": self.token_expiry_minutes * 60,  # In seconds
-                "language": language,
-                "createdAt": datetime.utcnow().isoformat()
+                
+                # Generate our own JWT token for API authentication
+                access_token = jwt.encode(
+                    jwt_payload,
+                    self.jwt_secret,
+                    algorithm=self.jwt_algorithm
+                )
+                
+                logger.info(
+                    "Anonymous session created",
+                    extra={
+                        "user_id": user.id,
+                        "language": language,
+                        "expires_at": expires_at.isoformat(),
+                        "attempt": attempt + 1
+                    }
+                )
+                
+                return {
+                    "sessionId": user.id,
+                    "token": access_token,
+                    "expiresAt": expires_at.isoformat(),
+                    "expiresIn": self.token_expiry_minutes * 60,  # In seconds
+                    "language": language,
+                    "createdAt": datetime.utcnow().isoformat()
+                }
+                
+            except Exception as e:
+                last_error = e
+                error_msg = str(e)
+                
+                # Check if it's a rate limit error (429)
+                is_rate_limit = (
+                    "rate limit" in error_msg.lower() or
+                    "429" in error_msg or
+                    "too many requests" in error_msg.lower()
+                )
+                
+                if is_rate_limit and attempt < max_retries:
+                    # Calculate delay with exponential backoff
+                    delay = initial_delay * (2 ** attempt)
+                    logger.warning(
+                        f"Rate limit hit, retrying in {delay:.1f}s (attempt {attempt + 1}/{max_retries})",
+                        extra={
+                            "attempt": attempt + 1,
+                            "max_retries": max_retries,
+                            "delay": delay,
+                            "error": error_msg
+                        }
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                
+                # If not a rate limit error or out of retries, raise
+                logger.error(
+                    f"Session creation error: {error_msg}",
+                    extra={
+                        "attempt": attempt + 1,
+                        "is_rate_limit": is_rate_limit,
+                        "error_type": type(e).__name__
+                    },
+                    exc_info=True
+                )
+                
+                if attempt >= max_retries:
+                    break
+                    
+        # All retries exhausted
+        raise AppError(
+            message="Failed to create session after multiple attempts",
+            error_code="SESSION_CREATION_FAILED",
+            status_code=500,
+            details={
+                "error": str(last_error),
+                "attempts": max_retries + 1
             }
-            
-        except JWTError as e:
-            logger.error(f"JWT encoding error: {str(e)}")
-            raise AppError(
-                message="Failed to generate authentication token",
-                error_code="TOKEN_GENERATION_FAILED",
-                status_code=500
-            )
-        except Exception as e:
-            logger.error(f"Session creation error: {str(e)}", exc_info=True)
-            raise AppError(
-                message="Failed to create session",
-                error_code="SESSION_CREATION_FAILED",
-                status_code=500,
-                details={"error": str(e)}
-            )
+        )
     
     async def validate_token(self, token: str) -> Dict[str, Any]:
         """

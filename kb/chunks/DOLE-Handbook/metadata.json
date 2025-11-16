@@ -1,0 +1,12 @@
+{
+  "source": "DOLE Handbook on Workers' Statutory Monetary Benefits",
+  "reference": "DOLE Handbook 2023",
+  "short_name": "Workers' Benefits Handbook",
+  "doc_type": "handbook",
+  "year": "2023",
+  "url": "https://bwc.dole.gov.ph",
+  "total_chunks": 0,
+  "chunking_strategy": "manual",
+  "last_updated": "2025-11-16",
+  "structure_note": "Comprehensive handbook with numbered sections (1-15). Chunk by benefit type: minimum wage (1), overtime pay (2), holiday pay (3), service incentive leave (4), 13th month pay (5), rest day (6), night shift differential (7), SSS/PhilHealth/Pag-IBIG (8-10), maternity/paternity (11-12), retirement (13), termination (14), compliance guide (15)"
+}
