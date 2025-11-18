@@ -1,7 +1,7 @@
 ---
 chunk_id: "PD-442-010"
 title: "Articles 23-24 - Board Composition and Appointment"
-article_number: "Article 23"
+article_number: pd442_articles23_24_board_composition
 semantic_type: statute
 hierarchy:
   book: "Book One"
@@ -16,6 +16,9 @@ keywords:
   - "Central Bank"
   - "Philippine Coast Guard"
   - "Maritime Industry Authority"
+has_table: false
+has_formula: false
+has_list: false
 ---
 
 **Article 23. Composition of the Boards.**

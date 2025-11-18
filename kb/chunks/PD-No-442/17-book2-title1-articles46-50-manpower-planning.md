@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title1-articles46-50-manpower-planning
 title: Book Two - Manpower Planning and Skills Development (Articles 46-50)
-article_number: Articles 46-50
+article_number: pd442_articles46_50_manpower_planning
 semantic_type: statute
 hierarchy:
   book: Book Two

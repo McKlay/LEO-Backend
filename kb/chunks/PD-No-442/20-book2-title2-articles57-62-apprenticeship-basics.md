@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title2-articles57-62-apprenticeship-basics
 title: Book Two - Apprenticeship Program Basics (Articles 57-62)
-article_number: Articles 57-62
+article_number: pd442_articles57_62_apprenticeship_basics
 semantic_type: statute
 hierarchy:
   book: Book Two

@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title7a-articles260-262b-grievance-voluntary-arbitration
 title: Book Five - Grievance Machinery and Voluntary Arbitration (Articles 260-262-B)
-article_number: Articles 260-262-B
+article_number: pd442_articles260_262b_grievance
 semantic_type: statute
 hierarchy:
   book: Book Five

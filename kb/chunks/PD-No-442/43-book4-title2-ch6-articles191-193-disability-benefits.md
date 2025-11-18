@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch6-articles191-193-disability-benefits
 title: Book Four - Disability Benefits (Articles 191-193)
-article_number: Articles 191-193
+article_number: pd442_articles191_193_disability
 semantic_type: statute
 hierarchy:
   book: Book Four

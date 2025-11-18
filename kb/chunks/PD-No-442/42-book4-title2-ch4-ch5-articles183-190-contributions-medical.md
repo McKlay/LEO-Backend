@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch4-ch5-articles183-190-contributions-medical
 title: Book Four - Contributions and Medical Benefits (Articles 183-190)
-article_number: Articles 183-190
+article_number: pd442_articles183_190_contributions
 semantic_type: statute
 hierarchy:
   book: Book Four

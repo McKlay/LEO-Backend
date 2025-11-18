@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title6-articles247-249-unfair-labor-practices
 title: Book Five - Unfair Labor Practices (Articles 247-249)
-article_number: Articles 247-249
+article_number: pd442_articles247_249_unfair_practices
 semantic_type: statute
 hierarchy:
   book: Book Five

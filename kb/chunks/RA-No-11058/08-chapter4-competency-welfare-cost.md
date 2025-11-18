@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-08
 title: Competency Certification, Welfare Facilities, and Program Costs
-article_number: RA-11058-08
+article_number: ra11058_chapter4_competency_welfare_cost
 semantic_type: statute
 hierarchy:
   chapter: "Chapter IV"

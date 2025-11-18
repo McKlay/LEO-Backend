@@ -1,7 +1,7 @@
 ---
 chunk_id: pd442_book1_article14_employment_promotion
-title: Article 14 - Employment Promotion Powers
-article_number: Article 14
+title: Article 14 - Employment Promotion
+article_number: pd442_article14_employment_promotion
 semantic_type: statute
 hierarchy:
   book: Book One

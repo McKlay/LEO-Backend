@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title4-chapter3-title5-articles242-246-union-rights-coverage
 title: Book Five - Union Rights and Coverage (Articles 242-246)
-article_number: Articles 242-246
+article_number: pd442_articles242_246_union_rights
 semantic_type: statute
 hierarchy:
   book: Book Five

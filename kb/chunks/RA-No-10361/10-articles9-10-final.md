@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-10
 title: Penal Provisions and Final Provisions
-article_number: RA-10361-10
+article_number: ra10361_articles9_10_final
 semantic_type: statute
 hierarchy:
   article: "Articles IX-X"

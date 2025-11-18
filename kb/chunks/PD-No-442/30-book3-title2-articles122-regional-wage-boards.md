@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-article122-regional-wage-boards
 title: Book Three - Regional Wage Boards (Article 122)
-article_number: Article 122
+article_number: pd442_article122_wage_boards
 semantic_type: statute
 hierarchy:
   book: Book Three

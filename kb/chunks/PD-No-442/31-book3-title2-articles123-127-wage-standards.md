@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles123-127-wage-standards
 title: Book Three - Wage Orders and Standards (Articles 123-127)
-article_number: Articles 123-127
+article_number: pd442_articles123_127_wage_standards
 semantic_type: statute
 hierarchy:
   book: Book Three

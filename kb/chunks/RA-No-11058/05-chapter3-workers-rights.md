@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-05
 title: Workers' Rights (Refuse Unsafe Work, Report Accidents, PPE, Signage, Equipment, Information)
-article_number: RA-11058-05
+article_number: ra11058_chapter3_workers_rights
 semantic_type: statute
 hierarchy:
   chapter: "Chapter III"

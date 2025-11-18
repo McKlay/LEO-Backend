@@ -1,7 +1,7 @@
 ---
 chunk_id: book1-chapter3-articles37-39-miscellaneous-provisions
 title: Chapter 3 - Miscellaneous Provisions (Articles 37-39)
-article_number: Articles 37-39
+article_number: pd442_articles37_39_miscellaneous
 semantic_type: statute
 hierarchy:
   book: Book One

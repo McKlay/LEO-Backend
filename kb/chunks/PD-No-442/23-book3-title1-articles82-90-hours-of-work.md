@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title1-articles82-90-hours-of-work
 title: Book Three - Hours of Work and Overtime (Articles 82-90)
-article_number: Articles 82-90
+article_number: pd442_articles82_90_hours_work
 semantic_type: statute
 hierarchy:
   book: Book Three

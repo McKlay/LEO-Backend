@@ -1,7 +1,7 @@
 ---
 chunk_id: pd442_book1_article13_definitions
 title: Article 13 - Definitions (Recruitment and Placement)
-article_number: Article 13
+article_number: pd442_article13_definitions
 semantic_type: statute
 hierarchy:
   book: Book One

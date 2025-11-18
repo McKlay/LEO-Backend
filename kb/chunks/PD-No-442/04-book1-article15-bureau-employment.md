@@ -1,7 +1,7 @@
 ---
 chunk_id: pd442_book1_article15_bureau_employment
 title: Article 15 - Bureau of Employment Services
-article_number: Article 15
+article_number: pd442_article15_bureau_employment
 semantic_type: statute
 hierarchy:
   book: Book One

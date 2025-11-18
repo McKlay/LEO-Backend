@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles128-129-wage-administration
 title: Book Three - Wage Administration and Enforcement (Articles 128-129)
-article_number: Articles 128-129
+article_number: pd442_articles128_129_wage_admin
 semantic_type: statute
 hierarchy:
   book: Book Three

@@ -1,7 +1,7 @@
 ---
 chunk_id: pd442_book1_articles16-18_overseas_employment
 title: Articles 16-18 - Private Recruitment and Overseas Employment Board
-article_number: Articles 16-18
+article_number: pd442_articles16_18_overseas_employment
 semantic_type: statute
 hierarchy:
   book: Book One

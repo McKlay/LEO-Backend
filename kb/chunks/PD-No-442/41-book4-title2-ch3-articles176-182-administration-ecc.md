@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch3-articles176-182-administration-ecc
 title: Book Four - Employees' Compensation Commission Administration (Articles 176-182)
-article_number: Articles 176-182
+article_number: pd442_articles176_182_ecc_admin
 semantic_type: statute
 hierarchy:
   book: Book Four

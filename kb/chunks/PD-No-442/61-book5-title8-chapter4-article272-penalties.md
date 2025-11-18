@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title8-chapter4-article272-penalties
 title: Book Five - Penalties for Strike/Lockout Violations (Article 272)
-article_number: Article 272
+article_number: pd442_article272_penalties
 semantic_type: statute
 hierarchy:
   book: Book Five

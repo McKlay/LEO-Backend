@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-titles3-4-articles209-210-medicare-education
 title: Book Four - Medicare and Adult Education (Articles 209-210)
-article_number: Articles 209-210
+article_number: pd442_articles209_210_medicare
 semantic_type: statute
 hierarchy:
   book: Book Four

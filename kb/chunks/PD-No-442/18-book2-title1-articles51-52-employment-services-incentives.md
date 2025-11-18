@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title1-articles51-52-employment-services-incentives
 title: Book Two - Employment Services and Incentives (Articles 51-52)
-article_number: Articles 51-52
+article_number: pd442_articles51_52_employment_incentives
 semantic_type: statute
 hierarchy:
   book: Book Two

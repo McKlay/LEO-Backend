@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-07
 title: Employment Terms and Conditions - Leave and Social Benefits
-article_number: RA-10361-07
+article_number: ra10361_article4_benefits
 semantic_type: statute
 hierarchy:
   article: "Article IV"

@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title1-articles53-56-council-secretariat
 title: Book Two - Council Secretariat and Regional Offices (Articles 53-56)
-article_number: Articles 53-56
+article_number: pd442_articles53_56_council
 semantic_type: statute
 hierarchy:
   book: Book Two

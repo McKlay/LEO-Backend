@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title8-chapter1-articles264-266-prohibited-acts
 title: Book Five - Prohibited Strike/Lockout Activities (Articles 264-266)
-article_number: Articles 264-266
+article_number: pd442_articles264_266_prohibited_acts
 semantic_type: statute
 hierarchy:
   book: Book Five

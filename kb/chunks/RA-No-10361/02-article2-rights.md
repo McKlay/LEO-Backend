@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-02
 title: Rights and Privileges of Domestic Workers
-article_number: RA-10361-02
+article_number: ra10361_article2_rights
 semantic_type: statute
 hierarchy:
   article: "Article II"

@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-01
 title: Preamble and General Provisions
-article_number: RA-10361-01
+article_number: ra10361_preamble_article1
 semantic_type: statute
 hierarchy:
   article: "Preamble and Article I"

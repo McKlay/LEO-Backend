@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title8-chapter2-3-articles267-271-assistance-foreign-activities
 title: Book Five - Assistance to Labor and Foreign Activities (Articles 267-271)
-article_number: Articles 267-271
+article_number: pd442_articles267_271_assistance
 semantic_type: statute
 hierarchy:
   book: Book Five

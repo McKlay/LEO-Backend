@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-05
 title: Employment Terms and Conditions - Work Hours and Duties
-article_number: RA-10361-05
+article_number: ra10361_article4_work_conditions
 semantic_type: statute
 hierarchy:
   article: "Article IV"

@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles120-121-wage-commission
 title: Book Three - National Wages and Productivity Commission (Articles 120-121)
-article_number: Articles 120-121
+article_number: pd442_articles120_121_wage_commission
 semantic_type: statute
 hierarchy:
   book: Book Three

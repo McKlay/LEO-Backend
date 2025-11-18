@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title1-articles91-96-weekly-rest-holidays
 title: Book Three - Weekly Rest and Holidays (Articles 91-96)
-article_number: Articles 91-96
+article_number: pd442_articles91_96_rest_holidays
 semantic_type: statute
 hierarchy:
   book: Book Three

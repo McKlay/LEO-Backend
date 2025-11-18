@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles106-111-contractor-liability
 title: Book Three - Contractor Liability and Worker Protection (Articles 106-111)
-article_number: Articles 106-111
+article_number: pd442_articles106_111_contractor_liability
 semantic_type: statute
 hierarchy:
   book: Book Three

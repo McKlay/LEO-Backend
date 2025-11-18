@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch9-articles205-208-records-penal
 title: Book Four - Records, Reports and Penal Provisions (Articles 205-208A)
-article_number: Articles 205-208A
+article_number: pd442_articles205_208a_records_penal
 semantic_type: statute
 hierarchy:
   book: Book Four

@@ -1,7 +1,7 @@
 ---
 chunk_id: book6-title1-articles278-286-termination-employment
 title: Book Six - Termination of Employment (Articles 278-286)
-article_number: Articles 278-286
+article_number: pd442_articles278_286_termination
 semantic_type: statute
 hierarchy:
   book: Book Six

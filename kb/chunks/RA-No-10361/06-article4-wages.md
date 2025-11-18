@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-06
 title: Employment Terms and Conditions - Wages and Payment
-article_number: RA-10361-06
+article_number: ra10361_article4_wages
 semantic_type: statute
 hierarchy:
   article: "Article IV"

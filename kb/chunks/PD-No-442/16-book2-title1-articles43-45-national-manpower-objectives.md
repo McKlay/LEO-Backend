@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title1-articles43-45-national-manpower-objectives
 title: Book Two - National Manpower Development (Articles 43-45)
-article_number: Articles 43-45
+article_number: pd442_articles43_45_manpower_objectives
 semantic_type: statute
 hierarchy:
   book: Book Two

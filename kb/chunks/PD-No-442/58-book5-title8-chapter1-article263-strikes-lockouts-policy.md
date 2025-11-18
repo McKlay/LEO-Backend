@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title8-chapter1-article263-strikes-lockouts-policy
 title: Book Five - Strikes, Picketing and Lockouts Policy and Procedures (Article 263)
-article_number: Article 263
+article_number: pd442_article263_strikes_policy
 semantic_type: statute
 hierarchy:
   book: Book Five

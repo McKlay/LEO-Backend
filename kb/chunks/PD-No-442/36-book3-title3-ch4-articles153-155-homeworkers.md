@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title3-ch4-articles153-155-homeworkers
 title: Book Three - Employment of Homeworkers (Articles 153-155)
-article_number: Articles 153-155
+article_number: pd442_articles153_155_homeworkers
 semantic_type: statute
 hierarchy:
   book: Book Three

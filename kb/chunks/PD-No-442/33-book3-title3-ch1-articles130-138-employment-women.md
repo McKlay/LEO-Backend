@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title3-ch1-articles130-138-employment-women
 title: Book Three - Employment of Women (Articles 130-138)
-article_number: Articles 130-138
+article_number: pd442_articles130_138_employment_women
 semantic_type: statute
 hierarchy:
   book: Book Three

@@ -1,7 +1,7 @@
 ---
 chunk_id: covid_protocols_testing_compliance
 title: DTI-DOLE COVID-19 Guidelines - Testing, Vulnerable Groups, and Compliance
-article_number: covid_guidelines_part3
+article_number: covid19workplaceguidelines_part3
 semantic_type: guidelines
 hierarchy:
   topic: Testing, Special Protections, and Compliance

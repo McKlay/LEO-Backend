@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles102-105-payment-mechanics
 title: Book Three - Payment Mechanics (Articles 102-105)
-article_number: Articles 102-105
+article_number: pd442_articles102_105_wage_payment
 semantic_type: statute
 hierarchy:
   book: Book Three

@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch7-ch8-articles194-204-death-benefits
 title: Book Four - Death Benefits and Common Provisions (Articles 194-204)
-article_number: Articles 194-204
+article_number: pd442_articles194_204_death_benefits
 semantic_type: statute
 hierarchy:
   book: Book Four

@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-08
 title: Post Employment - Termination of Service
-article_number: RA-10361-08
+article_number: ra10361_article5_termination
 semantic_type: statute
 hierarchy:
   article: "Article V"

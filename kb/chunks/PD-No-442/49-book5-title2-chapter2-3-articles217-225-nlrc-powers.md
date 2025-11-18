@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title2-chapter2-articles217-225-nlrc-powers
 title: Book Five - NLRC Powers and Duties (Articles 217-225)
-article_number: Articles 217-225
+article_number: pd442_articles217_225_nlrc_powers
 semantic_type: statute
 hierarchy:
   book: Book Five

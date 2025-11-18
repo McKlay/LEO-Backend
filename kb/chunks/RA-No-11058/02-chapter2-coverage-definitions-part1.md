@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-02
 title: Coverage and Definitions (Part 1)
-article_number: RA-11058-02
+article_number: ra11058_chapter2_coverage_definitions_part1
 semantic_type: statute
 hierarchy:
   chapter: "Chapter II"

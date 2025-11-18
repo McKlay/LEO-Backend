@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-09
 title: Private Employment Agencies, Disputes, and Special Provisions
-article_number: RA-10361-09
+article_number: ra10361_articles6_8_agencies_disputes
 semantic_type: statute
 hierarchy:
   article: "Articles VI-VIII"

@@ -1,7 +1,7 @@
 ---
 chunk_id: "PD-442-007"
 title: "Article 19 - Office of Emigrant Affairs"
-article_number: "Article 19"
+article_number: pd442_article19_emigrant_affairs
 semantic_type: statute
 hierarchy:
   book: "Book One"
@@ -15,6 +15,9 @@ keywords:
   - "re-integration"
   - "emigrant welfare"
   - "data bank"
+has_table: false
+has_formula: false
+has_list: false
 ---
 
 # Article 19. Office of Emigrant Affairs

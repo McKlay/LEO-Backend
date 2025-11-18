@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles97-101-wages-definitions
 title: "Book Three - Wages: Definitions and Minimum Wage (Articles 97-101)"
-article_number: Articles 97-101
+article_number: pd442_articles97_101_wage_definitions
 semantic_type: statute
 hierarchy:
   book: Book Three

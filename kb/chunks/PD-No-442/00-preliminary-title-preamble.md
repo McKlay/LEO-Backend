@@ -1,7 +1,7 @@
 ---
 chunk_id: pd442_00_preliminary_title
 title: Presidential Decree No. 442 - Preliminary Title and Tenant Emancipation
-article_number: PD 442
+article_number: pd442_preliminary_title
 semantic_type: decree
 hierarchy:
   part: Preliminary Title

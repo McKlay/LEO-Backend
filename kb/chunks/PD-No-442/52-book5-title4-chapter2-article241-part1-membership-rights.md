@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title4-chapter2-article241-part1-membership-rights
 title: Book Five - Rights and Conditions of Union Membership Part 1 (Article 241 a-g)
-article_number: Article 241
+article_number: pd442_article241_part1_membership
 semantic_type: statute
 hierarchy:
   book: Book Five

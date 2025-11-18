@@ -1,7 +1,7 @@
 ---
 chunk_id: pd442_book1_article12_objectives
 title: Article 12 - Statement of Objectives (Pre-Employment)
-article_number: Article 12
+article_number: pd442_article12_objectives
 semantic_type: statute
 hierarchy:
   book: Book One

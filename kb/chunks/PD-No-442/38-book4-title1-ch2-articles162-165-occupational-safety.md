@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title1-ch2-articles162-165-occupational-safety
 title: Book Four - Occupational Health and Safety (Articles 162-165)
-article_number: Articles 162-165
+article_number: pd442_articles162_165_occupational_safety
 semantic_type: statute
 hierarchy:
   book: Book Four

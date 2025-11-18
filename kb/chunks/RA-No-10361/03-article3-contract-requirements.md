@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-03
 title: Pre-Employment - Employment Contract and Requirements
-article_number: RA-10361-03
+article_number: ra10361_article3_contract_requirements
 semantic_type: statute
 hierarchy:
   article: "Article III"

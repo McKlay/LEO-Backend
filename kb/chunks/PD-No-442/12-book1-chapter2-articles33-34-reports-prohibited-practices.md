@@ -1,7 +1,7 @@
 ---
 chunk_id: book1-chapter2-articles33-34-reports-prohibited-practices
 title: Chapter 2 - Employment Reports and Prohibited Practices (Articles 33-34)
-article_number: Articles 33-34
+article_number: pd442_articles33_34_reports_prohibited
 semantic_type: statute
 hierarchy:
   book: Book One

@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title2-articles112-119-wage-prohibitions
 title: Book Three - Prohibitions Regarding Wages (Articles 112-119)
-article_number: Articles 112-119
+article_number: pd442_articles112_119_wage_prohibitions
 semantic_type: statute
 hierarchy:
   book: Book Three

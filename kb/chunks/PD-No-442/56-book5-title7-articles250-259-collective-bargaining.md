@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title7-articles250-259-collective-bargaining
 title: Book Five - Collective Bargaining and Administration (Articles 250-259)
-article_number: Articles 250-259
+article_number: pd442_articles250_259_collective_bargaining
 semantic_type: statute
 hierarchy:
   book: Book Five

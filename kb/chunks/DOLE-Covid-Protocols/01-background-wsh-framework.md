@@ -1,7 +1,7 @@
 ---
 chunk_id: covid_protocols_background_wsh_framework
 title: DTI-DOLE COVID-19 Guidelines - Background and Workplace Safety Framework
-article_number: covid_guidelines_part1
+article_number: covid19workplaceguidelines_part1
 semantic_type: guidelines
 hierarchy:
   topic: Workplace Prevention and Control Framework

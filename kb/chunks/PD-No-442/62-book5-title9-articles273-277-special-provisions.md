@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title9-articles273-277-special-provisions
 title: Book Five - Special Provisions (Articles 273-277)
-article_number: Articles 273-277
+article_number: pd442_articles273_277_special_provisions
 semantic_type: statute
 hierarchy:
   book: Book Five

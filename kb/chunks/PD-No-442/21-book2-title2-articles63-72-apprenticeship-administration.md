@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title2-articles63-72-apprenticeship-administration
 title: Book Two - Apprenticeship Administration (Articles 63-72)
-article_number: Articles 63-72
+article_number: pd442_articles63_72_apprenticeship_admin
 semantic_type: statute
 hierarchy:
   book: Book Two

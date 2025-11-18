@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title4-chapter1-articles234-240-union-registration
 title: Book Five - Labor Organizations Registration and Cancellation (Articles 234-240)
-article_number: Articles 234-240
+article_number: pd442_articles234_240_union_registration
 semantic_type: statute
 hierarchy:
   book: Book Five

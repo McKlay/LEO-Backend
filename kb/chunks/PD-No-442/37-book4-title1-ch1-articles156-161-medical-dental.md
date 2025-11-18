@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title1-ch1-articles156-161-medical-dental
 title: Book Four - Medical and Dental Services (Articles 156-161)
-article_number: Articles 156-161
+article_number: pd442_articles156_161_medical_dental
 semantic_type: statute
 hierarchy:
   book: Book Four

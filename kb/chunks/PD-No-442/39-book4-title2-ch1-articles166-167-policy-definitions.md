@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch1-articles166-167-policy-definitions
 title: Book Four - Employees' Compensation Policy and Definitions (Articles 166-167)
-article_number: Articles 166-167
+article_number: pd442_articles166_167_policy_definitions
 semantic_type: statute
 hierarchy:
   book: Book Four

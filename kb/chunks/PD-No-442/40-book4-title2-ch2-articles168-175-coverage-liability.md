@@ -1,7 +1,7 @@
 ---
 chunk_id: book4-title2-ch2-articles168-175-coverage-liability
 title: Book Four - Coverage and Liability (Articles 168-175)
-article_number: Articles 168-175
+article_number: pd442_articles168_175_coverage_liability
 semantic_type: statute
 hierarchy:
   book: Book Four

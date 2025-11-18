@@ -1,7 +1,7 @@
 ---
 chunk_id: book1-chapter2-articles29-32-license-requirements-fees
 title: Chapter 2 - License Requirements and Fees (Articles 29-32)
-article_number: Articles 29-32
+article_number: pd442_articles29_32_license_fees
 semantic_type: statute
 hierarchy:
   book: Book One

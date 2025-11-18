@@ -1,7 +1,7 @@
 ---
 chunk_id: book2-title2-articles73-81-learners-handicapped
 title: Book Two - Learners and Handicapped Workers (Articles 73-81)
-article_number: Articles 73-81
+article_number: pd442_articles73_81_learners
 semantic_type: statute
 hierarchy:
   book: Book Two

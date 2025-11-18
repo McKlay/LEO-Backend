@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title1-articles211-212-labor-relations-policy
 title: Book Five - Labor Relations Policy and Definitions (Articles 211-212 Part 1)
-article_number: Articles 211-212
+article_number: pd442_articles211_212_labor_policy
 semantic_type: statute
 hierarchy:
   book: Book Five

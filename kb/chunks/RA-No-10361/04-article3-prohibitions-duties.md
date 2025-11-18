@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-10361-04
 title: Pre-Employment - Prohibitions and Employer Duties
-article_number: RA-10361-04
+article_number: ra10361_article3_prohibitions_duties
 semantic_type: statute
 hierarchy:
   article: "Article III"

@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title4-chapter2-article241-part2-financial-accountability
 title: Book Five - Rights and Conditions of Union Membership Part 2 (Article 241 h-p)
-article_number: Article 241
+article_number: pd442_article241_part2_financial
 semantic_type: statute
 hierarchy:
   book: Book Five

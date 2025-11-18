@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title2-chapter1-articles213-216-nlrc-creation
 title: Book Five - National Labor Relations Commission Creation and Composition (Articles 213-216)
-article_number: Articles 213-216
+article_number: pd442_articles213_216_nlrc
 semantic_type: statute
 hierarchy:
   book: Book Five

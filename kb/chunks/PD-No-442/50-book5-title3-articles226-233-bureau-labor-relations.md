@@ -1,7 +1,7 @@
 ---
 chunk_id: book5-title3-articles226-233-bureau-labor-relations
 title: Book Five - Bureau of Labor Relations (Articles 226-233)
-article_number: Articles 226-233
+article_number: pd442_articles226_233_bureau_labor
 semantic_type: statute
 hierarchy:
   book: Book Five

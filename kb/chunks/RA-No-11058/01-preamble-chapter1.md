@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-01
 title: Preamble and Declaration of Policy
-article_number: RA-11058-01
+article_number: ra11058_preamble_chapter1
 semantic_type: statute
 hierarchy:
   chapter: "Preamble and Chapter I"
@@ -42,3 +42,4 @@ The State shall ensure a safe and healthful workplace for all working people by 
 The State shall protect every worker against injury, sickness or death through safe and healthful working conditions thereby assuring the conservation of valuable manpower resources and prevention of loss or damage to lives and properties consistent with national development goals, and with the State's commitment to the total development of every worker as a complete human being.
 
 The State, in protecting the safety and health of the workers, shall promote strict but dynamic, inclusive, and gender-sensitive measures in the formulation and implementation of policies and programs related to occupational safety and health.
+

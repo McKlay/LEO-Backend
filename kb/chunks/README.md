@@ -34,7 +34,7 @@ Each chunk is a **Markdown file with YAML frontmatter**:
 ---
 chunk_id: unique_identifier
 title: Descriptive title
-article_number: database_article_number
+article_number: {source_prefix}_{descriptive_section_id}
 semantic_type: decree|statute|rules|provisions|definitions|guidelines|handbook
 hierarchy:
   part: "Preliminary Title"  # or "Main Decree", "Chapter I", "Rule I"
@@ -51,6 +51,29 @@ has_list: true
 
 The full text of the chunk goes here...
 ```
+
+**CRITICAL: Article Number Format**
+
+The `article_number` field **MUST** be a string identifier in the format:
+```
+{source_prefix}_{descriptive_section_id}
+```
+
+**Examples:**
+- `pd851_decree_sec1_3` - Presidential Decree 851, decree sections 1-3
+- `pd851_rules_preamble_sec1_2` - PD 851, rules preamble and sections 1-2
+- `ra11199_sec3_establishment` - Republic Act 11199, section 3 (establishment)
+- `ra11199_sec12_13b_pension_benefits` - RA 11199, sections 12-13B (pension benefits)
+- `pd442_book1_title1_art1_11` - PD 442 (Labor Code), Book 1, Title 1, Articles 1-11
+
+**Naming Guidelines:**
+1. **Source prefix**: Use lowercase abbreviation (e.g., `pd851`, `ra11199`, `pd442`)
+2. **Section identifier**: Use descriptive text (lowercase, underscore-separated)
+3. **Never use numeric-only values** (e.g., `1`, `2`, `3`) - database expects strings
+4. **Be descriptive**: Include section numbers and/or topic keywords
+5. **Keep consistent**: Within a document, use the same prefix format
+
+**Note**: This string identifier is used for database lookups and auto-chunking operations.
 
 **CRITICAL: Hierarchy Structure Flexibility**
 

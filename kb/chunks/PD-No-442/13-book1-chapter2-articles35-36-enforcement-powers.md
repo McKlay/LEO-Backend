@@ -1,7 +1,7 @@
 ---
 chunk_id: book1-chapter2-articles35-36-enforcement-powers
 title: Chapter 2 - Enforcement Powers (Articles 35-36)
-article_number: Articles 35-36
+article_number: pd442_articles35_36_enforcement
 semantic_type: statute
 hierarchy:
   book: Book One

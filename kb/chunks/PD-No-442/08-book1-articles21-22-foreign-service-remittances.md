@@ -1,7 +1,7 @@
 ---
 chunk_id: "PD-442-009"
 title: "Articles 21-22 - Foreign Service and Mandatory Remittances"
-article_number: "Articles 21-22"
+article_number: pd442_articles21_22_foreign_service_remittances
 semantic_type: statute
 hierarchy:
   book: "Book One"
@@ -16,6 +16,9 @@ keywords:
   - "employment contracts"
   - "OEDB"
   - "overseas workers"
+has_table: false
+has_formula: false
+has_list: false
 ---
 
 # Articles 21-22. Foreign Service Role and Mandatory Remittances

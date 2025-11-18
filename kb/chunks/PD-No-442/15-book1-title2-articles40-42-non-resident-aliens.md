@@ -1,7 +1,7 @@
 ---
 chunk_id: book1-title2-articles40-42-non-resident-aliens
 title: Title II - Employment of Non-Resident Aliens (Articles 40-42)
-article_number: Articles 40-42
+article_number: pd442_articles40_42_non_resident_aliens
 semantic_type: statute
 hierarchy:
   book: Book One

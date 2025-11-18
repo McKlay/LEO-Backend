@@ -1,7 +1,7 @@
 ---
 chunk_id: book1-chapter2-articles25-28-private-sector-participation
 title: Chapter 2 - Regulation of Recruitment (Articles 25-28)
-article_number: Articles 25-28
+article_number: pd442_articles25_28_private_sector
 semantic_type: statute
 hierarchy:
   book: Book One

@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title3-ch3-articles141-152-househelpers
 title: Book Three - Employment of Househelpers (Articles 141-152)
-article_number: Articles 141-152
+article_number: pd442_articles141_152_househelpers
 semantic_type: statute
 hierarchy:
   book: Book Three

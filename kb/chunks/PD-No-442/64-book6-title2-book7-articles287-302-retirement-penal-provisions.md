@@ -1,7 +1,7 @@
 ---
 chunk_id: book6-title2-book7-articles287-302-retirement-penal-provisions
 title: Book Six-Seven - Retirement and Penal Provisions (Articles 287-302)
-article_number: Articles 287-302
+article_number: pd442_articles287_302_retirement_penal
 semantic_type: statute
 hierarchy:
   book: Book Six and Book Seven

@@ -1,7 +1,7 @@
 ---
 chunk_id: book3-title3-ch2-articles139-140-employment-minors
 title: Book Three - Employment of Minors (Articles 139-140)
-article_number: Articles 139-140
+article_number: pd442_articles139_140_employment_minors
 semantic_type: statute
 hierarchy:
   book: Book Three

@@ -1,7 +1,7 @@
 ---
 chunk_id: covid_protocols_duties_responsibilities
 title: DTI-DOLE COVID-19 Guidelines - Employer and Worker Duties
-article_number: covid_guidelines_part2
+article_number: covid19workplaceguidelines_part2
 semantic_type: guidelines
 hierarchy:
   topic: Duties and Responsibilities

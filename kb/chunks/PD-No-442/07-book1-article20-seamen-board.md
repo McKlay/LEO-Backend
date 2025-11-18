@@ -1,7 +1,7 @@
 ---
 chunk_id: "PD-442-008"
 title: "Article 20 - National Seamen Board"
-article_number: "Article 20"
+article_number: pd442_article20_seamen_board
 semantic_type: statute
 hierarchy:
   book: "Book One"
@@ -16,6 +16,9 @@ keywords:
   - "NLRC"
   - "jurisdiction"
   - "employer-employee relations"
+has_table: false
+has_formula: false
+has_list: false
 ---
 
 # Article 20. National Seamen Board
