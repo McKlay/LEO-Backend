@@ -74,6 +74,13 @@ def setup_logging(
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
     
+    # Force UTF-8 encoding for Windows compatibility with emojis
+    if sys.platform == 'win32' and hasattr(console_handler.stream, 'reconfigure'):
+        try:
+            console_handler.stream.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+    
     # Set formatter
     if json_output:
         formatter = JSONFormatter()

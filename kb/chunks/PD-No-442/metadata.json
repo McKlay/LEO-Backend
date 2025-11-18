@@ -5,8 +5,9 @@
   "doc_type": "statute",
   "year": "1974",
   "url": "https://lawphil.net/statutes/presdecs/pd1974/pd_442_1974.html",
-  "total_chunks": 15,
+  "total_chunks": 65,
   "chunking_strategy": "manual",
-  "last_updated": "2025-11-14",
-  "notes": "Large document (265K chars, 2059 lines) chunked by Books and major Titles. Preliminary + 7 Books = 8-15 chunks estimated."
+  "last_updated": "2025-11-16",
+  "notes": "Complete Labor Code chunked following 200-800 word guideline with flexibility for semantic completeness. Includes: Preliminary Title (Articles 1-11), Book One (Human Resources Development, Articles 12-60), Book Two (Pre-Employment, Articles 61-109), Book Three (Conditions of Employment, Articles 110-157), Book Four (Health Safety and Social Welfare, Articles 157-210), Book Five (Labor Relations, Articles 211-277), Book Six (Post Employment, Articles 278-287), and Book Seven (Penal Provisions, Articles 288-302). All 65 chunks completed (files 00-64). Fixed article overlap in chunks 59-61 on 2025-11-16.",
+  "structure_note": "Book Five (Labor Relations) is the largest section with 16 chunks covering NLRC, Bureau of Labor Relations, labor organizations, unfair labor practices, collective bargaining, strikes/lockouts, and special provisions. Articles 264-272 split into separate chunks (59: prohibited acts, 60: assistance/foreign, 61: penalties)."
 }

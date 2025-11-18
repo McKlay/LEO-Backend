@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Validate manually chunked documents.
 
@@ -28,6 +29,12 @@ import yaml
 from pathlib import Path
 from typing import List, Tuple, Dict
 import sys
+import io
+
+# Fix Windows console encoding for emoji support
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 
 def validate_frontmatter(chunk_file: Path) -> Tuple[bool, List[str], List[str]]:

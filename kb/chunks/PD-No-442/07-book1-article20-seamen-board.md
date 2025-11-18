@@ -1,9 +1,11 @@
 ---
 chunk_id: "PD-442-008"
+title: "Article 20 - National Seamen Board"
 article_number: "Article 20"
+semantic_type: statute
 hierarchy:
   book: "Book One"
-  title_name: "Pre-Employment"
+  title: "Pre-Employment"
   chapter: ""
 keywords:
   - "National Seamen Board"

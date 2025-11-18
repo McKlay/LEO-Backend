@@ -1,9 +1,11 @@
 ---
 chunk_id: "PD-442-009"
+title: "Articles 21-22 - Foreign Service and Mandatory Remittances"
 article_number: "Articles 21-22"
+semantic_type: statute
 hierarchy:
   book: "Book One"
-  title_name: "Pre-Employment"
+  title: "Pre-Employment"
   chapter: ""
 keywords:
   - "labor attachés"

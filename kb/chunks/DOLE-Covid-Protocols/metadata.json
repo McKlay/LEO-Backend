@@ -4,9 +4,9 @@
   "short_name": "COVID-19 Protocols",
   "doc_type": "guidelines",
   "year": "2020",
-  "url": "",
-  "total_chunks": 0,
+  "url": "https://www.dole9portal.com/covid-19/DTI-and-DOLE-Interim-Guidelines-on-Workplace-Prevention-and-Control-of-COVID-19.pdf",
+  "total_chunks": 3,
   "chunking_strategy": "manual",
-  "last_updated": "2025-11-16",
-  "structure_note": "Presentation-style guidelines with topical sections. Chunk by major topics: background/objective, workplace safety (A-D), entrance protocols, physical distancing, hygiene, contact tracing, response procedures"
+  "last_updated": "2025-11-18",
+  "structure_note": "Chunked into 3 contextually complete sections: (1) Background + complete WSH framework (A-D) to preserve context of all safety measures, (2) Employer and worker duties together, (3) Testing, vulnerable groups, and compliance. This prevents context loss when users ask about workplace safety guidelines."
 }

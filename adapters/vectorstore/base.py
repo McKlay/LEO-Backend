@@ -90,6 +90,27 @@ class BaseVectorStore(ABC):
         """
         pass
     
+    async def delete_by_source_id(self, source_id: str) -> int:
+        """
+        Delete all documents associated with a specific source ID.
+        
+        Optional method - implementations may override for better efficiency.
+        Default implementation queries for IDs then deletes.
+        
+        Args:
+            source_id: Source ID to delete documents for
+            
+        Returns:
+            Number of documents deleted
+            
+        Raises:
+            VectorStoreError: If delete operation fails
+        """
+        # Default implementation - subclasses can override for efficiency
+        raise NotImplementedError(
+            "delete_by_source_id not implemented for this vector store"
+        )
+    
     @abstractmethod
     async def get_by_id(self, document_id: str) -> Optional[Document]:
         """

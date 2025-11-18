@@ -161,14 +161,23 @@ class SupabaseVectorStore(BaseVectorStore):
                 except:
                     doc_uuid = str(uuid.uuid4())
                 
+                # Use legal article_number from metadata (e.g., "PD 442", "Article 123")
+                # file_stem is stored in metadata for check_ingestion.py tracking
+                legal_article_number = metadata.get("article_number", doc.id)
+                
+                # Extract semantic_type and section_number from metadata
+                # These columns exist in the actual database schema
+                semantic_type = metadata.get("semantic_type")
+                section_number = metadata.get("section_number")
+                
                 record = {
                     "id": doc_uuid,
                     "full_text": doc.content,  # New schema uses full_text, not content
                     "embedding": doc.embedding,
-                    "metadata": json.dumps(metadata),
+                    "metadata": metadata,  # Send dict directly; Supabase will encode as JSONB
                     
                     # Extract fields from metadata for structured columns
-                    "article_number": metadata.get("article_number", doc.id),
+                    "article_number": legal_article_number,  # Legal identifier from frontmatter
                     "article_title": metadata.get("title", ""),
                     "summary": metadata.get("summary"),
                     "keywords": metadata.get("keywords", []),
@@ -179,9 +188,20 @@ class SupabaseVectorStore(BaseVectorStore):
                     "has_formula": metadata.get("has_formula", False),
                     "has_list": metadata.get("has_list", False),
                     
-                    # Source ID (will be null for now, needs source management)
+                    # Additional columns that exist in actual database schema
+                    "semantic_type": semantic_type,
+                    "section_number": section_number,
+                    
+                    # Source ID
                     "source_id": metadata.get("source_id")
                 }
+                
+                # Debug: Log metadata keys for first document
+                if not records:
+                    logger.info(f"First document metadata keys: {list(metadata.keys())}")
+                    logger.info(f"  chunk_id: {metadata.get('chunk_id')}")
+                    logger.info(f"  file_stem: {metadata.get('file_stem')}")
+                
                 records.append(record)
             
             # Upsert to Supabase
@@ -294,10 +314,10 @@ class SupabaseVectorStore(BaseVectorStore):
     
     async def delete(self, document_ids: list[str]) -> None:
         """
-        Delete documents from vector store.
+        Delete documents from vector store by database ID (UUID).
         
         Args:
-            document_ids: List of document IDs to delete
+            document_ids: List of document UUIDs to delete
             
         Raises:
             AppError: If delete operation fails
@@ -318,6 +338,102 @@ class SupabaseVectorStore(BaseVectorStore):
             logger.error(f"Vector store delete error: {str(e)}", exc_info=True)
             raise AppError(
                 message="Failed to delete documents from vector store",
+                error_code="VECTOR_STORE_DELETE_FAILED",
+                status_code=500,
+                details={"error": str(e)}
+            )
+    
+    async def delete_by_article_numbers(self, article_numbers: list[str]) -> int:
+        """
+        Delete documents by their article_number metadata field.
+        
+        Args:
+            article_numbers: List of article numbers to delete
+            
+        Returns:
+            Number of documents deleted
+            
+        Raises:
+            AppError: If delete operation fails
+        """
+        try:
+            if not article_numbers:
+                logger.warning("Attempted to delete with empty article numbers list")
+                return 0
+            
+            # First, get count of documents to delete
+            count_response = self.client.table(self.table_name).select(
+                "id",
+                count="exact"
+            ).in_("article_number", article_numbers).execute()
+            
+            count = count_response.count or 0
+            
+            if count == 0:
+                logger.info(f"No documents found for article_numbers: {article_numbers[:3]}...")
+                return 0
+            
+            # Delete documents by article_number
+            response = self.client.table(self.table_name).delete().in_(
+                "article_number",
+                article_numbers
+            ).execute()
+            
+            logger.info(f"Deleted {count} documents for {len(article_numbers)} article numbers")
+            return count
+            
+        except Exception as e:
+            logger.error(f"Vector store delete by article_number error: {str(e)}", exc_info=True)
+            raise AppError(
+                message="Failed to delete documents by article_number",
+                error_code="VECTOR_STORE_DELETE_FAILED",
+                status_code=500,
+                details={"error": str(e)}
+            )
+    
+    async def delete_by_source_id(self, source_id: str) -> int:
+        """
+        Delete all documents associated with a specific source ID.
+        
+        Args:
+            source_id: Source ID to delete documents for
+            
+        Returns:
+            Number of documents deleted
+            
+        Raises:
+            AppError: If delete operation fails
+        """
+        try:
+            if not source_id:
+                logger.warning("Attempted to delete with empty source ID")
+                return 0
+            
+            # First, get count of documents to delete
+            count_response = self.client.table(self.table_name).select(
+                "id",
+                count="exact"
+            ).eq("source_id", source_id).execute()
+            
+            count = count_response.count or 0
+            
+            if count == 0:
+                logger.info(f"No documents found for source_id: {source_id}")
+                return 0
+            
+            # Delete documents
+            response = self.client.table(self.table_name).delete().eq(
+                "source_id",
+                source_id
+            ).execute()
+            
+            logger.info(f"Deleted {count} documents for source_id: {source_id}")
+            return count
+            
+        except Exception as e:
+            logger.error(f"Vector store delete by source_id error: {str(e)}", exc_info=True)
+            raise AppError(
+                message="Failed to delete documents by source_id",
                 error_code="VECTOR_STORE_DELETE_FAILED",
                 status_code=500,
                 details={"error": str(e)}

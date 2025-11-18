@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Verify a single chunk file.
 
@@ -15,6 +16,12 @@ import argparse
 import sys
 import yaml
 from pathlib import Path
+import io
+
+# Fix Windows console encoding for emoji support
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent

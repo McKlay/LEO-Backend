@@ -1,9 +1,11 @@
 ---
 chunk_id: "PD-442-010"
+title: "Articles 23-24 - Board Composition and Appointment"
 article_number: "Article 23"
+semantic_type: statute
 hierarchy:
   book: "Book One"
-  title_name: "Pre-Employment"
+  title: "Pre-Employment"
   chapter: ""
 keywords:
   - "OEDB composition"

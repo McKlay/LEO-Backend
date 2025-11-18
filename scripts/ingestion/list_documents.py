@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 List all manually chunked documents.
 
@@ -20,6 +21,12 @@ import json
 import sys
 from pathlib import Path
 from typing import Dict, List
+import io
+
+# Fix Windows console encoding for emoji support
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent

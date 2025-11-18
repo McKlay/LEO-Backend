@@ -22,6 +22,8 @@ class ManualChunk:
     title: str
     content: str
     article_number: str
+    file_stem: Optional[str] = None  # For ingestion tracking (e.g., "00-preliminary-title-preamble")
+    document_name: Optional[str] = None  # For folder-level tracking (e.g., "PD-No-851")
     semantic_type: Optional[str] = None
     hierarchy: Optional[Dict[str, str]] = None
     keywords: Optional[List[str]] = None
@@ -42,6 +44,8 @@ class ManualChunk:
             "title": self.title,
             "content": self.content,
             "article_number": self.article_number,
+            "file_stem": self.file_stem,
+            "document_name": self.document_name,
             "semantic_type": self.semantic_type,
             "hierarchy": self.hierarchy,
             "keywords": self.keywords,
@@ -113,7 +117,8 @@ class ManualChunkLoader:
     def load_chunk_file(
         self, 
         chunk_file: Path, 
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        document_name: Optional[str] = None
     ) -> Optional[ManualChunk]:
         """
         Load a single Markdown chunk file with YAML frontmatter.
@@ -121,6 +126,7 @@ class ManualChunkLoader:
         Args:
             chunk_file: Path to .md file
             metadata: Optional document metadata from metadata.json
+            document_name: Name of the document folder (e.g., "PD-No-851")
             
         Returns:
             ManualChunk object or None if parsing fails
@@ -157,6 +163,8 @@ class ManualChunkLoader:
                 title=frontmatter['title'],
                 article_number=frontmatter['article_number'],
                 content=chunk_content,
+                file_stem=chunk_file.stem,  # Store file stem for tracking
+                document_name=document_name,  # Store document folder name
                 semantic_type=frontmatter.get('semantic_type'),
                 hierarchy=frontmatter.get('hierarchy'),
                 keywords=frontmatter.get('keywords', []),
@@ -204,8 +212,11 @@ class ManualChunkLoader:
         # Load document metadata
         metadata = self.load_metadata(document_folder)
         
-        # Find all .md files (recursively, to support subfolders)
-        chunk_files = sorted(document_folder.rglob("*.md"))
+        # Find all .md files in document folder (exclude docs subfolder and other subfolders)
+        chunk_files = sorted([
+            f for f in document_folder.glob("*.md")
+            if f.is_file()
+        ])
         
         if not chunk_files:
             logger.warning(f"No .md files found in {document_folder}")
@@ -216,7 +227,7 @@ class ManualChunkLoader:
         # Load each chunk
         chunks = []
         for chunk_file in chunk_files:
-            chunk = self.load_chunk_file(chunk_file, metadata)
+            chunk = self.load_chunk_file(chunk_file, metadata, document_name)
             if chunk:
                 chunks.append(chunk)
             else:
@@ -287,8 +298,9 @@ class ManualChunkLoader:
         # Assume structure: kb/chunks/{document}/{file.md}
         try:
             document_folder = chunk_path.parent
+            document_name = document_folder.name
             metadata = self.load_metadata(document_folder)
-            return self.load_chunk_file(chunk_path, metadata)
+            return self.load_chunk_file(chunk_path, metadata, document_name)
         except Exception as e:
             logger.error(f"Failed to load single chunk from {chunk_path}: {e}")
             return None

@@ -5,8 +5,8 @@
   "doc_type": "statute",
   "year": "2013",
   "url": "https://lawphil.net/statutes/repacts/ra2013/ra_10361_2013.html",
-  "total_chunks": 0,
+  "total_chunks": 10,
   "chunking_strategy": "manual",
-  "last_updated": "2025-11-16",
-  "structure_note": "Republic Act with Articles (I-VIII). Use article-based chunking: Article I (general provisions), Article II (rights), Article III (pre-employment), Article IV (employment standards), Article V-VIII (enforcement, penalties, final provisions)"
+  "last_updated": "2025-11-18",
+  "structure_note": "Republic Act with Articles (I-X). Article-based chunking: Preamble+Art I (general provisions), Art II (rights), Art III split into 2 (pre-employment contract/requirements and prohibitions/duties), Art IV split into 3 (work conditions, wages, benefits), Art V (termination), Art VI-VIII (agencies/disputes/special), Art IX-X (penalties/final)"
 }

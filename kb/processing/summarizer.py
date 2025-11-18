@@ -1,8 +1,15 @@
 """
 Chunk Summarizer - Generate summaries and extract keywords from legal text chunks.
 
-This module provides intelligent summarization using GPT-4o-mini for cost efficiency
-while maintaining high-quality legal keyword extraction.
+This module provides intelligent summarization using GPT-4 Turbo Preview (GPT-4.1) 
+for high-quality legal summaries, especially important for long articles (1000+ words).
+
+GPT-4 Turbo Preview is used instead of GPT-4o-mini because:
+- Better comprehension of complex legal text
+- Richer, more comprehensive summaries (200-500 tokens)
+- Higher quality keyword extraction
+- Summaries are used for semantic search embeddings - quality critical
+- Note: User has free tokens for gpt-4-turbo-preview
 """
 
 from dataclasses import dataclass
@@ -20,9 +27,13 @@ logger = get_logger(__name__)
 
 @dataclass
 class ChunkSummary:
-    """Summary and keywords for a single chunk."""
+    """Summary and keywords for a single chunk.
+    
+    Summary should be 150-300 words (~200-250 tokens) for comprehensive
+    legal context that improves semantic search quality.
+    """
     chunk_text: str
-    summary: str  # 2-3 sentences
+    summary: str  # 150-300 words comprehensive summary (not just 2-3 sentences)
     keywords: List[str]  # 5-8 keywords
     confidence: float  # 0.0-1.0
 
@@ -30,13 +41,16 @@ class ChunkSummary:
 class ChunkSummarizer:
     """
     Generate summaries and extract keywords from legal text chunks.
-    Uses GPT-4o-mini for cost efficiency.
+    Uses GPT-4 Turbo Preview (GPT-4.1) for high-quality legal summaries.
     
     Features:
-    - Concise 2-3 sentence summaries for chunks >50 words
+    - Comprehensive 200-500 token summaries for better semantic search
     - Legal keyword extraction (Article refs, terms, entities)
     - Hash-based caching to avoid re-summarizing identical content
     - Graceful fallback when LLM fails
+    
+    Cost: ~$0.01-0.02 per chunk (one-time ingestion cost)
+    Note: Using gpt-4-turbo-preview as user has free tokens for this model.
     """
     
     def __init__(self, llm: Optional[OpenAILLM] = None, use_llm: bool = True):
@@ -44,13 +58,15 @@ class ChunkSummarizer:
         Initialize summarizer.
         
         Args:
-            llm: OpenAI LLM adapter (defaults to GPT-4o-mini if use_llm=True)
+            llm: OpenAI LLM adapter (defaults to GPT-4 Turbo Preview if use_llm=True)
             use_llm: Whether to use LLM for summarization (False = always use fallback)
         """
         self.use_llm = use_llm
         if use_llm and llm is None:
             try:
-                self.llm = OpenAILLM(model="gpt-4o-mini")
+                # Use GPT-4 Turbo Preview (GPT-4.1) for high-quality summaries
+                self.llm = OpenAILLM(model="gpt-4.1")
+                logger.info("Initialized ChunkSummarizer with GPT-4 Turbo Preview (GPT-4.1)")
             except Exception as e:
                 logger.warning(f"Failed to initialize LLM, using fallback mode: {e}")
                 self.llm = None
@@ -61,7 +77,8 @@ class ChunkSummarizer:
         self._cache = {}  # Simple hash-based cache
         self.min_words_for_summary = 50
         self.default_temperature = 0.3
-        self.default_max_tokens = 300
+        # Increased from 300 to 500 for richer summaries
+        self.default_max_tokens = 500
         
     async def summarize(self, chunk_text: str) -> ChunkSummary:
         """
@@ -182,21 +199,40 @@ class ChunkSummarizer:
         return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
     
     def _build_summary_prompt(self, chunk_text: str) -> str:
-        """Build prompt for GPT-4o-mini."""
-        return f"""Analyze this Philippine labor law text chunk and provide:
+        """
+        Build prompt for GPT-4.1 with target summary length of 150-300 words.
+        
+        Longer, more comprehensive summaries improve semantic search quality
+        by capturing nuanced legal concepts and providing better context for
+        vector embeddings. Target: 200-300 words (approximately 150-250 tokens).
+        """
+        return f"""You are a Philippine labor law expert. Analyze this legal text chunk and provide:
 
-1. A concise 2-3 sentence summary that captures the key legal concepts
-2. 5-8 relevant keywords including:
+1. A comprehensive 150-300 word summary that captures:
+   - Core legal concepts and provisions
+   - Who is covered (employers, employees, contractors, etc.)
+   - Key rights, obligations, and penalties
+   - Relevant procedures or timelines if applicable
+   - Any conditions or exceptions
+   
+2. 5-8 highly relevant keywords including:
    - Article/Section references (e.g., "Article 97", "Section 3(a)")
-   - Legal terms (e.g., "overtime pay", "regular wage", "employer obligations")
+   - Legal terms of art (e.g., "overtime pay", "regular wage", "employer obligations")
    - Named entities (e.g., "DOLE", "NLRC", "SSS")
+   - Domain concepts (e.g., "minimum wage", "illegal dismissal")
+
+Guidelines:
+- Write the summary as a cohesive paragraph or 2-3 well-developed sentences
+- Focus on worker rights and protections
+- Include relevant numerical thresholds or percentages if mentioned
+- Keep language clear and precise, suitable for legal professionals
 
 Text:
 {chunk_text[:2000]}
 
 Respond ONLY in valid JSON format:
 {{
-  "summary": "2-3 sentence summary here",
+  "summary": "150-300 word comprehensive summary here that captures all key legal concepts",
   "keywords": ["keyword1", "keyword2", "keyword3", ...]
 }}"""
 

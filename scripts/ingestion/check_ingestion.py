@@ -19,20 +19,26 @@ import argparse
 import asyncio
 import json
 import sys
+import psycopg2
+import io
 from pathlib import Path
 from typing import Dict, List
+
+# Fix Unicode encoding on Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from core import get_logger
-from app.containers import get_vectorstore_adapter
+from core.config import Settings
 
 logger = get_logger(__name__)
 
 
-async def check_document_status(document_folder: Path, vectorstore) -> Dict:
+async def check_document_status(document_folder: Path, db_url: str) -> Dict:
     """
     Check ingestion status for a document.
     
@@ -72,17 +78,25 @@ async def check_document_status(document_folder: Path, vectorstore) -> Dict:
     for chunk_file in chunk_files:
         chunk_name = chunk_file.stem
         
-        # Query vectorstore for this chunk
-        # Note: This is a simplified check - actual implementation may vary
+        # Query database directly for this chunk
         try:
-            # Search for chunk by metadata
-            results = await vectorstore.query(
-                query_text=chunk_name,
-                top_k=1,
-                filters={'chunk_id': chunk_name}
-            )
+            conn = psycopg2.connect(db_url)
+            cursor = conn.cursor()
             
-            is_ingested = len(results) > 0
+            # Check if chunk exists by article_number OR chunk_id in metadata
+            # article_number should contain chunk_id after the fix
+            cursor.execute("""
+                SELECT id, article_number, metadata->>'file_stem' as file_stem
+                FROM labor_law_sections 
+                WHERE metadata->>'file_stem' = %s
+                LIMIT 1
+            """, (chunk_name,))
+            
+            result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            is_ingested = result is not None
             
             chunk_detail = {
                 'file': chunk_file.name,
@@ -92,7 +106,7 @@ async def check_document_status(document_folder: Path, vectorstore) -> Dict:
             
             if is_ingested:
                 report['ingested_chunks'] += 1
-                chunk_detail['embedding_id'] = results[0].get('id') if results else None
+                chunk_detail['embedding_id'] = result[0] if result else None
             else:
                 report['missing_chunks'].append(chunk_file.name)
             
@@ -149,15 +163,20 @@ async def main():
     print(f"{'='*60}\n")
     
     try:
-        # Get vectorstore adapter
-        vectorstore = get_vectorstore_adapter()
+        # Get database settings
+        settings = Settings()
+        db_url = settings.supabase_db_url
+        
+        if not db_url:
+            logger.error("Database URL not configured")
+            sys.exit(1)
         
         total_documents = 0
         total_ingested = 0
         total_missing = 0
         
         for doc_folder in sorted(document_folders):
-            report = await check_document_status(doc_folder, vectorstore)
+            report = await check_document_status(doc_folder, db_url)
             
             total_documents += 1
             total_ingested += report['ingested_chunks']

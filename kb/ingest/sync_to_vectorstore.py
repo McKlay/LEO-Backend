@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Optional
 import argparse
 
-from core import get_logger
+from core import get_logger, setup_logging
 from app.containers import get_embeddings_adapter, get_vectorstore_adapter, get_llm_adapter
 from retrieval.chunking import LegalDocumentChunker
 from kb.ingest.loaders import TextFileLoader
@@ -38,6 +38,7 @@ from kb.ingest.loaders.manual_chunk_loader import ManualChunkLoader, ManualChunk
 from kb.ingest.incremental_tracker import IngestionTracker
 from kb.ingest.source_manager import SourceManager
 from kb.processing.summarizer import ChunkSummarizer
+from kb.processing.auto_chunker import AutoChunker
 from adapters.vectorstore.base import Document
 
 logger = get_logger(__name__)
@@ -131,7 +132,8 @@ class KnowledgeBaseIngester:
         tracker: Optional[IngestionTracker] = None,
         source_manager: Optional[SourceManager] = None,
         loader: Optional[TextFileLoader] = None,
-        use_summarization: bool = True
+        use_summarization: bool = True,
+        use_auto_chunking: bool = True
     ):
         """
         Initialize ingester.
@@ -146,6 +148,7 @@ class KnowledgeBaseIngester:
             source_manager: Source manager for linking documents to sources
             loader: Text file loader (optional)
             use_summarization: Generate summaries and keywords
+            use_auto_chunking: Auto-chunk oversized articles into labor_law_chunks
         """
         self.embeddings = embeddings_adapter
         self.vectorstore = vectorstore_adapter
@@ -164,6 +167,16 @@ class KnowledgeBaseIngester:
             llm=llm_adapter,
             use_llm=use_summarization
         )
+        
+        # Auto-chunking for oversized articles
+        self.use_auto_chunking = use_auto_chunking
+        self.auto_chunker = None
+        if use_auto_chunking:
+            self.auto_chunker = AutoChunker(
+                embeddings_adapter=embeddings_adapter,
+                llm_adapter=llm_adapter,
+                use_summarization=use_summarization
+            )
         
         # Incremental tracking
         self.tracker = tracker or IngestionTracker()
@@ -441,6 +454,85 @@ class KnowledgeBaseIngester:
                     chunks.extend(doc_chunks)
                 logger.info(f"Loaded {len(chunks)} total chunks from {len(all_chunks_dict)} documents")
             
+            # Check if manual chunks should be ingested (incremental detection)
+            # Track EACH FILE individually, not the entire folder
+            # This applies to both specific folders and --all mode
+            if not force:
+                # Filter chunks: keep only those that changed or are new
+                filtered_chunks = []
+                skipped_count = 0
+                skipped_by_file = {}
+                
+                for chunk in chunks:
+                    # Each chunk has file_stem and document_name to identify its source file
+                    # Reconstruct the file path based on available information
+                    
+                    # For single_file mode, we already have the path
+                    if single_file:
+                        file_to_check = single_file
+                    # For document_name mode (specific folder) or --all mode with document_name set
+                    elif chunk.document_name:
+                        folder_path = Path(f"kb/chunks/{chunk.document_name}")
+                        file_to_check = folder_path / f"{chunk.file_stem}.md"
+                    # Fallback: try to derive from current document_name parameter
+                    elif document_name:
+                        folder_path = Path(f"kb/chunks/{document_name}")
+                        file_to_check = folder_path / f"{chunk.file_stem}.md"
+                    else:
+                        # Should not happen with updated ManualChunk, but handle gracefully
+                        logger.warning(
+                            f"Cannot determine file path for chunk {chunk.chunk_id}. "
+                            f"Including in ingestion (file: {chunk.file_stem}.md)."
+                        )
+                        filtered_chunks.append(chunk)
+                        continue
+                    
+                    should_ingest_file, reason = self.tracker.should_ingest(
+                        file_to_check,
+                        force=force
+                    )
+                    
+                    if should_ingest_file:
+                        filtered_chunks.append(chunk)
+                    else:
+                        skipped_count += 1
+                        file_name = file_to_check.name
+                        skipped_by_file[file_name] = skipped_by_file.get(file_name, 0) + 1
+                        logger.debug(f"Skipping chunk from {file_name}: {reason}")
+                
+                # If ALL chunks are skipped, return early
+                if not filtered_chunks:
+                    logger.info(
+                        f"Skipping {document_name or 'all documents'}: "
+                        f"All {len(chunks)} chunks unchanged"
+                    )
+                    return {
+                        "document": document_name or "all",
+                        "status": "skipped",
+                        "reason": "All chunks unchanged",
+                        "skipped": len(chunks),
+                        "total": len(chunks)
+                    }
+                
+                if skipped_count > 0:
+                    logger.info(
+                        f"Processing {document_name or 'selected documents'}: "
+                        f"{len(filtered_chunks)} chunks to ingest, {skipped_count} chunks skipped"
+                    )
+                    for file_name, count in sorted(skipped_by_file.items()):
+                        logger.info(f"  Skipped {file_name}: {count} chunks (unchanged)")
+                else:
+                    logger.info(
+                        f"Processing {document_name or 'all documents'}: "
+                        f"All {len(chunks)} chunks are new or modified"
+                    )
+                
+                # Replace chunks with only the ones that need ingesting
+                chunks = filtered_chunks
+            else:
+                # Force flag is set - ingest everything
+                logger.info(f"Force flag enabled - ingesting all {len(chunks)} chunks")
+            
             if dry_run:
                 logger.info(
                     f"[DRY RUN] Would ingest {len(chunks)} manual chunks "
@@ -485,7 +577,9 @@ class KnowledgeBaseIngester:
                     "url": manual_chunk.url or "",
                     "short_name": reference,
                     "title": manual_chunk.title,
-                    "article_number": manual_chunk.article_number,
+                    "chunk_id": manual_chunk.chunk_id,  # Store chunk_id in metadata
+                    "file_stem": manual_chunk.file_stem,  # Store file stem for tracking
+                    "article_number": manual_chunk.article_number,  # Store legal article number in metadata
                     "has_table": manual_chunk.has_table,
                     "has_formula": manual_chunk.has_formula,
                     "has_list": manual_chunk.has_list,
@@ -531,13 +625,38 @@ class KnowledgeBaseIngester:
                 batch_size=100
             )
             
-            # Delete old chunks if force flag is set
-            if force and document_name:
-                # Delete by source_id or document reference
-                logger.info(f"Force flag set - deleting old chunks for {document_name}")
-                # Note: This would require a method to delete by source_id
-                # For now, log a warning
-                logger.warning("Force re-ingestion: manual deletion of old chunks not yet implemented")
+            # Delete old chunks if re-ingesting
+            # Delete ONLY the chunks from files that are being re-ingested
+            # Group chunks by file to delete only what's being replaced
+            if force or any(
+                chunk.file_stem in {c.file_stem for c in chunks}
+                for chunk in chunks
+            ):
+                # Collect article_numbers to delete (only from files being re-ingested)
+                article_numbers_to_delete = []
+                files_to_delete = set()
+                
+                for chunk in chunks:
+                    article_numbers_to_delete.append(chunk.article_number)
+                    files_to_delete.add(chunk.file_stem)
+                
+                if article_numbers_to_delete:
+                    logger.info(
+                        f"Re-ingesting {len(files_to_delete)} file(s) - "
+                        f"deleting {len(article_numbers_to_delete)} old chunks"
+                    )
+                    try:
+                        deleted_count = await self.vectorstore.delete_by_article_numbers(
+                            article_numbers_to_delete
+                        )
+                        if deleted_count > 0:
+                            logger.info(
+                                f"Deleted {deleted_count} old chunks from "
+                                f"{', '.join(sorted(files_to_delete))}"
+                            )
+                    except Exception as e:
+                        logger.error(f"Failed to delete old chunks: {e}", exc_info=True)
+                        # Continue anyway - upsert will handle duplicates
             
             # Create final documents with embeddings
             final_documents = []
@@ -554,6 +673,103 @@ class KnowledgeBaseIngester:
             logger.info(f"Upserting {len(final_documents)} documents to vector store...")
             await self.vectorstore.upsert(final_documents)
             
+            # Auto-chunk oversized articles into labor_law_chunks table
+            if self.use_auto_chunking and self.auto_chunker:
+                logger.info("Checking for oversized articles that need auto-chunking...")
+                total_sub_chunks = 0
+                
+                # Get database connection from vectorstore adapter
+                db_conn = self.vectorstore._get_connection()
+                
+                for doc_dict in documents:
+                    try:
+                        # Check if this article needs auto-chunking
+                        if self.auto_chunker.should_auto_chunk(doc_dict["content"]):
+                            # Extract section_id from metadata (it was set during upsert)
+                            # We need to query the section we just inserted to get its UUID
+                            cursor = db_conn.cursor()
+                            cursor.execute("""
+                                SELECT id FROM labor_law_sections
+                                WHERE article_number = %s
+                                ORDER BY created_at DESC
+                                LIMIT 1
+                            """, (doc_dict["metadata"]["article_number"],))
+                            
+                            result = cursor.fetchone()
+                            if result:
+                                section_id = str(result[0])
+                                
+                                # Create and insert sub-chunks
+                                num_sub_chunks = await self.auto_chunker.process_section(
+                                    section_id=section_id,
+                                    full_text=doc_dict["content"],
+                                    metadata=doc_dict["metadata"],
+                                    db_connection=db_conn
+                                )
+                                
+                                if num_sub_chunks:
+                                    total_sub_chunks += num_sub_chunks
+                                    logger.info(
+                                        f"  Article {doc_dict['metadata']['article_number']}: "
+                                        f"created {num_sub_chunks} sub-chunks"
+                                    )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to auto-chunk article "
+                            f"{doc_dict['metadata'].get('article_number', 'unknown')}: {e}",
+                            exc_info=True
+                        )
+                        # Continue with other articles
+                
+                if total_sub_chunks > 0:
+                    logger.info(
+                        f"✓ Auto-chunked {total_sub_chunks} sub-chunks "
+                        f"into labor_law_chunks table"
+                    )
+            
+            # Record successful ingestion in history
+            # Track EACH FILE individually (not the folder as a whole)
+            if document_name:
+                try:
+                    folder_path = Path(f"kb/chunks/{document_name}")
+                    
+                    # Record each ingested chunk's file
+                    # Group by file_stem to get unique files
+                    unique_files = set()
+                    for chunk in chunks:
+                        file_path = folder_path / f"{chunk.file_stem}.md"
+                        unique_files.add(file_path)
+                    
+                    for file_path in unique_files:
+                        # Calculate hash for this specific file
+                        try:
+                            file_hash = self.tracker.calculate_file_hash(file_path)
+                        except:
+                            file_hash = ""
+                        
+                        # Count chunks from this file
+                        file_chunk_count = sum(
+                            1 for chunk in chunks 
+                            if chunk.file_stem == file_path.stem
+                        )
+                        
+                        self.tracker.record_ingestion(
+                            file_path=file_path,
+                            file_hash=file_hash,
+                            chunk_count=file_chunk_count,
+                            token_count=0,  # Don't double-count tokens
+                            ingestion_method="manual_chunking",
+                            status="success"
+                        )
+                    
+                    logger.info(
+                        f"✓ Recorded ingestion history for {len(unique_files)} files "
+                        f"in {document_name}"
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to record ingestion history: {e}")
+                    # Don't fail the whole ingestion if history recording fails
+            
             logger.info(
                 f"✓ Successfully ingested {len(chunks)} manual chunks: "
                 f"{batch_response.total_tokens_used} tokens"
@@ -569,6 +785,23 @@ class KnowledgeBaseIngester:
             
         except Exception as e:
             logger.error(f"Failed to ingest manual chunks: {str(e)}", exc_info=True)
+            
+            # Record failed ingestion in history
+            if document_name:
+                try:
+                    folder_path = Path(f"kb/chunks/{document_name}")
+                    self.tracker.record_ingestion(
+                        file_path=folder_path,
+                        file_hash="",
+                        chunk_count=0,
+                        token_count=0,
+                        ingestion_method="manual_chunking",
+                        status="failed",
+                        error_message=str(e)
+                    )
+                except:
+                    pass  # Ignore errors in error recording
+            
             return {
                 "status": "failed",
                 "error": str(e)
@@ -662,6 +895,9 @@ class KnowledgeBaseIngester:
 
 async def main():
     """CLI entry point."""
+    # Initialize logging for CLI output
+    setup_logging(level="INFO", json_output=False)
+    
     parser = argparse.ArgumentParser(
         description="Ingest Philippine labor law documents into vector store"
     )
@@ -764,6 +1000,10 @@ async def main():
             if result["status"] == "failed":
                 logger.error(f"Manual ingestion failed: {result.get('error', 'Unknown error')}")
                 sys.exit(1)
+            elif result["status"] == "skipped":
+                logger.info(
+                    f"Skipped: {result.get('document', 'Document')} - {result.get('reason', 'unchanged')}"
+                )
             elif result["status"] == "dry_run":
                 logger.info(
                     f"[DRY RUN] Would ingest {result['chunks']} chunks "

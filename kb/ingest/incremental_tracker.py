@@ -143,8 +143,58 @@ class IngestionTracker:
             logger.info(f"Previous ingestion failed for {file_name} - retrying")
             return True, "Previous ingestion failed"
         
+        # Hash matches and ingestion succeeded - verify chunks exist in DB
+        # This handles the case where chunks were manually deleted
+        if not self._verify_chunks_exist(file_name):
+            logger.info(f"Chunks missing in DB for {file_name} - re-ingesting")
+            return True, "Chunks missing in database"
+        
         logger.info(f"File unchanged: {file_name} (skipping)")
         return False, "File unchanged since last ingestion"
+    
+    def _verify_chunks_exist(self, file_name: str) -> bool:
+        """
+        Verify that chunks from this file actually exist in the database.
+        
+        This prevents skipping ingestion when chunks were manually deleted
+        from labor_law_sections but history still shows successful ingestion.
+        
+        Args:
+            file_name: Name of the file (e.g., "01-decree-main.md")
+            
+        Returns:
+            True if chunks exist, False if missing
+        """
+        conn = self._get_connection()
+        try:
+            with conn.cursor() as cursor:
+                # Extract file stem (filename without extension)
+                # e.g., "01-decree-main.md" -> "01-decree-main"
+                file_stem = file_name.replace('.md', '').replace('.txt', '')
+                
+                # Query labor_law_sections for chunks from this file
+                # The file_stem is stored in metadata->file_stem
+                cursor.execute("""
+                    SELECT COUNT(*) 
+                    FROM labor_law_sections 
+                    WHERE metadata->>'file_stem' = %s
+                """, (file_stem,))
+                
+                count = cursor.fetchone()[0]
+                
+                if count > 0:
+                    logger.debug(f"Found {count} chunks for {file_name} in database")
+                    return True
+                else:
+                    logger.warning(f"No chunks found for {file_name} in database")
+                    return False
+                    
+        except Exception as e:
+            # If verification fails, err on the side of re-ingesting
+            logger.warning(f"Failed to verify chunks for {file_name}: {e}")
+            return False
+        finally:
+            conn.close()
     
     def record_ingestion(
         self,

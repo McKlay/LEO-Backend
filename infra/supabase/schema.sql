@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS labor_law_sources (
 CREATE TABLE IF NOT EXISTS labor_law_sections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     source_id UUID REFERENCES labor_law_sources(id) ON DELETE CASCADE,
-    article_number VARCHAR(50),  -- 'Article 123', 'Section 5', etc.
+    article_number VARCHAR(50),  -- 'Article 123', 'Section 5', 'PD 442', etc.
     article_title TEXT,
     full_text TEXT NOT NULL,
     summary TEXT,  -- LLM-generated summary for better semantic search
@@ -135,6 +135,10 @@ CREATE TABLE IF NOT EXISTS labor_law_sections (
     
     -- Vector embedding (for semantic search)
     embedding vector(1536),
+    
+    -- Additional columns (added after initial schema)
+    semantic_type VARCHAR(50),  -- 'decree', 'article', 'section', 'rule', etc.
+    section_number INTEGER,  -- Numeric section/article number if applicable
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

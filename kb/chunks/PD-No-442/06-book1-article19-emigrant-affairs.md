@@ -1,9 +1,11 @@
 ---
 chunk_id: "PD-442-007"
+title: "Article 19 - Office of Emigrant Affairs"
 article_number: "Article 19"
+semantic_type: statute
 hierarchy:
   book: "Book One"
-  title_name: "Pre-Employment"
+  title: "Pre-Employment"
   chapter: ""
 keywords:
   - "Office of Emigrant Affairs"
