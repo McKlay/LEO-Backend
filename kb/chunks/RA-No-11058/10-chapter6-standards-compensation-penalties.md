@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-10
 title: Standards Setting, Compensation, Incentives, and Prohibited Acts
-article_number: 10
+article_number: RA-11058-10
 semantic_type: statute
 hierarchy:
   chapter: "Chapter VI"

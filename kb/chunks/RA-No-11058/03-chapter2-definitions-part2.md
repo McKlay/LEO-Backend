@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-03
 title: Definitions (Part 2)
-article_number: 3
+article_number: RA-11058-03
 semantic_type: statute
 hierarchy:
   chapter: "Chapter II"

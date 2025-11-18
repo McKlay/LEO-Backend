@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-04
 title: Duties of Employers and Workers, Right to Know
-article_number: 4
+article_number: RA-11058-04
 semantic_type: statute
 hierarchy:
   chapter: "Chapter III"

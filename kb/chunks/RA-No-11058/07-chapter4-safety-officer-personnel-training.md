@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-07
 title: Safety Officer, Health Personnel, Training, and Reports
-article_number: 7
+article_number: RA-11058-07
 semantic_type: statute
 hierarchy:
   chapter: "Chapter IV"

@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-11
 title: Miscellaneous Provisions and Final Clauses
-article_number: 11
+article_number: RA-11058-11
 semantic_type: statute
 hierarchy:
   chapter: "Chapter VII and Final Provisions"

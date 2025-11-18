@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-06
 title: OSH Program and OSH Committee
-article_number: 6
+article_number: RA-11058-06
 semantic_type: statute
 hierarchy:
   chapter: "Chapter IV"

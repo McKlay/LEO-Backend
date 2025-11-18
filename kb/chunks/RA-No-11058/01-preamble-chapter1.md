@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-01
 title: Preamble and Declaration of Policy
-article_number: 1
+article_number: RA-11058-01
 semantic_type: statute
 hierarchy:
   chapter: "Preamble and Chapter I"

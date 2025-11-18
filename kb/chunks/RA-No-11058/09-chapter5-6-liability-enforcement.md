@@ -1,7 +1,7 @@
 ---
 chunk_id: RA-11058-09
 title: Joint Liability and Enforcement Powers
-article_number: 9
+article_number: RA-11058-09
 semantic_type: statute
 hierarchy:
   chapter: "Chapters V-VI"
