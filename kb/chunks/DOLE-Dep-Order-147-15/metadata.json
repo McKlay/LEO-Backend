@@ -5,8 +5,8 @@
   "doc_type": "department_order",
   "year": "2015",
   "url": "https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/10/71535",
-  "total_chunks": 0,
+  "total_chunks": 7,
   "chunking_strategy": "manual",
-  "last_updated": "2025-11-16",
-  "structure_note": "Department Order with Rules (I-A to VI). Use rule-based chunking: preamble, Rule I-A (application), Rule I-B (just causes), Rule I-C (authorized causes), Rule II-VI (procedures, special cases)"
+  "last_updated": "2025-11-18",
+  "structure_note": "Department Order chunked into: (1) Preamble & authority, (2) Rule I-A foundations (sections 1-3), (3) Definitions (section 4), (4) Due process & just causes (section 5.1-5.2), (5) Authorized causes & separation pay (section 5.3-5.5), (6) Other causes & procedures (sections 6-11), (7) Final provisions (sections 2-4)"
 }
