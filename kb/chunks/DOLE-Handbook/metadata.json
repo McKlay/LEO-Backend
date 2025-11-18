@@ -5,8 +5,8 @@
   "doc_type": "handbook",
   "year": "2023",
   "url": "https://bwc.dole.gov.ph",
-  "total_chunks": 0,
+  "total_chunks": 18,
   "chunking_strategy": "manual",
-  "last_updated": "2025-11-16",
-  "structure_note": "Comprehensive handbook with numbered sections (1-15). Chunk by benefit type: minimum wage (1), overtime pay (2), holiday pay (3), service incentive leave (4), 13th month pay (5), rest day (6), night shift differential (7), SSS/PhilHealth/Pag-IBIG (8-10), maternity/paternity (11-12), retirement (13), termination (14), compliance guide (15)"
+  "last_updated": "2025-01-18",
+  "structure_note": "18 semantically complete chunks: (01) title/TOC/compliance, (02-04) minimum wage sections, (05) holiday pay, (06) premium/overtime, (07) night shift + computation guide table, (08) service charges/SIL, (09) maternity/paternity/parental leave, (10) VAWC/special women leave, (11) 13th month pay, (12) separation pay, (13) retirement pay, (14) ECP, (15) PhilHealth, (16) SSS, (17) Pag-IBIG, (18) directories/BWC. All tables, formulas, and lists preserved intact. Article numbers follow string format per README.md specifications."
 }
