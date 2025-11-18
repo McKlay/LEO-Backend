@@ -200,24 +200,7 @@ Examples:
 04-rules-sec1-2.md
 ```
 
-## Ingestion Commands
-
-### Ingest Single Document
-```bash
-python -m kb.ingest.sync_to_vectorstore --manual --folder kb/chunks/PD-No-851
-```
-
-### Ingest All Manual Chunks
-```bash
-python -m kb.ingest.sync_to_vectorstore --manual --all
-```
-
-### Re-ingest Single Chunk (after editing)
-```bash
-python -m kb.ingest.sync_to_vectorstore --manual --file kb/chunks/PD-No-851/02-decree-sec1-3.md --force
-```
-
-### Dry Run (test without writing to DB)
+## Dry Run (test without writing to DB)
 ```bash
 python -m kb.ingest.sync_to_vectorstore --manual --folder kb/chunks/PD-No-851 --dry-run
 ```
