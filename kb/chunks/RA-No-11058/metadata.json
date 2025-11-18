@@ -3,10 +3,10 @@
   "reference": "RA 11058",
   "short_name": "OSH Standards Law",
   "doc_type": "statute",
-  "year": "2017",
+  "year": "2018",
   "url": "https://lawphil.net/statutes/repacts/ra2018/ra_11058_2018.html",
-  "total_chunks": 0,
+  "total_chunks": 11,
   "chunking_strategy": "manual",
-  "last_updated": "2025-11-16",
-  "structure_note": "Republic Act with Chapters (I-VII). Use chapter-based chunking: preamble, chapter I (policy), chapter II (definitions), chapter III (duties), chapter IV-VII (enforcement, penalties, final provisions)"
+  "last_updated": "2024-11-18",
+  "structure_note": "Republic Act with Chapters (I-VII). Chunked by chapter-based semantic boundaries: preamble+Ch.I, Ch.II definitions (2 parts), Ch.III duties and rights (2 parts), Ch.IV covered workplaces (3 parts), Ch.V+VI liability and enforcement (2 parts), Ch.VII miscellaneous+final provisions"
 }
