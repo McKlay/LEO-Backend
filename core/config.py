@@ -197,7 +197,7 @@ class Settings(BaseSettings):
         description="LLM model for query analysis"
     )
     analysis_timeout: float = Field(
-        default=5.0,
+        default=10.0,  # Increased from 5.0 to handle cold start latency
         gt=0.0,
         description="Timeout for query analysis in seconds"
     )

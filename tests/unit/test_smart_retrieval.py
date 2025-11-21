@@ -213,7 +213,7 @@ class TestSmartRetrieve:
         
         with patch.object(vector_store, 'direct_article_lookup', new_callable=AsyncMock) as mock_direct, \
              patch.object(vector_store, 'keyword_search', new_callable=AsyncMock) as mock_keyword, \
-             patch.object(vector_store, 'query', new_callable=AsyncMock) as mock_semantic:
+             patch.object(vector_store, 'query_with_chunks', new_callable=AsyncMock) as mock_semantic:
             
             # All should return results
             mock_direct.return_value = [QueryResult(id="d1", content="", metadata={}, score=1.0)]
@@ -240,7 +240,7 @@ class TestSmartRetrieve:
         keywords = ["overtime"]
         
         with patch.object(vector_store, 'keyword_search', new_callable=AsyncMock) as mock_keyword, \
-             patch.object(vector_store, 'query', new_callable=AsyncMock) as mock_semantic:
+             patch.object(vector_store, 'query_with_chunks', new_callable=AsyncMock) as mock_semantic:
             
             # Both strategies return same document
             same_doc = QueryResult(id="doc1", content="Same content", metadata={}, score=0.8)
@@ -265,7 +265,7 @@ class TestSmartRetrieve:
         keywords = ["overtime"]
         
         with patch.object(vector_store, 'keyword_search', new_callable=AsyncMock) as mock_keyword, \
-             patch.object(vector_store, 'query', new_callable=AsyncMock) as mock_semantic:
+             patch.object(vector_store, 'query_with_chunks', new_callable=AsyncMock) as mock_semantic:
             
             # Keyword search fails
             mock_keyword.side_effect = Exception("Database error")
@@ -325,7 +325,7 @@ class TestResultMerging:
         
         with patch.object(vector_store, 'direct_article_lookup', new_callable=AsyncMock) as mock_direct, \
              patch.object(vector_store, 'keyword_search', new_callable=AsyncMock) as mock_keyword, \
-             patch.object(vector_store, 'query', new_callable=AsyncMock) as mock_semantic:
+             patch.object(vector_store, 'query_with_chunks', new_callable=AsyncMock) as mock_semantic:
             
             # Lower score direct match should still come first
             mock_direct.return_value = [
@@ -357,7 +357,7 @@ class TestResultMerging:
         """Test that within same strategy, results are sorted by score."""
         query_embedding = [0.1] * 1536
         
-        with patch.object(vector_store, 'query', new_callable=AsyncMock) as mock_semantic:
+        with patch.object(vector_store, 'query_with_chunks', new_callable=AsyncMock) as mock_semantic:
             # Multiple semantic results with different scores
             mock_semantic.return_value = [
                 QueryResult(id="doc1", content="", metadata={}, score=0.6),

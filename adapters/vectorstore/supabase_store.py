@@ -556,23 +556,41 @@ class SupabaseVectorStore(BaseVectorStore):
                 cursor.execute("""
                     SELECT 
                         id,
-                        content,
-                        metadata,
-                        ts_rank(to_tsvector('english', content), plainto_tsquery('english', %s)) as rank
+                        full_text,
+                        article_number,
+                        article_title,
+                        book,
+                        title_name,
+                        chapter,
+                        summary,
+                        keywords,
+                        ts_rank(to_tsvector('english', full_text), plainto_tsquery('english', %s)) as rank
                     FROM labor_law_sections
-                    WHERE to_tsvector('english', content) @@ plainto_tsquery('english', %s)
-                    AND ts_rank(to_tsvector('english', content), plainto_tsquery('english', %s)) > %s
+                    WHERE to_tsvector('english', full_text) @@ plainto_tsquery('english', %s)
+                    AND ts_rank(to_tsvector('english', full_text), plainto_tsquery('english', %s)) > %s
                     ORDER BY rank DESC
                     LIMIT %s
                 """, (search_terms, search_terms, search_terms, threshold, limit))
                 
                 results = []
                 for row in cursor.fetchall():
+                    # Build metadata from individual columns
+                    metadata = {
+                        'article_number': row[2],
+                        'article_title': row[3],
+                        'book': row[4],
+                        'title_name': row[5],
+                        'chapter': row[6],
+                        'summary': row[7],
+                        'keywords': row[8] if row[8] else [],
+                        '_source_table': 'sections'
+                    }
+                    
                     results.append(QueryResult(
                         id=row[0],
-                        content=row[1],
-                        metadata=row[2] if isinstance(row[2], dict) else json.loads(row[2]),
-                        score=float(row[3])
+                        content=row[1],  # full_text
+                        metadata=metadata,
+                        score=float(row[9])  # rank is now at index 9
                     ))
                 
                 logger.info(
@@ -628,20 +646,42 @@ class SupabaseVectorStore(BaseVectorStore):
                     ]
                     
                     for pattern in patterns:
-                        # Search in content and metadata
+                        # Search in full_text and article fields
                         cursor.execute("""
-                            SELECT id, content, metadata
+                            SELECT 
+                                id, 
+                                full_text, 
+                                article_number, 
+                                article_title, 
+                                book, 
+                                title_name, 
+                                chapter,
+                                summary,
+                                keywords
                             FROM labor_law_sections
-                            WHERE content ILIKE %s
-                            OR metadata::text ILIKE %s
+                            WHERE full_text ILIKE %s
+                            OR article_number ILIKE %s
+                            OR article_title ILIKE %s
                             LIMIT 5
-                        """, (f"%{pattern}%", f"%{pattern}%"))
+                        """, (f"%{pattern}%", f"%{pattern}%", f"%{pattern}%"))
                         
                         for row in cursor.fetchall():
+                            # Build metadata from individual columns
+                            metadata = {
+                                'article_number': row[2],
+                                'article_title': row[3],
+                                'book': row[4],
+                                'title_name': row[5],
+                                'chapter': row[6],
+                                'summary': row[7],
+                                'keywords': row[8] if row[8] else [],
+                                '_source_table': 'sections'
+                            }
+                            
                             results.append(QueryResult(
                                 id=row[0],
-                                content=row[1],
-                                metadata=row[2] if isinstance(row[2], dict) else json.loads(row[2]),
+                                content=row[1],  # full_text
+                                metadata=metadata,
                                 score=1.0  # Perfect score for direct match
                             ))
                         
@@ -671,6 +711,254 @@ class SupabaseVectorStore(BaseVectorStore):
             # Don't fail entire pipeline - return empty results
             return []
     
+    async def query_with_chunks(
+        self,
+        query_embedding: List[float],
+        limit: int = 10,
+        similarity_threshold: float = 0.7
+    ) -> List[QueryResult]:
+        """
+        Query both labor_law_sections and labor_law_chunks tables.
+        
+        Strategy:
+        1. Query sections table (top-level articles) in parallel
+        2. Query chunks table (granular sub-sections) in parallel
+        3. Merge and deduplicate results (prefer chunks over parent sections)
+        4. Rank by relevance with priority: high-score chunks > high-score sections
+        
+        This dual-table approach ensures:
+        - Specific queries get granular chunk-level content
+        - Broad queries get comprehensive section-level content
+        - No duplicate content (parent + child both returned)
+        
+        Args:
+            query_embedding: Query vector for semantic search
+            limit: Maximum number of results (distributed across both tables)
+            similarity_threshold: Minimum similarity score (0.0-1.0)
+            
+        Returns:
+            Merged and ranked list of query results with source metadata
+            
+        Raises:
+            AppError: If both table queries fail
+        """
+        try:
+            # Query both tables in parallel
+            sections_task = self._query_sections_table(
+                query_embedding, limit, similarity_threshold
+            )
+            chunks_task = self._query_chunks_table(
+                query_embedding, limit, similarity_threshold
+            )
+            
+            sections_results, chunks_results = await asyncio.gather(
+                sections_task, chunks_task, return_exceptions=True
+            )
+            
+            # Handle exceptions
+            if isinstance(sections_results, Exception):
+                logger.error(f"Sections query failed: {str(sections_results)}")
+                sections_results = []
+            if isinstance(chunks_results, Exception):
+                logger.error(f"Chunks query failed: {str(chunks_results)}")
+                chunks_results = []
+            
+            # Merge and rank results
+            merged_results = self._merge_and_rank_dual_table(
+                sections_results, chunks_results, limit
+            )
+            
+            logger.info(
+                f"Dual-table query returned {len(merged_results)} results "
+                f"(sections={len(sections_results)}, chunks={len(chunks_results)})"
+            )
+            
+            return merged_results
+            
+        except Exception as e:
+            logger.error(f"Dual-table query error: {str(e)}", exc_info=True)
+            raise AppError(
+                message="Dual-table query failed",
+                error_code="DUAL_TABLE_QUERY_FAILED",
+                status_code=500,
+                details={"error": str(e)}
+            )
+    
+    async def _query_sections_table(
+        self,
+        query_embedding: List[float],
+        limit: int,
+        threshold: float
+    ) -> List[QueryResult]:
+        """Query labor_law_sections table for top-level articles."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
+            
+            cursor.execute("""
+                SELECT 
+                    id,
+                    full_text,
+                    article_number,
+                    article_title,
+                    book,
+                    title_name,
+                    chapter,
+                    summary,
+                    keywords,
+                    1 - (embedding <=> %s::vector) as similarity
+                FROM labor_law_sections
+                WHERE 1 - (embedding <=> %s::vector) > %s
+                ORDER BY embedding <=> %s::vector
+                LIMIT %s
+            """, (embedding_str, embedding_str, threshold, embedding_str, limit))
+            
+            results = []
+            for row in cursor.fetchall():
+                # Build metadata from individual columns
+                metadata = {
+                    'article_number': row[2],
+                    'article_title': row[3],
+                    'book': row[4],
+                    'title_name': row[5],
+                    'chapter': row[6],
+                    'summary': row[7],
+                    'keywords': row[8] if row[8] else [],
+                    '_source_table': 'sections'
+                }
+                
+                results.append(QueryResult(
+                    id=row[0],
+                    content=row[1],  # full_text
+                    metadata=metadata,
+                    score=float(row[9])  # similarity is now at index 9
+                ))
+            
+            return results
+            
+        finally:
+            self._return_connection(conn, cursor)
+    
+    async def _query_chunks_table(
+        self,
+        query_embedding: List[float],
+        limit: int,
+        threshold: float
+    ) -> List[QueryResult]:
+        """Query labor_law_chunks table for granular sub-sections."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
+            
+            cursor.execute("""
+                SELECT 
+                    c.id,
+                    c.chunk_text,
+                    c.keywords,
+                    1 - (c.embedding <=> %s::vector) as similarity,
+                    s.article_number,
+                    s.article_title,
+                    c.section_id,
+                    c.summary
+                FROM labor_law_chunks c
+                LEFT JOIN labor_law_sections s ON c.section_id = s.id
+                WHERE 1 - (c.embedding <=> %s::vector) > %s
+                ORDER BY c.embedding <=> %s::vector
+                LIMIT %s
+            """, (embedding_str, embedding_str, threshold, embedding_str, limit))
+            
+            results = []
+            for row in cursor.fetchall():
+                # Build metadata from chunks table structure
+                metadata = {
+                    'keywords': row[2] if row[2] else [],
+                    'section_id': row[6],
+                    'summary': row[7],
+                    '_source_table': 'chunks',
+                    '_parent_article': row[4],
+                    '_parent_title': row[5]
+                }
+                
+                results.append(QueryResult(
+                    id=row[0],
+                    content=row[1],  # chunk_text
+                    metadata=metadata,
+                    score=float(row[3])
+                ))
+            
+            return results
+            
+        finally:
+            self._return_connection(conn, cursor)
+    
+    def _merge_and_rank_dual_table(
+        self,
+        sections: List[QueryResult],
+        chunks: List[QueryResult],
+        limit: int
+    ) -> List[QueryResult]:
+        """
+        Merge and rank results from sections and chunks tables.
+        
+        Ranking priority:
+        1. Chunks with similarity >0.85 (very relevant, granular)
+        2. Sections with similarity >0.80 (very relevant, broad)
+        3. Chunks with similarity >0.75 (relevant, granular)
+        4. Sections with similarity >0.70 (relevant, broad)
+        5. Everything else by descending similarity
+        
+        Deduplication:
+        - If both parent section and child chunk are in results, prefer chunk
+        - Track parent section IDs to avoid redundant broad content
+        """
+        # Combine all results
+        all_results = []
+        parent_section_ids = set()
+        
+        # First pass: collect all chunks and track their parent sections
+        for chunk in chunks:
+            all_results.append(chunk)
+            section_id = chunk.metadata.get('section_id')
+            if section_id:
+                parent_section_ids.add(section_id)
+        
+        # Second pass: add sections that are NOT parents of included chunks
+        for section in sections:
+            # Skip if this section already has chunks in results
+            if section.id not in parent_section_ids:
+                all_results.append(section)
+        
+        # Define ranking key
+        def ranking_key(result: QueryResult) -> Tuple[int, float]:
+            """
+            Returns (priority, -similarity) for sorting.
+            Higher priority number = higher rank.
+            Negative similarity for descending order.
+            """
+            score = result.score
+            is_chunk = result.metadata.get('_source_table') == 'chunks'
+            
+            if is_chunk and score > 0.85:
+                return (4, -score)  # Highest priority
+            elif not is_chunk and score > 0.80:
+                return (3, -score)
+            elif is_chunk and score > 0.75:
+                return (2, -score)
+            elif not is_chunk and score > 0.70:
+                return (1, -score)
+            else:
+                return (0, -score)  # Lowest priority, still sorted by score
+        
+        # Sort by ranking key
+        all_results.sort(key=ranking_key, reverse=True)
+        
+        # Limit results
+        return all_results[:limit]
+    
     async def smart_retrieve(
         self,
         query_embedding: Optional[List[float]] = None,
@@ -686,7 +974,7 @@ class SupabaseVectorStore(BaseVectorStore):
         Executes retrieval strategies in parallel based on available inputs:
         1. Direct article lookup (if articles provided) - HIGHEST priority
         2. Keyword search (if keywords provided)
-        3. Semantic search (if embedding provided)
+        3. Semantic search with dual-table (if embedding provided)
         
         Results are merged, deduplicated, and ranked by strategy priority.
         
@@ -726,10 +1014,10 @@ class SupabaseVectorStore(BaseVectorStore):
                 tasks.append(self.keyword_search(query_text, keywords, limit, threshold * 0.3))
                 strategy_names.append("keyword")
             
-            # 3. Semantic search
+            # 3. Semantic search with dual-table querying
             if query_embedding:
-                tasks.append(self.query(query_embedding, limit, None, threshold))
-                strategy_names.append("semantic")
+                tasks.append(self.query_with_chunks(query_embedding, limit, threshold))
+                strategy_names.append("semantic_dual")
             
             if not tasks:
                 logger.warning("No retrieval strategies available")
@@ -742,7 +1030,7 @@ class SupabaseVectorStore(BaseVectorStore):
             merged_results = []
             result_map: Dict[str, Tuple[QueryResult, str, int]] = {}  # id -> (result, strategy, priority)
             
-            strategy_priority = {"direct": 3, "keyword": 2, "semantic": 1}
+            strategy_priority = {"direct": 3, "keyword": 2, "semantic_dual": 1}
             
             for strategy_name, results in zip(strategy_names, strategy_results):
                 if isinstance(results, Exception):

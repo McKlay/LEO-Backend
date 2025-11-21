@@ -1,0 +1,220 @@
+[
+  {
+    "id": "direct_1",
+    "category": "direct_article",
+    "query": "What does Article 82 say?",
+    "expected": {
+      "type": "direct_lookup",
+      "min_citations": 1,
+      "should_contain": ["Article 82", "hours of work", "coverage"]
+    }
+  },
+  {
+    "id": "direct_2",
+    "category": "direct_article",
+    "query": "Show me the kasambahay law",
+    "expected": {
+      "type": "direct_lookup",
+      "min_citations": 2,
+      "should_contain": ["RA 10361", "kasambahay", "domestic worker"]
+    }
+  },
+  {
+    "id": "direct_3",
+    "category": "direct_article",
+    "query": "Presidential Decree 851",
+    "expected": {
+      "type": "direct_lookup",
+      "min_citations": 1,
+      "should_contain": ["PD 851", "13th month"]
+    }
+  },
+  {
+    "id": "specific_1",
+    "category": "specific_calculation",
+    "query": "How to calculate overtime pay?",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 3,
+      "should_contain": ["overtime", "rate", "150%", "regular"]
+    }
+  },
+  {
+    "id": "specific_2",
+    "category": "specific_calculation",
+    "query": "What is night shift differential rate?",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 2,
+      "should_contain": ["night", "10%", "differential"]
+    }
+  },
+  {
+    "id": "specific_3",
+    "category": "specific_calculation",
+    "query": "13th month pay computation formula",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 3,
+      "should_contain": ["13th month", "basic salary", "/12", "computation"]
+    }
+  },
+  {
+    "id": "specific_4",
+    "category": "specific_calculation",
+    "query": "How much is holiday pay on regular holidays?",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 2,
+      "should_contain": ["holiday", "100%", "regular"]
+    }
+  },
+  {
+    "id": "concept_1",
+    "category": "concept_topic",
+    "query": "What are the types of leaves in the Philippines?",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 4,
+      "should_contain": ["leave", "service incentive", "maternity", "paternity"]
+    }
+  },
+  {
+    "id": "concept_2",
+    "category": "concept_topic",
+    "query": "Employee benefits under labor code",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 4,
+      "should_contain": ["benefits", "13th month", "SSS", "holiday"]
+    }
+  },
+  {
+    "id": "concept_3",
+    "category": "concept_topic",
+    "query": "Maternity leave entitlements",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 3,
+      "should_contain": ["maternity", "105 days", "expanded"]
+    }
+  },
+  {
+    "id": "concept_4",
+    "category": "concept_topic",
+    "query": "Rest day requirements for workers",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 2,
+      "should_contain": ["rest day", "24 hours", "week"]
+    }
+  },
+  {
+    "id": "concept_5",
+    "category": "concept_topic",
+    "query": "Kasambahay rights and benefits",
+    "expected": {
+      "type": "grounded_answer",
+      "min_citations": 4,
+      "should_contain": ["kasambahay", "SSS", "wage", "contract"]
+    }
+  },
+  {
+    "id": "vague_1",
+    "category": "vague_clarification",
+    "query": "Tell me about leave",
+    "expected": {
+      "type": "clarification",
+      "min_followups": 3,
+      "should_contain": ["maternity", "sick", "service incentive", "paternity"]
+    }
+  },
+  {
+    "id": "vague_2",
+    "category": "vague_clarification",
+    "query": "What about pay?",
+    "expected": {
+      "type": "clarification",
+      "min_followups": 3,
+      "should_contain": ["minimum wage", "overtime", "13th month", "holiday"]
+    }
+  },
+  {
+    "id": "vague_3",
+    "category": "vague_clarification",
+    "query": "I have a question about work hours",
+    "expected": {
+      "type": "clarification",
+      "min_followups": 3,
+      "should_contain": ["8 hours", "overtime", "night", "rest"]
+    }
+  },
+  {
+    "id": "vague_4",
+    "category": "vague_clarification",
+    "query": "Can you help with employee rights?",
+    "expected": {
+      "type": "clarification",
+      "min_followups": 3,
+      "should_contain": ["wages", "benefits", "security", "discrimination"]
+    }
+  },
+  {
+    "id": "multiturn_1",
+    "category": "multi_turn",
+    "turns": [
+      {
+        "query": "What is overtime pay?",
+        "expected": {
+          "type": "grounded_answer",
+          "min_citations": 2
+        }
+      },
+      {
+        "query": "How is it calculated?",
+        "expected": {
+          "type": "context_aware",
+          "no_clarification": true,
+          "should_contain": ["150%", "rate"]
+        }
+      },
+      {
+        "query": "What if I work on a holiday?",
+        "expected": {
+          "type": "context_aware",
+          "no_clarification": true,
+          "should_contain": ["holiday", "200%"]
+        }
+      }
+    ]
+  },
+  {
+    "id": "multiturn_2",
+    "category": "multi_turn",
+    "turns": [
+      {
+        "query": "Tell me about maternity leave",
+        "expected": {
+          "type": "grounded_answer",
+          "min_citations": 3
+        }
+      },
+      {
+        "query": "How long is it?",
+        "expected": {
+          "type": "context_aware",
+          "no_clarification": true,
+          "should_contain": ["105 days"]
+        }
+      },
+      {
+        "query": "Do I get paid?",
+        "expected": {
+          "type": "context_aware",
+          "no_clarification": true,
+          "should_contain": ["100%", "SSS"]
+        }
+      }
+    ]
+  }
+]

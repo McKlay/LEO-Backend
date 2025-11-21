@@ -200,7 +200,7 @@ class ChunkSummarizer:
     
     def _build_summary_prompt(self, chunk_text: str) -> str:
         """
-        Build prompt for GPT-4.1 with target summary length of 150-300 words.
+        Build prompt for GPT-4.1 with target summary length of 150-400 words.
         
         Longer, more comprehensive summaries improve semantic search quality
         by capturing nuanced legal concepts and providing better context for
@@ -208,14 +208,14 @@ class ChunkSummarizer:
         """
         return f"""You are a Philippine labor law expert. Analyze this legal text chunk and provide:
 
-1. A comprehensive 150-300 word summary that captures:
+1. A comprehensive 150-400 word summary that captures:
    - Core legal concepts and provisions
    - Who is covered (employers, employees, contractors, etc.)
    - Key rights, obligations, and penalties
    - Relevant procedures or timelines if applicable
    - Any conditions or exceptions
    
-2. 5-8 highly relevant keywords including:
+2. Highly relevant keywords including:
    - Article/Section references (e.g., "Article 97", "Section 3(a)")
    - Legal terms of art (e.g., "overtime pay", "regular wage", "employer obligations")
    - Named entities (e.g., "DOLE", "NLRC", "SSS")
@@ -232,7 +232,7 @@ Text:
 
 Respond ONLY in valid JSON format:
 {{
-  "summary": "150-300 word comprehensive summary here that captures all key legal concepts",
+  "summary": "150-400 word comprehensive summary here that captures all key legal concepts",
   "keywords": ["keyword1", "keyword2", "keyword3", ...]
 }}"""
 
