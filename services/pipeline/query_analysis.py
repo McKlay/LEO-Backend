@@ -138,6 +138,40 @@ class QueryAnalysisPipeline:
             
             # Create QueryAnalysis object
             analysis = QueryAnalysis(**analysis_data)
+
+            # Post-processing: override LLM clarification decision when there
+            # are strong, unambiguous topic signals in the query or in the
+            # extracted analysis. This is a lightweight, deterministic
+            # guard to reduce false-positive clarification for clearly
+            # scoped legal questions (e.g. "What is the minimum wage?").
+            #
+            # IMPORTANT: We do not modify the analysis prompt here per
+            # request; instead we apply a small heuristic after the LLM
+            # returns. This keeps the LLM prompt intact while avoiding
+            # overly-strict clarification behavior.
+            if analysis.needs_clarification:
+                qlower = query.lower()
+                topic_keywords = [
+                    "minimum wage", "wage", "overtime", "13th month",
+                    "maternity", "termination", "severance", "contractual",
+                    "holiday pay", "sick leave", "hazard pay", "probation"
+                ]
+
+                keywords_in_analysis = [k.lower() for k in analysis.keywords or []]
+                legal_concepts_lower = [c.lower() for c in analysis.legal_concepts or []]
+
+                has_strong_topic = (
+                    any(k in qlower for k in topic_keywords)
+                    or bool(analysis.articles)
+                    or any(k in kw for kw in keywords_in_analysis for k in ["wage", "overtime", "minimum", "13th", "maternity", "termination"]) 
+                    or any(k in lc for lc in legal_concepts_lower for k in ["wage", "overtime", "minimum", "maternity", "termination"]) 
+                )
+
+                if has_strong_topic:
+                    logger.info("Overriding LLM clarification decision based on strong topic signals")
+                    analysis.needs_clarification = False
+                    analysis.clarification_reason = None
+                    analysis.clarification_questions = []
             
             # Enhance with regex-based article extraction
             articles = self._extract_articles_regex(query)
@@ -176,21 +210,39 @@ class QueryAnalysisPipeline:
         """
         # Build conversation context string
         context_str = ""
+        has_context = False
         if conversation_history and len(conversation_history) > 0:
-            recent_history = conversation_history[-4:]  # Last 4 messages
-            context_lines = []
-            for msg in recent_history:
-                role = msg.get("role", "unknown")
-                content = msg.get("content", "")[:200]  # Truncate long messages
-                context_lines.append(f"{role.upper()}: {content}")
-            context_str = "\n".join(context_lines)
+            # Exclude the current user message (last message) since it's already being analyzed
+            # Take up to the last 6 messages (3 exchanges) before the current query
+            relevant_history = conversation_history[:-1][-6:] if len(conversation_history) > 1 else []
+            
+            if relevant_history:
+                has_context = True
+                context_lines = []
+                for msg in relevant_history:
+                    role = msg.get("role", "unknown")
+                    content = msg.get("content", "")[:300]  # Increased truncation limit
+                    context_lines.append(f"{role.upper()}: {content}")
+                context_str = "\n".join(context_lines)
         
-        context_section = f"Previous conversation:\n{context_str}\n\n" if context_str else "This is the first query in the conversation.\n\n"
-        
-        system_prompt = f"""Analyze Philippine labor law query. {context_section}
+        if has_context:
+            context_section = f"Previous conversation:\n{context_str}\n\n"
+            clarification_rules = """CRITICAL CLARIFICATION RULES:
+- **NEVER clarify** if query references conversation context (e.g., "How often is it updated?", "What about that?", "Tell me more")
+- **NEVER clarify** pronouns ("it", "they", "that") when previous context exists
+- **DO clarify** only if BOTH conditions: (1) vague query AND (2) NO relevant context in conversation
+- **NO clarify** for: follow-ups, pronoun references with context, topic continuations
 
-CLARIFY if: vague ("my rights"), ambiguous pronouns ("they"), no context ("I have problem")
-NO CLARIFY if: specific topic, follow-up with context, article reference
+CLARIFY ONLY if: First query AND vague ("my rights"), no context AND ambiguous ("they"), standalone unclear question
+"""
+        else:
+            context_section = "This is the first query in the conversation.\n\n"
+            clarification_rules = """CLARIFICATION RULES:
+CLARIFY if: vague ("my rights"), ambiguous pronouns without context ("they"), no specific topic ("I have problem")
+NO CLARIFY if: specific topic, article reference, clear legal concept
+"""
+        
+        system_prompt = f"""Analyze Philippine labor law query. {context_section}{clarification_rules}
 
 Return JSON only:
 {{
@@ -211,6 +263,11 @@ Return JSON only:
             Message(role="system", content=system_prompt),
             Message(role="user", content=user_prompt)
         ]
+        
+        logger.debug(
+            f"Query analysis prompt built: has_context={has_context}, "
+            f"history_messages={len(conversation_history) if conversation_history else 0}"
+        )
         
         return messages
     

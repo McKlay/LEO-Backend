@@ -555,19 +555,22 @@ class SupabaseVectorStore(BaseVectorStore):
                 # Use PostgreSQL FTS with ts_rank for relevance scoring
                 cursor.execute("""
                     SELECT 
-                        id,
-                        full_text,
-                        article_number,
-                        article_title,
-                        book,
-                        title_name,
-                        chapter,
-                        summary,
-                        keywords,
-                        ts_rank(to_tsvector('english', full_text), plainto_tsquery('english', %s)) as rank
-                    FROM labor_law_sections
-                    WHERE to_tsvector('english', full_text) @@ plainto_tsquery('english', %s)
-                    AND ts_rank(to_tsvector('english', full_text), plainto_tsquery('english', %s)) > %s
+                        s.id,
+                        s.full_text,
+                        s.article_number,
+                        s.article_title,
+                        s.book,
+                        s.title_name,
+                        s.chapter,
+                        s.summary,
+                        s.keywords,
+                        ts_rank(to_tsvector('english', s.full_text), plainto_tsquery('english', %s)) as rank,
+                        src.url,
+                        src.title AS source_title
+                    FROM labor_law_sections s
+                    LEFT JOIN labor_law_sources src ON s.source_id = src.id
+                    WHERE to_tsvector('english', s.full_text) @@ plainto_tsquery('english', %s)
+                    AND ts_rank(to_tsvector('english', s.full_text), plainto_tsquery('english', %s)) > %s
                     ORDER BY rank DESC
                     LIMIT %s
                 """, (search_terms, search_terms, search_terms, threshold, limit))
@@ -583,6 +586,8 @@ class SupabaseVectorStore(BaseVectorStore):
                         'chapter': row[6],
                         'summary': row[7],
                         'keywords': row[8] if row[8] else [],
+                        'source_url': row[10],
+                        'source_title': row[11],
                         '_source_table': 'sections'
                     }
                     
@@ -649,19 +654,22 @@ class SupabaseVectorStore(BaseVectorStore):
                         # Search in full_text and article fields
                         cursor.execute("""
                             SELECT 
-                                id, 
-                                full_text, 
-                                article_number, 
-                                article_title, 
-                                book, 
-                                title_name, 
-                                chapter,
-                                summary,
-                                keywords
-                            FROM labor_law_sections
-                            WHERE full_text ILIKE %s
-                            OR article_number ILIKE %s
-                            OR article_title ILIKE %s
+                                s.id, 
+                                s.full_text, 
+                                s.article_number, 
+                                s.article_title, 
+                                s.book, 
+                                s.title_name, 
+                                s.chapter,
+                                s.summary,
+                                s.keywords,
+                                src.url,
+                                src.title AS source_title
+                            FROM labor_law_sections s
+                            LEFT JOIN labor_law_sources src ON s.source_id = src.id
+                            WHERE s.full_text ILIKE %s
+                            OR s.article_number ILIKE %s
+                            OR s.article_title ILIKE %s
                             LIMIT 5
                         """, (f"%{pattern}%", f"%{pattern}%", f"%{pattern}%"))
                         
@@ -675,6 +683,8 @@ class SupabaseVectorStore(BaseVectorStore):
                                 'chapter': row[6],
                                 'summary': row[7],
                                 'keywords': row[8] if row[8] else [],
+                                'source_url': row[9],
+                                'source_title': row[10],
                                 '_source_table': 'sections'
                             }
                             
@@ -799,19 +809,22 @@ class SupabaseVectorStore(BaseVectorStore):
             
             cursor.execute("""
                 SELECT 
-                    id,
-                    full_text,
-                    article_number,
-                    article_title,
-                    book,
-                    title_name,
-                    chapter,
-                    summary,
-                    keywords,
-                    1 - (embedding <=> %s::vector) as similarity
-                FROM labor_law_sections
-                WHERE 1 - (embedding <=> %s::vector) > %s
-                ORDER BY embedding <=> %s::vector
+                    s.id,
+                    s.full_text,
+                    s.article_number,
+                    s.article_title,
+                    s.book,
+                    s.title_name,
+                    s.chapter,
+                    s.summary,
+                    s.keywords,
+                    1 - (s.embedding <=> %s::vector) as similarity,
+                    src.url,
+                    src.title AS source_title
+                FROM labor_law_sections s
+                LEFT JOIN labor_law_sources src ON s.source_id = src.id
+                WHERE 1 - (s.embedding <=> %s::vector) > %s
+                ORDER BY s.embedding <=> %s::vector
                 LIMIT %s
             """, (embedding_str, embedding_str, threshold, embedding_str, limit))
             
@@ -826,6 +839,8 @@ class SupabaseVectorStore(BaseVectorStore):
                     'chapter': row[6],
                     'summary': row[7],
                     'keywords': row[8] if row[8] else [],
+                    'source_url': row[10],
+                    'source_title': row[11],
                     '_source_table': 'sections'
                 }
                 

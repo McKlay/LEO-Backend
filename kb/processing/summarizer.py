@@ -215,30 +215,34 @@ class ChunkSummarizer:
    - Relevant procedures or timelines if applicable
    - Any conditions or exceptions
    
-2. Highly relevant keywords including:
+2. Highly relevant keywords (5-8 terms) including:
    - Article/Section references (e.g., "Article 97", "Section 3(a)")
    - Legal terms of art (e.g., "overtime pay", "regular wage", "employer obligations")
    - Named entities (e.g., "DOLE", "NLRC", "SSS")
    - Domain concepts (e.g., "minimum wage", "illegal dismissal")
 
-Guidelines:
-- Write the summary as a cohesive paragraph or 2-3 well-developed sentences
-- Focus on worker rights and protections
-- Include relevant numerical thresholds or percentages if mentioned
-- Keep language clear and precise, suitable for legal professionals
+CRITICAL JSON FORMATTING RULES:
+- Write summary as ONE CONTINUOUS STRING with NO line breaks inside the string value
+- Use only spaces to separate sentences - NEVER use \\n or actual newlines
+- Replace any internal double quotes with single quotes or remove them
+- Ensure keywords array contains 5-8 string values
+- DO NOT wrap response in markdown code blocks (no ```)
+- DO NOT include explanatory text before or after the JSON
+- VALIDATE that all strings are properly closed with matching quotes
+- VALIDATE that all arrays are properly closed with matching brackets
 
-Text:
+Text to summarize:
 {chunk_text[:2000]}
 
-Respond ONLY in valid JSON format:
+RESPOND WITH ONLY THIS EXACT JSON STRUCTURE (no markdown, no code blocks):
 {{
-  "summary": "150-400 word comprehensive summary here that captures all key legal concepts",
-  "keywords": ["keyword1", "keyword2", "keyword3", ...]
+  "summary": "Your 150-400 word summary here as a single continuous string with spaces instead of newlines",
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8"]
 }}"""
 
     def _parse_response(self, response: str, chunk_text: str) -> ChunkSummary:
         """
-        Parse LLM JSON response.
+        Parse LLM JSON response with robust validation and recovery.
         
         Args:
             response: JSON string from LLM
@@ -248,21 +252,160 @@ Respond ONLY in valid JSON format:
             ChunkSummary object
         """
         try:
+            # First attempt: direct JSON parsing
             data = json.loads(response)
-            summary = data.get("summary", "").strip()
+            return self._validate_and_return_summary(data, chunk_text)
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {e}")
+            logger.debug(f"Response was: {response[:300]}")
+            
+            # Second attempt: Try to fix common JSON issues
+            try:
+                fixed_response = self._repair_json(response)
+                data = json.loads(fixed_response)
+                logger.info("Successfully repaired malformed JSON response")
+                return self._validate_and_return_summary(data, chunk_text)
+            except Exception as repair_error:
+                logger.warning(f"JSON repair failed: {repair_error}")
+                return self._fallback_summary(chunk_text)
+        except Exception as e:
+            logger.error(f"Unexpected error parsing LLM response: {e}")
+            return self._fallback_summary(chunk_text)
+    
+    def _repair_json(self, response: str) -> str:
+        """
+        Attempt to repair common JSON parsing errors.
+        
+        Handles:
+        - Unterminated strings (missing closing quotes)
+        - Incomplete objects/arrays (missing closing braces/brackets)
+        - Newlines within string values
+        - Embedded code blocks
+        
+        Args:
+            response: Potentially malformed JSON string
+            
+        Returns:
+            Repaired JSON string (best effort)
+        """
+        # Remove leading/trailing whitespace
+        response = response.strip()
+        
+        # Try to extract JSON from markdown code blocks
+        if '```json' in response:
+            start = response.find('```json') + 7
+            end = response.rfind('```')
+            if end > start:
+                response = response[start:end].strip()
+        elif '```' in response:
+            start = response.find('```') + 3
+            end = response.rfind('```')
+            if end > start:
+                response = response[start:end].strip()
+        
+        # Try to find the JSON object boundaries
+        json_start = response.find('{')
+        json_end = response.rfind('}')
+        
+        if json_start != -1 and json_end > json_start:
+            # Extract just the JSON part
+            response = response[json_start:json_end + 1]
+        
+        # Replace problematic characters in string values
+        # Fix newlines within JSON strings (but preserve structure)
+        response = re.sub(r'"\s*\n\s*([^"{}[\],]+)\s*\n\s*"', r'" \1 "', response)
+        
+        # Count braces to detect incomplete object
+        open_braces = response.count('{')
+        close_braces = response.count('}')
+        open_brackets = response.count('[')
+        close_brackets = response.count(']')
+        
+        # Parse and track quote positions more carefully
+        in_escape = False
+        quote_positions = []
+        i = 0
+        while i < len(response):
+            char = response[i]
+            if char == '\\' and not in_escape:
+                in_escape = True
+            elif char == '"' and not in_escape:
+                quote_positions.append(i)
+                in_escape = False
+            else:
+                in_escape = False
+            i += 1
+        
+        # If odd number of unescaped quotes, we have an unterminated string
+        if len(quote_positions) % 2 == 1:
+            logger.debug(f"Detected unterminated string at position {quote_positions[-1]}")
+            last_quote_pos = quote_positions[-1]
+            
+            # Find where to close the string - look for structural JSON delimiters
+            rest_of_string = response[last_quote_pos + 1:]
+            
+            # Find the earliest occurrence of a structural delimiter
+            delimiters = [',', '}', ']', '\n']
+            end_pos = len(rest_of_string)
+            
+            for delimiter in delimiters:
+                pos = rest_of_string.find(delimiter)
+                if pos != -1 and pos < end_pos:
+                    end_pos = pos
+            
+            # Insert closing quote before the delimiter
+            if end_pos > 0:
+                response = (
+                    response[:last_quote_pos + 1 + end_pos] + 
+                    '"' + 
+                    response[last_quote_pos + 1 + end_pos:]
+                )
+                logger.debug("Added closing quote for unterminated string")
+        
+        # Add missing closing braces/brackets at the end
+        if open_braces > close_braces:
+            missing = open_braces - close_braces
+            response += '}' * missing
+            logger.debug(f"Added {missing} missing closing braces")
+        if open_brackets > close_brackets:
+            missing = open_brackets - close_brackets
+            response += ']' * missing
+            logger.debug(f"Added {missing} missing closing brackets")
+        
+        return response
+    
+    def _validate_and_return_summary(self, data: dict, chunk_text: str) -> ChunkSummary:
+        """
+        Validate parsed JSON data and return ChunkSummary.
+        
+        Args:
+            data: Parsed JSON dictionary
+            chunk_text: Original chunk text
+            
+        Returns:
+            ChunkSummary object or fallback if validation fails
+        """
+        try:
+            summary = data.get("summary", "").strip() if isinstance(data.get("summary"), str) else ""
             keywords = data.get("keywords", [])
             
             # Validate keywords is a list
             if not isinstance(keywords, list):
-                logger.warning(f"Keywords is not a list: {type(keywords)}")
+                logger.warning(f"Keywords is not a list: {type(keywords)}, using empty list")
                 keywords = []
             
-            # Ensure keywords are strings and deduplicate
-            keywords = list(set([str(k).strip() for k in keywords if k]))[:8]
+            # Ensure keywords are strings and deduplicate (max 8)
+            keywords = list(set([str(k).strip() for k in keywords if k and isinstance(k, (str, int))]))[:8]
             
-            # Validate summary
-            if not summary:
-                logger.warning("Empty summary from LLM, using fallback")
+            # If no keywords were extracted, use fallback
+            if not keywords:
+                logger.warning("No valid keywords extracted from LLM response")
+                keywords = self._extract_basic_keywords(chunk_text)
+            
+            # Validate summary length
+            if not summary or len(summary) < 20:
+                logger.warning(f"Summary too short ({len(summary)} chars), using fallback")
                 return self._fallback_summary(chunk_text)
             
             return ChunkSummary(
@@ -272,12 +415,8 @@ Respond ONLY in valid JSON format:
                 confidence=0.9
             )
             
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {e}")
-            logger.debug(f"Response was: {response[:200]}")
-            return self._fallback_summary(chunk_text)
         except Exception as e:
-            logger.error(f"Error parsing LLM response: {e}")
+            logger.error(f"Validation error: {e}")
             return self._fallback_summary(chunk_text)
     
     def _fallback_summary(self, chunk_text: str) -> ChunkSummary:

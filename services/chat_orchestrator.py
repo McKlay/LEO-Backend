@@ -98,16 +98,17 @@ class ChatOrchestrator:
                 f"conversation={conversation_id}, language={language}"
             )
             
-            # Step 1: Add user message to conversation history
-            await self.conversation.add_user_message(
-                session_id=conversation_id,  # Use conversation_id as session
-                content=user_message
-            )
-            
-            # Step 2: Get conversation history for context-aware analysis
+            # Step 1: Get conversation history BEFORE adding current message
+            # This ensures query analysis has context of PREVIOUS messages only
             conversation_history = await self.conversation.get_conversation_context(
                 session_id=conversation_id,
                 include_last_n=settings.max_conversation_history
+            )
+            
+            # Step 2: Add user message to conversation history
+            await self.conversation.add_user_message(
+                session_id=conversation_id,  # Use conversation_id as session
+                content=user_message
             )
             
             # Step 3: Smart query analysis with clarification detection
@@ -371,7 +372,7 @@ class ChatOrchestrator:
                 clarification_parts.append("\n\n**Here are some specific questions you might ask**:")
             
             for i, question in enumerate(analysis.clarification_questions[:4], 1):
-                clarification_parts.append(f"{i}. {question}")
+                clarification_parts.append(f"\n\n{i}. {question}")
         
         # Add suggested topics
         if analysis.suggested_topics:
@@ -383,7 +384,7 @@ class ChatOrchestrator:
                 clarification_parts.append("\n\n**Or choose from these common topics**:")
             
             for topic in analysis.suggested_topics[:5]:
-                clarification_parts.append(f"• {topic}")
+                clarification_parts.append(f"\n\n• {topic}")
         
         clarification_text = "".join(clarification_parts)
         
@@ -567,68 +568,113 @@ class ChatOrchestrator:
                 f"conversation={conversation_id}, language={language}"
             )
             
-            # Step 1: Add user message to conversation history
+            # Step 1: Get conversation history BEFORE adding current message
+            # This ensures query analysis has context of PREVIOUS messages only
+            conversation_history = await self.conversation.get_conversation_context(
+                session_id=conversation_id,
+                include_last_n=settings.max_conversation_history
+            )
+            
+            # Step 2: Add user message to conversation history
             await self.conversation.add_user_message(
                 session_id=conversation_id,
                 content=user_message
             )
             
-            # Step 2: Get conversation history for context awareness
-            conversation_history = await self.conversation.get_conversation_context(
-                session_id=conversation_id
-            )
-            
-            # Step 3: Query analysis with smart clarification (LLM-based)
-            logger.info("Analyzing query with conversation context")
-            analysis = await self.query_analysis.analyze_query(
-                query=user_message,
-                conversation_history=conversation_history
-            )
-            
-            # Step 4: Check if clarification is needed (early exit)
-            if analysis.needs_clarification:
-                logger.info(
-                    f"Clarification needed: {analysis.clarification_reason}"
-                )
+            # Step 3: Smart query analysis with clarification detection (if enabled)
+            analysis = None
+            if settings.enable_smart_clarification:
+                logger.info("Analyzing query with conversation context")
                 
-                # Build clarification response with LLM-generated questions
-                clarification = self._build_clarification_response(
-                    analysis=analysis,
-                    language=language
-                )
-                
-                # Add clarification as assistant message
-                await self.conversation.add_assistant_message(
-                    session_id=conversation_id,
-                    content=clarification["content"]
-                )
-                
-                processing_time = time.time() - start_time
-                message_id = str(uuid.uuid4())
-                
-                # Yield complete clarification event
+                # Yield status event: Analyzing
                 yield {
-                    "type": "complete",
+                    "type": "status",
                     "data": {
-                        "message_id": message_id,
-                        "conversation_id": conversation_id,
-                        "role": "assistant",
-                        "content": clarification["content"],
-                        "timestamp": datetime.utcnow().isoformat(),
-                        "citations": [],
-                        "suggestions": clarification["suggestions"],
-                        "metadata": {
-                            "processing_time": round(processing_time, 2),
-                            "is_clarification": True,
-                            "clarification_reason": analysis.clarification_reason,
-                            "model": settings.query_analysis_model
-                        }
+                        "step": "analyze",
+                        "message": "Analyzing your query..."
                     }
                 }
-                return
+                
+                analysis_start = time.time()
+                
+                analysis = await self.query_analysis.analyze(
+                    query=user_message,
+                    conversation_history=conversation_history
+                )
+                
+                analysis_time = time.time() - analysis_start
+                
+                logger.info(
+                    f"Query analysis complete: "
+                    f"needs_clarification={analysis.needs_clarification}, "
+                    f"concepts={analysis.legal_concepts}, "
+                    f"articles={analysis.articles}, "
+                    f"time={analysis_time:.3f}s"
+                )
+                
+                # Step 4: Check if clarification is needed (early exit)
+                if analysis.needs_clarification:
+                    logger.info(
+                        f"Clarification needed: {analysis.clarification_reason}"
+                    )
+                    
+                    # Build clarification response with LLM-generated questions
+                    clarification = self._build_clarification_response(
+                        analysis=analysis,
+                        language=language
+                    )
+                    
+                    # Add clarification as assistant message
+                    await self.conversation.add_assistant_message(
+                        session_id=conversation_id,
+                        content=clarification["content"]
+                    )
+                    
+                    processing_time = time.time() - start_time
+                    message_id = str(uuid.uuid4())
+                    
+                    # Yield complete clarification event
+                    yield {
+                        "type": "complete",
+                        "data": {
+                            "message_id": message_id,
+                            "conversation_id": conversation_id,
+                            "role": "assistant",
+                            "content": clarification["content"],
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "citations": [],
+                            "suggestions": clarification.get("suggestions", []),
+                            "metadata": {
+                                "processing_time": round(processing_time, 2),
+                                "retrieval_time": 0.0,  # No retrieval for clarification
+                                "generation_time": round(analysis_time, 3),  # Query analysis time
+                                "analysis_time": round(analysis_time, 3),
+                                "model": settings.query_analysis_model,
+                                "confidence": 0.5,
+                                "disclaimer_required": False,
+                                "is_clarification": True,
+                                "clarification_reason": analysis.clarification_reason,
+                                "tokens_used": 0  # No LLM generation for clarification
+                            }
+                        }
+                    }
+                    return
+            else:
+                # Fallback: no query analysis
+                logger.info("Smart clarification disabled - proceeding with retrieval")
             
             # Step 5: Retrieve relevant context
             logger.info("Retrieving context from knowledge base")
+            
+            # Yield status event: Retrieving
+            yield {
+                "type": "status",
+                "data": {
+                    "step": "retrieve",
+                    "message": "Searching labor laws..."
+                }
+            }
+            
             retrieval_start = time.time()
             
             retrieval_results = await self.retrieval.retrieve(
@@ -672,6 +718,16 @@ class ChatOrchestrator:
             
             # Step 7: Stream LLM response generation
             logger.info("Starting streaming LLM generation")
+            
+            # Yield status event: Generating
+            yield {
+                "type": "status",
+                "data": {
+                    "step": "generate",
+                    "message": "Formulating response..."
+                }
+            }
+            
             generation_start = time.time()
             
             full_content = []

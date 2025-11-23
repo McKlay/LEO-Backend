@@ -321,15 +321,38 @@ Language: {language}
         for idx, result in enumerate(results, 1):
             metadata = result.metadata or {}
             
-            # Build citation matching API specification
+            # Map metadata fields from vector store to API response format
+            # Handle both 'sections' and 'chunks' table schemas
+            article_id = (
+                metadata.get("article_number") or 
+                metadata.get("_parent_article") or 
+                metadata.get("article") or 
+                "N/A"
+            )
+            
+            title = (
+                metadata.get("article_title") or 
+                metadata.get("_parent_title") or 
+                metadata.get("title") or 
+                "Labor Law Provision"
+            )
+            
+            # Extract text excerpt (limited to 300 chars)
+            excerpt = result.content[:300] + "..." if len(result.content) > 300 else result.content
+            
+            # Get source info (use source_url from JOIN with labor_law_sources table)
+            source_title = metadata.get("source_title", "Labor Code of the Philippines")
+            source_url = metadata.get("source_url") or metadata.get("url", "https://www.dole.gov.ph/labor-code/")
+            
+            # Build citation matching API specification (schemas_chat.py Citation model)
             # Required fields: id, text, source, article, url, confidence
             citation = {
-                "id": str(uuid.uuid4()),  # UUID string as per API spec
-                "text": result.content[:200] + "..." if len(result.content) > 200 else result.content,  # Citation text
-                "source": metadata.get("source", "Labor Code of the Philippines"),  # Source name
-                "article": metadata.get("article") or metadata.get("section") or "N/A",  # Article/section number
-                "url": metadata.get("url", "https://www.dole.gov.ph/labor-code/"),  # URL to source
-                "confidence": round(result.score, 3)  # Confidence score (0-1)
+                "id": str(uuid.uuid4()),
+                "text": excerpt,  # API expects 'text' field
+                "source": source_title,
+                "article": article_id,  # API expects 'article' field (not 'article_id')
+                "url": source_url,  # Use actual source URL from labor_law_sources table
+                "confidence": round(result.score, 3)
             }
             
             citations.append(citation)

@@ -10,15 +10,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.containers import Container
+from app.containers import get_embeddings_adapter, get_vectorstore_adapter
 
 
 async def test_ingested_documents():
     """Test retrieval with actual ingested documents."""
     
-    container = Container()
-    embeddings = container.embeddings()
-    vectorstore = container.vectorstore()
+    embeddings = get_embeddings_adapter()
+    vectorstore = get_vectorstore_adapter()
     
     print("\n" + "="*80)
     print("DUAL-TABLE RETRIEVAL TEST - INGESTED DOCUMENTS")
@@ -125,9 +124,8 @@ async def test_ingested_documents():
 async def test_deduplication_real_data():
     """Test deduplication with real data."""
     
-    container = Container()
-    embeddings = container.embeddings()
-    vectorstore = container.vectorstore()
+    embeddings = get_embeddings_adapter()
+    vectorstore = get_vectorstore_adapter()
     
     print("\n" + "="*80)
     print("DEDUPLICATION TEST - REAL DATA")
@@ -179,9 +177,8 @@ async def test_deduplication_real_data():
 async def test_ranking_real_data():
     """Test ranking with real data."""
     
-    container = Container()
-    embeddings = container.embeddings()
-    vectorstore = container.vectorstore()
+    embeddings = get_embeddings_adapter()
+    vectorstore = get_vectorstore_adapter()
     
     print("\n" + "="*80)
     print("RANKING PRIORITY TEST - REAL DATA")

@@ -158,6 +158,84 @@ async def test_multi_turn_conversation():
 
 
 @pytest.mark.asyncio
+async def test_dual_table_retrieval_chunks():
+    """Test that chunks are retrieved alongside sections."""
+    async with await create_test_client() as client:
+        token, _ = await create_session(client)
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Query that should retrieve chunks (specific calculation details)
+        response = await client.post(
+            "/api/v1/chat/message",
+            json={
+                "message": "How to calculate overtime pay step by step?",
+                "language": "en"
+            },
+            headers=headers
+        )
+        
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        
+        # Verify citations include chunk metadata
+        citations = data["citations"]
+        assert len(citations) > 0
+        
+        # Check for chunk-specific metadata
+        has_chunks = False
+        for cit in citations:
+            metadata = cit.get("metadata", {})
+            if metadata.get("_source_table") == "chunks":
+                has_chunks = True
+                assert "chunk_index" in metadata or "_parent_article" in metadata
+                break
+        
+        print(f"✓ Dual-table retrieval: {len(citations)} citations, chunks={'yes' if has_chunks else 'no'}")
+
+
+@pytest.mark.asyncio
+async def test_citation_deduplication():
+    """Test that parent sections and child chunks are not both returned."""
+    async with await create_test_client() as client:
+        token, _ = await create_session(client)
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        response = await client.post(
+            "/api/v1/chat/message",
+            json={
+                "message": "13th month pay requirements",
+                "language": "en"
+            },
+            headers=headers
+        )
+        
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        
+        citations = data["citations"]
+        
+        # Check for duplicates (same section_id appearing in both sections and chunks)
+        section_ids = set()
+        chunk_parent_ids = set()
+        
+        for cit in citations:
+            metadata = cit.get("metadata", {})
+            source_table = metadata.get("_source_table")
+            
+            if source_table == "sections":
+                section_ids.add(cit["id"])
+            elif source_table == "chunks":
+                parent_id = metadata.get("section_id")
+                if parent_id:
+                    chunk_parent_ids.add(parent_id)
+        
+        duplicates = section_ids.intersection(chunk_parent_ids)
+        assert len(duplicates) == 0, f"Found {len(duplicates)} duplicate parent-child pairs"
+        
+        print(f"✓ Citation deduplication: No duplicates in {len(citations)} citations")
+
+
+@pytest.mark.asyncio
 async def test_citation_quality():
     """Test citation completeness across multiple queries."""
     queries = [
