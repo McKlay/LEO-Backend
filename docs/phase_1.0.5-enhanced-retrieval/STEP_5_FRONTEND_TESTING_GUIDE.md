@@ -106,11 +106,11 @@ Status: FIXED - Ready for retest
 **Query**: "How to calculate 13th month pay?"
 
 **Check Points**:
-- [ ] First token appears within 3.5s
-- [ ] Tokens stream smoothly (no long pauses)
-- [ ] No UI flicker or layout shifts
-- [ ] Citations appear after main text completes
-- [ ] Loading indicator shows during streaming
+- [✅] First token appears within 3.5s
+- [✅] Tokens stream smoothly (no long pauses)
+- [✅] No UI flicker or layout shifts
+- [✅] Citations appear after main text completes
+- [✅] Loading indicator shows during streaming
 
 **Actual Behavior**:
 - First token time: ___________

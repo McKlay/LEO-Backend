@@ -134,11 +134,13 @@ POST /api/v1/auth/session/refresh
 
 ### 1. Chat Message API
 
-#### Send Message and Get AI Response
+#### Send Message and Get Streaming AI Response
 
 ```http
-POST /api/v1/chat/message
+POST /api/v1/chat/message/stream
 ```
+
+**Description:** Send a chat message and receive a streaming response via Server-Sent Events (SSE). This endpoint provides better perceived performance by streaming the response as it's generated.
 
 **Request Headers:**
 ```
@@ -163,13 +165,35 @@ Accept-Language: en | fil | ceb
 }
 ```
 
-**Response:** `200 OK`
-```json
-{
-  "messageId": "msg-uuid-v4",
-  "role": "assistant",
-  "content": "Under Article 279 of the Labor Code of the Philippines...",
-  "timestamp": "2025-10-31T10:30:00Z",
+**Response:** `200 OK` (Server-Sent Events Stream)
+
+The response is a stream of Server-Sent Events (SSE) with the following event types:
+
+**Event: `status`**
+```
+event: status
+data: {"step": "analyze", "message": "Analyzing your question..."}
+```
+
+**Event: `metadata`**
+```
+event: metadata
+data: {"messageId": "msg-uuid-v4", "conversationId": "conv-uuid-v4"}
+```
+
+**Event: `content_chunk`** (multiple chunks streamed as generated)
+```
+event: content_chunk
+data: {"chunk": "Under Article 279"}
+
+event: content_chunk  
+data: {"chunk": " of the Labor Code"}
+```
+
+**Event: `citations`**
+```
+event: citations
+data: {
   "citations": [
     {
       "id": "cite-uuid-1",
@@ -179,7 +203,16 @@ Accept-Language: en | fil | ceb
       "url": "https://www.dole.gov.ph/labor-code-of-the-philippines/",
       "confidence": 0.95
     }
-  ],
+  ]
+}
+```
+
+**Event: `complete`**
+```
+event: complete
+data: {
+  "content": "Under Article 279 of the Labor Code...",
+  "citations": [...],
   "suggestions": [
     {
       "id": "action-1",
@@ -191,38 +224,20 @@ Accept-Language: en | fil | ceb
         "email": "dolero4a@gmail.com",
         "website": "https://www.dole.gov.ph"
       }
-    },
-    {
-      "id": "action-2",
-      "type": "form",
-      "label": "File SEnA Request",
-      "data": {
-        "formName": "Single Entry Approach (SEnA)",
-        "instructions": [
-          "Go to nearest DOLE office",
-          "Fill out SEnA Request Form",
-          "Submit with supporting documents"
-        ],
-        "downloadUrl": "https://www.dole.gov.ph/sena-request-form/"
-      }
-    },
-    {
-      "id": "action-3",
-      "type": "link",
-      "label": "Find a Lawyer",
-      "data": {
-        "url": "https://www.pao.gov.ph",
-        "external": true
-      }
     }
   ],
   "metadata": {
     "processingTime": 1.5,
     "model": "gpt-4.1",
-    "confidence": 0.92,
-    "disclaimerRequired": true
+    "confidence": 0.92
   }
 }
+```
+
+**Event: `error`** (only if an error occurs)
+```
+event: error
+data: {"error": "Processing failed", "error_code": "GENERATION_ERROR"}
 ```
 
 **Error Response:** `400 Bad Request`

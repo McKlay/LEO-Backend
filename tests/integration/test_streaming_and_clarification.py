@@ -13,6 +13,7 @@ import time
 import json
 import asyncio
 from httpx import AsyncClient, ASGITransport
+from tests.conftest import parse_sse_response
 from fastapi import status
 
 # Skip if integration testing not enabled
@@ -60,7 +61,7 @@ async def get_or_create_session(client: AsyncClient) -> tuple[str, str]:
             )
             
             if response.status_code == status.HTTP_201_CREATED:
-                data = response.json()
+                data = await parse_sse_response(response)
                 token = data["token"]
                 session_id = data["sessionId"]
                 
@@ -169,7 +170,7 @@ async def test_vague_query_triggers_clarification():
         for query in vague_queries:
             start = time.time()
             response = await client.post(
-                "/api/v1/chat/message",
+                "/api/v1/chat/message/stream",
                 json={
                     "message": query,
                     "language": "en"
@@ -179,7 +180,7 @@ async def test_vague_query_triggers_clarification():
             elapsed = time.time() - start
             
             assert response.status_code == status.HTTP_200_OK
-            data = response.json()
+            data = await parse_sse_response(response)
             
             # Note: Clarification may or may not trigger depending on query analysis
             # This is expected behavior - we're testing the system works either way
@@ -210,7 +211,7 @@ async def test_clear_query_skips_clarification():
         
         for query in clear_queries:
             response = await client.post(
-                "/api/v1/chat/message",
+                "/api/v1/chat/message/stream",
                 json={
                     "message": query,
                     "language": "en"
@@ -219,7 +220,7 @@ async def test_clear_query_skips_clarification():
             )
             
             assert response.status_code == status.HTTP_200_OK
-            data = response.json()
+            data = await parse_sse_response(response)
             
             # Verify NOT clarification
             is_clarification = data["metadata"].get("isClarification", False)
@@ -241,7 +242,7 @@ async def test_multi_turn_conversation():
         
         # First query: Clear and specific
         response1 = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "What is 13th month pay?",
                 "language": "en"
@@ -254,7 +255,7 @@ async def test_multi_turn_conversation():
         
         # Second query: Follow-up
         response2 = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "How is it calculated?",
                 "language": "en",
@@ -303,3 +304,4 @@ async def test_streaming_perceived_latency():
         assert first_chunk_time < 15.0, f"Time to first chunk: {first_chunk_time:.2f}s"
         
         print(f"\n[OK] Streaming latency: {first_chunk_time:.2f}s to first chunk")
+

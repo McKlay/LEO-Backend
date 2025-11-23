@@ -8,6 +8,7 @@ import os
 import time
 from httpx import AsyncClient, ASGITransport
 from fastapi import status
+from tests.conftest import parse_sse_response
 
 # Skip if integration testing not enabled
 pytestmark = pytest.mark.skipif(
@@ -37,7 +38,7 @@ async def create_session(client: AsyncClient) -> tuple[str, str]:
         }
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
+    data = await parse_sse_response(response)
     return data["token"], data["sessionId"]
 
 
@@ -50,7 +51,7 @@ async def test_13th_month_pay_query():
         
         start = time.time()
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "What is the 13th month pay requirement in the Philippines?",
                 "language": "en"
@@ -60,7 +61,7 @@ async def test_13th_month_pay_query():
         elapsed = time.time() - start
         
         assert response.status_code == status.HTTP_200_OK
-        data = response.json()
+        data = await parse_sse_response(response)
         
         # Verify structure
         assert "messageId" in data
@@ -99,7 +100,7 @@ async def test_termination_grounds():
         headers = {"Authorization": f"Bearer {token}"}
         
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "What are the just causes for terminating an employee?",
                 "language": "en"
@@ -108,7 +109,7 @@ async def test_termination_grounds():
         )
         
         assert response.status_code == status.HTTP_200_OK
-        data = response.json()
+        data = await parse_sse_response(response)
         
         content = data["content"].lower()
         assert any(term in content for term in ["just cause", "termination", "labor code"])
@@ -126,7 +127,7 @@ async def test_multi_turn_conversation():
         
         # Turn 1
         response1 = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "What are the rules for overtime pay?",
                 "language": "en"
@@ -134,12 +135,12 @@ async def test_multi_turn_conversation():
             headers=headers
         )
         assert response1.status_code == status.HTTP_200_OK
-        data1 = response1.json()
-        conv_id = data1["conversationId"]
+        data1 = await parse_sse_response(response1)
+        conv_id = data1.get("conversationId") or data1.get("metadata", {}).get("conversationId")
         
         # Turn 2 - follow-up
         response2 = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "How much should I be paid for it?",
                 "language": "en",
@@ -148,7 +149,8 @@ async def test_multi_turn_conversation():
             headers=headers
         )
         assert response2.status_code == status.HTTP_200_OK
-        data2 = response2.json()
+        data2 = await parse_sse_response(response2)
+        data2 = await parse_sse_response(response2)
         
         assert data2["conversationId"] == conv_id
         content = data2["content"].lower()
@@ -166,7 +168,7 @@ async def test_dual_table_retrieval_chunks():
         
         # Query that should retrieve chunks (specific calculation details)
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "How to calculate overtime pay step by step?",
                 "language": "en"
@@ -175,7 +177,7 @@ async def test_dual_table_retrieval_chunks():
         )
         
         assert response.status_code == status.HTTP_200_OK
-        data = response.json()
+        data = await parse_sse_response(response)
         
         # Verify citations include chunk metadata
         citations = data["citations"]
@@ -201,7 +203,7 @@ async def test_citation_deduplication():
         headers = {"Authorization": f"Bearer {token}"}
         
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={
                 "message": "13th month pay requirements",
                 "language": "en"
@@ -210,7 +212,7 @@ async def test_citation_deduplication():
         )
         
         assert response.status_code == status.HTTP_200_OK
-        data = response.json()
+        data = await parse_sse_response(response)
         
         citations = data["citations"]
         
@@ -250,13 +252,13 @@ async def test_citation_quality():
             headers = {"Authorization": f"Bearer {token}"}
             
             response = await client.post(
-                "/api/v1/chat/message",
+                "/api/v1/chat/message/stream",
                 json={"message": query, "language": "en"},
                 headers=headers
             )
             
             assert response.status_code == status.HTTP_200_OK
-            data = response.json()
+            data = await parse_sse_response(response)
             citations = data["citations"]
             
             assert len(citations) > 0, f"No citations for: {query}"
@@ -294,14 +296,14 @@ async def test_performance_benchmark():
             
             start = time.time()
             response = await client.post(
-                "/api/v1/chat/message",
+                "/api/v1/chat/message/stream",
                 json={"message": query, "language": "en"},
                 headers=headers
             )
             elapsed = time.time() - start
             
             assert response.status_code == status.HTTP_200_OK
-            data = response.json()
+            data = await parse_sse_response(response)
             
             times.append(elapsed)
             cit_counts.append(len(data["citations"]))
@@ -327,7 +329,7 @@ async def test_error_handling():
         
         # Empty message
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={"message": "", "language": "en"},
             headers=headers
         )
@@ -335,7 +337,7 @@ async def test_error_handling():
         
         # Message too long
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={"message": "a" * 2001, "language": "en"},
             headers=headers
         )
@@ -343,7 +345,7 @@ async def test_error_handling():
         
         # Invalid language
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={"message": "Test", "language": "invalid"},
             headers=headers
         )
@@ -357,7 +359,7 @@ async def test_no_auth_rejected():
     """Test requests without auth are rejected."""
     async with await create_test_client() as client:
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={"message": "Test", "language": "en"}
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -377,13 +379,13 @@ async def test_phase_1e_summary():
         headers = {"Authorization": f"Bearer {token}"}
         
         response = await client.post(
-            "/api/v1/chat/message",
+            "/api/v1/chat/message/stream",
             json={"message": "What is the Labor Code?", "language": "en"},
             headers=headers
         )
         
         assert response.status_code == status.HTTP_200_OK
-        data = response.json()
+        data = await parse_sse_response(response)
         
         checks = {
             "Chat API responds": response.status_code == 200,
@@ -405,3 +407,5 @@ async def test_phase_1e_summary():
         print("="*70)
         print("\nReady for Phase 1.1 (Conversation Management)")
         print("="*70 + "\n")
+
+
