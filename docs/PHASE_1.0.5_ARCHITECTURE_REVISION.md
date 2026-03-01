@@ -218,6 +218,76 @@ async def get_embedding(text: str):
 
 ## Architecture Diagram
 
+### Three-Stage Hybrid RAG Architecture for Legal Queries
+
+```
+                               ┌─────────────────────┐
+                    ┌────────▶│      User Query      │
+                    │          └──────────┬──────────┘
+                    │                    │
+                    │                    ▼
+                    │  ┌─────────────────────────────────────────────┐
+                    │  │    Stage 1: Query Analysis + Clarification  │
+                    │  │                 GPT-4o-mini                 │
+                    │  │  Multi-turn: Summarize context →            │
+                    │  │             Consolidate query               │
+                    │  │  Single/Multi-turn: Translate to English    │
+                    │  │                     if needed               │
+                    │  └──────────────────────┬──────────────────────┘
+                    │                         │
+                    │                         ▼
+                    │             ┌───────────────────────┐
+                    │             │   Needs Clarification?│
+                    │             └──────┬────────────────┘
+                    │           YES      │           NO
+                    │    ┌───────────────┘           └──────────────────┐
+                    │    ▼                                              ▼
+                    │  ┌───────────────────────┐       ┌────────────────────────────┐
+                    └──│  Return Clarification │       │  Extract Legal Concepts,   │
+                       │  with Follow-up       │       │  Articles, Keywords        │
+                       │  Questions            │       └───────────────┬────────────┘
+                       └───────────────────────┘                       │
+                                                                       │
+                                         ┌─────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │          Stage 2: Smart Parallel Multi-Strategy Retrieval   │
+  └────────────┬───────────────────┬───────────────────┬────────┘
+               │                   │                   │
+               ▼                   ▼                   ▼
+  ┌────────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
+  │Strategy 1: Direct  │ │Strategy 2:       │ │Strategy 3: Keyword   │
+  │Article Lookup - SQL│ │Semantic Search - │ │Search - PostgreSQL   │
+  │                    │ │pgvector          │ │FTS                   │
+  └────────────┬───────┘ └────────┬─────────┘ └──────────┬───────────┘
+               │                   │                     │
+               └───────────────────┼─────────────────────┘
+                                   │
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │  Merge, Deduplicate & Rank   │
+                    │         Results              │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+               ┌────────────────────────────────────────┐
+               │  Stage 3: Direct Rich-Context Grounding│
+               │                (GPT-4.1)               │
+               └──────────────────┬─────────────────────┘
+                                   │
+                                   ▼
+        ┌──────────────────────────────────────────────────────┐
+        │     Final Response + Citations + Suggested Actions   │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+### Detailed Pipeline Walkthrough
+
+**Example 1: Clear Multi-Turn Query**
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ User Query: "I was terminated while pregnant. Is this legal?"   │
