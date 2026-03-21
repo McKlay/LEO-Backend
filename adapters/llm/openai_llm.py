@@ -87,7 +87,7 @@ class OpenAILLM(BaseLLM):
                     openai_messages.append({"role": msg.role, "content": msg.content})
             
             # Log the request
-            logger.debug(
+            logger.info(
                 f"Generating response: {len(messages)} messages, "
                 f"temp={temperature}, max_tokens={max_tokens}"
             )
@@ -159,7 +159,7 @@ class OpenAILLM(BaseLLM):
                 else:
                     openai_messages.append({"role": msg.role, "content": msg.content})
             
-            logger.debug(
+            logger.info(
                 f"Streaming response: {len(messages)} messages, "
                 f"temp={temperature}, max_tokens={max_tokens}"
             )
@@ -308,7 +308,7 @@ class OpenAILLM(BaseLLM):
                 else:
                     openai_messages.append({"role": msg.role, "content": msg.content})
             
-            logger.debug(
+            logger.info(
                 f"Query analysis with GPT-4o-mini: "
                 f"{len(messages)} messages, temp={temperature}, max_tokens={max_tokens}"
             )
@@ -325,7 +325,7 @@ class OpenAILLM(BaseLLM):
             
             choice = response.choices[0]
             
-            logger.debug(
+            logger.info(
                 f"Query analysis complete: "
                 f"tokens={response.usage.total_tokens}, "
                 f"model={response.model}"

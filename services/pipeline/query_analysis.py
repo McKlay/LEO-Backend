@@ -115,7 +115,7 @@ class QueryAnalysisPipeline:
                 conversation_history=conversation_history,
                 preferred_language=preferred_language
             )
-            logger.debug(
+            logger.info(
                 "Query analysis request prepared: "
                 f"preferred_language={preferred_language or 'auto'}, "
                 f"history_count={len(conversation_history) if conversation_history else 0}, "
@@ -138,7 +138,7 @@ class QueryAnalysisPipeline:
             
             # Parse JSON response
             analysis_data = self._parse_llm_response(response.content)
-            logger.debug(
+            logger.info(
                 "Parsed query analysis payload: "
                 f"original_language={analysis_data.get('original_language')}, "
                 f"needs_clarification={analysis_data.get('needs_clarification')}, "
@@ -223,17 +223,16 @@ class QueryAnalysisPipeline:
             context_section = "This is the first query in the conversation.\n\n"
 
         if preferred_language in {"en", "fil", "ceb"}:
-            preferred_language_line = (
-                f"Preferred response language for clarification_question: {preferred_language}."
+            clarification_lang_instruction = (
+                f"Write clarification_question in: {preferred_language}."
             )
         else:
-            preferred_language_line = (
-                "Preferred response language for clarification_question: match the user's latest message language."
+            clarification_lang_instruction = (
+                "Write clarification_question in the same language as the user's latest message."
             )
 
         system_prompt = f"""You analyze user queries for a Philippine labor-law RAG pipeline.
-{context_section}{preferred_language_line}
-
+{context_section}
 Your task:
     1) If the query is a follow-up, first consolidate the user's full information need from recent dialogue.
     2) Detect ambiguity/underspecification.
@@ -244,19 +243,22 @@ Your task:
     Consolidation rule:
     - For follow-up or pronoun-heavy turns, infer the full intent from prior messages.
     - legal_concepts and keywords must represent the consolidated intent, not only the latest short utterance.
+    - If the conversation history shows the assistant previously asked a clarification question, and the current user message is a direct response to that question, the ambiguity is RESOLVED. Consolidate the full context into a normalized query and set needs_clarification=false — do NOT ask another clarification.
 
 Clarification policy:
 - Ask clarification only when missing details materially change legal outcome.
 - If context resolves pronouns/follow-up references, do not clarify.
-- Typical clarification cases: no region for minimum wage, unknown holiday type, unknown basis for separation pay, unknown leave type, unknown employment status, vague complaint with no concrete facts.
+- NEVER ask a second clarification if the user is directly responding to the assistant's prior clarification question — treat the response as resolving the ambiguity regardless of how brief it is.
+- Legally specific terms carry sufficient legal meaning and do NOT require further specification: "without just cause" (= illegal dismissal, Art. 294), "constructive dismissal", "retrenchment", "redundancy", "closure", "disease termination", "forced resignation", "security of tenure".
+- Typical clarification cases (ONLY when no prior exchange has already narrowed the topic): no region specified for a minimum wage rate lookup; holiday type completely unspecified for pay-rate computation; employment status entirely unknown and it changes the applicable rule; a bare vague complaint with zero factual detail and no prior exchange (e.g., first-turn "what are my rights?" alone).
+- NOT clarification cases: user states a specific scenario in response to a prior clarification (e.g., "I was terminated without just cause", "my employer is not paying my overtime", "I was forced to resign"); query includes a legally defined term that is self-sufficient for retrieval.
 - If no clarification is needed, set clarification_question to null.
 - If clarification is needed, make ONE strong, topic-guiding question that is specific to Philippine labor law.
 - The question should guide the user toward concrete issue categories when relevant (for example: termination, unpaid wages/overtime, benefits, leave, discrimination/harassment, contracting status).
-- Keep clarification_question in the preferred response language above unless the user clearly wrote in a different language.
+- {clarification_lang_instruction}
 
 Output requirements:
 - Return strict JSON only. No markdown.
-- clarification_question must be ONE best question in the user's language.
 - Keep keywords concise and retrieval-oriented.
 - Keep normalized_query_en short but complete.
 
@@ -265,7 +267,7 @@ Return JSON with this exact shape:
     "original_language": "en|fil|ceb|mixed",
     "normalized_query_en": "english retrieval query",
     "needs_clarification": true,
-    "clarification_question": "single follow-up question in original language",
+    "clarification_question": "single follow-up question in the specified language",
     "legal_concepts": ["..."],
     "articles": ["Article 297", "RA 10361"],
     "keywords": ["..."]
@@ -278,7 +280,7 @@ Return JSON with this exact shape:
             Message(role="user", content=user_prompt)
         ]
         
-        logger.debug(
+        logger.info(
             f"Query analysis prompt built: has_context={has_context}, "
             f"history_messages={len(conversation_history) if conversation_history else 0}"
         )
@@ -335,11 +337,14 @@ Return JSON with this exact shape:
                 if key not in data or not isinstance(data[key], list):
                     data[key] = []
 
+            # If LLM says clarification needed but omitted the question,
+            # treat it as no clarification needed rather than using a hardcoded fallback.
             if data.get("needs_clarification") and not data.get("clarification_question"):
-                data["clarification_question"] = (
-                    "To guide you accurately under Philippine labor law, is your concern about "
-                    "termination, unpaid wages or overtime, benefits or leave, or another workplace issue?"
+                logger.warning(
+                    "LLM set needs_clarification=true but provided no clarification_question; "
+                    "treating as needs_clarification=false to avoid hardcoded fallback."
                 )
+                data["needs_clarification"] = False
 
             if not data.get("needs_clarification"):
                 data["clarification_question"] = None

@@ -72,7 +72,7 @@ class ConversationPipeline:
                 for msg in history.messages
             ]
             
-            logger.debug(
+            logger.info(
                 f"Retrieved {len(messages)} messages for session {session_id}"
             )
             
@@ -102,7 +102,7 @@ class ConversationPipeline:
                 content=content
             )
             
-            logger.debug(f"Added user message to session {session_id}")
+            logger.info(f"Added user message to session {session_id}")
             
         except Exception as e:
             logger.error(f"Failed to add user message: {str(e)}", exc_info=True)
@@ -132,7 +132,7 @@ class ConversationPipeline:
                 content=content
             )
             
-            logger.debug(f"Added assistant message to session {session_id}")
+            logger.info(f"Added assistant message to session {session_id}")
             
         except Exception as e:
             logger.error(f"Failed to add assistant message: {str(e)}", exc_info=True)

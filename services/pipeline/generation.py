@@ -74,7 +74,7 @@ class GenerationPipeline:
             temp = temperature if temperature is not None else self.default_temperature
             tokens = max_tokens if max_tokens is not None else self.default_max_tokens
             
-            logger.debug(
+            logger.info(
                 f"Generating response (temp={temp}, max_tokens={tokens}, "
                 f"messages={len(messages)})"
             )
@@ -134,7 +134,7 @@ class GenerationPipeline:
             temp = temperature if temperature is not None else self.default_temperature
             tokens = max_tokens if max_tokens is not None else self.default_max_tokens
             
-            logger.debug(
+            logger.info(
                 f"Starting streaming generation (temp={temp}, max_tokens={tokens})"
             )
             

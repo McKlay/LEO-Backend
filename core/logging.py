@@ -22,6 +22,7 @@ class JSONFormatter(logging.Formatter):
             "severity": record.levelname,
             "message": record.getMessage(),
             "logger": record.name,
+            "filename": record.filename,
             "module": record.module,
             "function": record.funcName,
             "line": record.lineno,
@@ -86,7 +87,7 @@ def setup_logging(
         formatter = JSONFormatter()
     else:
         # Simple format for development
-        fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        fmt = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
         formatter = logging.Formatter(fmt)
     
     console_handler.setFormatter(formatter)

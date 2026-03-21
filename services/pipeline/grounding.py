@@ -135,7 +135,7 @@ Language: {language}
             recent_history = conversation_history[-6:]  # Last 3 exchanges
             messages.extend(recent_history)
             
-            logger.debug(
+            logger.info(
                 f"Added {len(recent_history)} messages from conversation history "
                 f"(limited to last 3 exchanges)"
             )
@@ -143,7 +143,7 @@ Language: {language}
         # Add current user query
         messages.append({"role": "user", "content": query})
         
-        logger.debug(
+        logger.info(
             f"Built grounded prompt: {len(context_results)} documents, "
             f"{len(messages)} total messages, "
             f"system_prompt={len(system_prompt)} chars"
@@ -231,7 +231,7 @@ Language: {language}
         # Join with clear separators
         formatted = "\n\n---\n\n".join(context_parts)
         
-        logger.debug(
+        logger.info(
             f"Formatted {len(results)} documents into rich context "
             f"({len(formatted)} chars)"
         )
@@ -399,7 +399,7 @@ Language: {language}
             "grounding_score": citation_count / max(len(context_results), 1)
         }
         
-        logger.debug(f"Grounding validation: {validation}")
+        logger.info(f"Grounding validation: {validation}")
         
         return validation
     

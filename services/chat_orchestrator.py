@@ -67,63 +67,31 @@ class ChatOrchestrator:
         """
         Build clarification response from query analysis.
         
-        Uses one LLM-generated clarification question to keep
-        the interaction conversational and natural.
+        Trusts the LLM-generated clarification question entirely, including
+        its language. The LLM already handles preferred_language via its prompt.
         
         Args:
             analysis: Query analysis result with clarification data
-            language: Response language
+            language: Response language (used for logging only)
             
         Returns:
             Dictionary with clarification content and suggestions
         """
-        question = analysis.clarification_question
-        requested_language = (language or "en").lower()
+        clarification_text = analysis.clarification_question
 
-        # Guardrail: avoid returning clarification in an unexpected language.
-        use_question = bool(question)
-        if requested_language == "en" and analysis.original_language in {"fil", "ceb", "mixed"}:
-            logger.warning(
-                "Clarification language mismatch detected. "
-                f"requested_language={requested_language}, detected_original={analysis.original_language}, "
-                f"question_preview={repr((question or '')[:120])}"
-            )
-            use_question = False
-
-        # Keep clarifications conversational: one concise follow-up question.
-        if use_question:
-            clarification_text = analysis.clarification_question
-        elif requested_language == "fil":
-            clarification_text = (
-                "Para mabigyan kita ng mas tumpak na gabay sa batas paggawa ng Pilipinas, "
-                "alin dito ang concern mo: illegal dismissal, kulang na sahod/overtime, benepisyo o leave, "
-                "o iba pang isyu sa trabaho?"
-            )
-        elif requested_language == "ceb":
-            clarification_text = (
-                "Aron mahatagan tika ug mas tukmang giya sa labor law sa Pilipinas, unsa gyud ang imong concern: "
-                "ilegal nga pagtangtang sa trabaho, kulang nga sweldo/overtime, benepisyo o leave, "
-                "o laing isyu sa trabaho?"
-            )
-        else:
-            clarification_text = (
-                "To guide you accurately under Philippine labor law, which issue best matches your concern: "
-                "possible illegal dismissal, unpaid wages or overtime, benefits or leave, "
-                "or another workplace problem?"
-            )
         logger.info(
             "Clarification response prepared: "
-            f"requested_language={requested_language}, detected_original={analysis.original_language}, "
-            f"used_model_question={use_question}, content_preview={repr(clarification_text[:140])}"
+            f"requested_language={language}, detected_original={analysis.original_language}, "
+            f"content_preview={repr((clarification_text or '')[:140])}"
         )
         
-        # Build suggestions for API response
         suggestions = []
-        if use_question and analysis.clarification_question:
+        if analysis.clarification_question:
+            label = analysis.clarification_question
             suggestions.append({
                 "id": "clarify-q1",
                 "type": "query",
-                "label": analysis.clarification_question[:60] + "..." if len(analysis.clarification_question) > 60 else analysis.clarification_question,
+                "label": label[:60] + "..." if len(label) > 60 else label,
                 "data": {"query": analysis.clarification_question}
             })
         

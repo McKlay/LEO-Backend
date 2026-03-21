@@ -86,13 +86,13 @@ class RetrievalPipeline:
             # Use default top_k if not specified
             k = top_k or self.default_top_k
             
-            logger.debug(f"Retrieving context for query: {query[:100]}...")
+            logger.info(f"Retrieving context for query: {query[:100]}...")
             
             # 1. Generate query embedding (always needed for fallback)
             embedding_response = await self.embeddings.embed_text(query)
             query_vector = embedding_response.embedding
             
-            logger.debug(f"Generated query embedding (dim={len(query_vector)})")
+            logger.info(f"Generated query embedding (dim={len(query_vector)})")
             
             # 2. Use smart_retrieve for multi-strategy approach
             results = await self.vectorstore.smart_retrieve(

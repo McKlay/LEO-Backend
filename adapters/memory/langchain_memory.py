@@ -45,7 +45,7 @@ class LangChainMemory(BaseMemory):
         """
         if session_id not in self._memories:
             self._memories[session_id] = ChatMessageHistory()
-            logger.debug(f"Created new memory for session: {session_id}")
+            logger.info(f"Created new memory for session: {session_id}")
         
         return self._memories[session_id]
     

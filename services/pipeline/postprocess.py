@@ -82,7 +82,7 @@ class PostprocessPipeline:
         if should_add_disclaimer:
             processed = self.add_disclaimer(processed, language)
         
-        logger.debug(
+        logger.info(
             f"Post-processed response "
             f"(citations={len(citations)}, redactions={len(redactions)})"
         )
