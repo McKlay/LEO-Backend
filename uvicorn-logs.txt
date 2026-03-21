@@ -1,104 +1,40 @@
 INFO:     Application startup complete.
-INFO:     127.0.0.1:59927 - "OPTIONS /api/v1/chat/message/stream HTTP/1.1" 200 OK
-2025-11-24 00:04:42,267 - app.containers - INFO - Initializing LangChain memory adapter
-2025-11-24 00:04:42,268 - adapters.memory.langchain_memory - INFO - LangChain memory initialized with token limit: 4000
-2025-11-24 00:04:42,268 - services.pipeline.conversation - INFO - Conversation pipeline initialized (max_messages=10, context_tokens=4000)
-2025-11-24 00:04:42,268 - app.containers - INFO - Initializing query analysis LLM adapter (GPT-4o-mini)
-2025-11-24 00:04:42,404 - adapters.llm.openai_llm - INFO - OpenAI LLM initialized with model: gpt-4o-mini
-2025-11-24 00:04:42,404 - services.pipeline.query_analysis - INFO - Query analysis pipeline initialized: enabled=True, smart_clarification=True
-2025-11-24 00:04:42,405 - app.containers - INFO - Initializing OpenAI embeddings adapter
-2025-11-24 00:04:42,415 - utils.embedding_cache - INFO - Embedding cache initialized with max_size=1000
-2025-11-24 00:04:42,415 - adapters.embeddings.openai_embed - INFO - OpenAI embeddings initialized with model: text-embedding-3-small, cache_enabled: True
-2025-11-24 00:04:42,415 - app.containers - INFO - Initializing Supabase vector store adapter
-2025-11-24 00:04:42,415 - app.containers - INFO - Initializing Supabase client
-2025-11-24 00:04:42,428 - app.containers - INFO - Supabase client initialized successfully
-2025-11-24 00:04:44,909 - adapters.vectorstore.supabase_store - INFO - Database connection pool initialized: min=2, max=10
-2025-11-24 00:04:44,909 - adapters.vectorstore.supabase_store - INFO - Supabase vector store initialized: table=labor_law_sections, dimension=1536, pooling_enabled=True
-2025-11-24 00:04:44,910 - services.pipeline.retrieval - INFO - Retrieval pipeline initialized (top_k=5, threshold=0.3)
-2025-11-24 00:04:44,910 - services.pipeline.grounding - INFO - Grounding pipeline initialized (max_context=8000)
-2025-11-24 00:04:44,911 - app.containers - INFO - Initializing OpenAI LLM adapter (GPT-4 Turbo)
-2025-11-24 00:04:44,932 - adapters.llm.openai_llm - INFO - OpenAI LLM initialized with model: gpt-4.1
-2025-11-24 00:04:44,933 - services.pipeline.generation - INFO - Generation pipeline initialized (temp=0.3, max_tokens=2000, streaming=True)
-2025-11-24 00:04:44,933 - services.pipeline.postprocess - INFO - Postprocessing pipeline initialized (disclaimer=True, redaction=False)
-2025-11-24 00:04:44,933 - services.chat_orchestrator - INFO - Chat orchestrator initialized with smart query analysis
-2025-11-24 00:04:44,942 - api.v1.routes_chat - INFO - Processing streaming chat message: session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-INFO:     127.0.0.1:59927 - "POST /api/v1/chat/message/stream HTTP/1.1" 200 OK
-2025-11-24 00:04:44,942 - services.chat_orchestrator - INFO - Processing streaming message for session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-2025-11-24 00:04:44,942 - services.chat_orchestrator - INFO - Analyzing query with conversation context
-2025-11-24 00:04:44,943 - services.pipeline.query_analysis - INFO - Analyzing query: 'What is the minimum wage?...'
-2025-11-24 00:04:51,026 - services.pipeline.query_analysis - INFO - Query analysis complete: needs_clarification=True, articles=0, concepts=0
-2025-11-24 00:04:51,027 - services.chat_orchestrator - INFO - Query analysis complete: needs_clarification=True, concepts=[], articles=[], time=6.083s
-2025-11-24 00:04:51,027 - services.chat_orchestrator - INFO - Clarification needed: The query is vague as it does not specify the location or context for the minimum wage inquiry.
-2025-11-24 00:05:50,804 - api.v1.routes_chat - INFO - Processing streaming chat message: session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-INFO:     127.0.0.1:64190 - "POST /api/v1/chat/message/stream HTTP/1.1" 200 OK
-2025-11-24 00:05:50,806 - services.chat_orchestrator - INFO - Processing streaming message for session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-2025-11-24 00:05:50,809 - services.chat_orchestrator - INFO - Analyzing query with conversation context
-2025-11-24 00:05:50,810 - services.pipeline.query_analysis - INFO - Analyzing query: 'explain it in context of philippine law?...'
-2025-11-24 00:05:55,590 - services.pipeline.query_analysis - INFO - Query analysis complete: needs_clarification=True, articles=0, concepts=0
-2025-11-24 00:05:55,590 - services.chat_orchestrator - INFO - Query analysis complete: needs_clarification=True, concepts=[], articles=[], time=4.780s
-2025-11-24 00:05:55,591 - services.chat_orchestrator - INFO - Clarification needed: The query is vague and lacks specific context.
-2025-11-24 00:06:11,934 - api.v1.routes_chat - INFO - Processing streaming chat message: session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-INFO:     127.0.0.1:54757 - "POST /api/v1/chat/message/stream HTTP/1.1" 200 OK
-2025-11-24 00:06:11,935 - services.chat_orchestrator - INFO - Processing streaming message for session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-2025-11-24 00:06:11,936 - services.chat_orchestrator - INFO - Analyzing query with conversation context
-2025-11-24 00:06:11,937 - services.pipeline.query_analysis - INFO - Analyzing query: 'what is the minimum wage in cebu?...'
-2025-11-24 00:06:15,813 - services.pipeline.query_analysis - INFO - Query analysis complete: needs_clarification=False, articles=1, concepts=2
-2025-11-24 00:06:15,814 - services.chat_orchestrator - INFO - Query analysis complete: needs_clarification=False, concepts=['minimum wage', 'wage order'], articles=['Article 90 of the Labor Code'], time=3.878s
-2025-11-24 00:06:15,814 - services.chat_orchestrator - INFO - Retrieving context from knowledge base
-2025-11-24 00:06:16,420 - adapters.vectorstore.supabase_store - INFO - Smart retrieve: has_embedding=True, has_keywords=True, has_articles=True
-2025-11-24 00:06:17,416 - adapters.vectorstore.supabase_store - INFO - Direct article lookup returned 0 results (articles: ['Article 90 of the Labor Code'])
-2025-11-24 00:06:18,120 - adapters.vectorstore.supabase_store - INFO - Keyword search returned 0 results (keywords: ['minimum wage', 'Cebu']...)
-2025-11-24 00:06:20,374 - adapters.vectorstore.supabase_store - INFO - Dual-table query returned 5 results (sections=5, chunks=5)
-2025-11-24 00:06:20,376 - adapters.vectorstore.supabase_store - INFO - Smart retrieve merged 5 results from 3 strategies: ['direct', 'keyword', 'semantic_dual']
-2025-11-24 00:06:20,377 - services.pipeline.retrieval - INFO - Smart retrieval completed in 4.56s: 5 results (articles=True, keywords=True)
-2025-11-24 00:06:20,378 - services.chat_orchestrator - INFO - Retrieved 5 results (retrieval_time=4.564s, avg_score=0.411)
-2025-11-24 00:06:20,378 - services.chat_orchestrator - INFO - Building grounded prompt
-2025-11-24 00:06:20,379 - services.pipeline.grounding - WARNING - Context exceeds 8000 chars (37502 chars), truncating intelligently
-2025-11-24 00:06:20,379 - services.pipeline.grounding - INFO - Smart truncation: kept 3/5 documents (7969/8000 chars)
-2025-11-24 00:06:20,379 - services.chat_orchestrator - INFO - Starting streaming LLM generation
-2025-11-24 00:06:29,049 - services.pipeline.generation - INFO - Completed streaming generation (308 chunks)
-2025-11-24 00:06:29,050 - services.chat_orchestrator - INFO - Streaming generation complete (generation_time=8.670s, chunks=308)
-2025-11-24 00:06:29,050 - services.chat_orchestrator - INFO - Post-processing response
-2025-11-24 00:06:29,051 - services.chat_orchestrator - INFO - Streaming message processed successfully in 17.12s (retrieval=4.564s, generation=8.670s, 5 citations)
-2025-11-24 00:08:40,655 - api.v1.routes_chat - INFO - Processing streaming chat message: session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-INFO:     127.0.0.1:60815 - "POST /api/v1/chat/message/stream HTTP/1.1" 200 OK
-2025-11-24 00:08:40,657 - services.chat_orchestrator - INFO - Processing streaming message for session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-2025-11-24 00:08:40,657 - services.chat_orchestrator - INFO - Analyzing query with conversation context
-2025-11-24 00:08:40,658 - services.pipeline.query_analysis - INFO - Analyzing query: 'how about in manila?...'
-2025-11-24 00:08:43,228 - services.pipeline.query_analysis - INFO - Query analysis complete: needs_clarification=False, articles=0, concepts=0
-2025-11-24 00:08:43,229 - services.chat_orchestrator - INFO - Query analysis complete: needs_clarification=False, concepts=[], articles=[], time=2.571s
-2025-11-24 00:08:43,229 - services.chat_orchestrator - INFO - Retrieving context from knowledge base
-2025-11-24 00:08:45,280 - adapters.vectorstore.supabase_store - INFO - Smart retrieve: has_embedding=True, has_keywords=True, has_articles=True
-2025-11-24 00:08:46,393 - adapters.vectorstore.supabase_store - INFO - Dual-table query returned 2 results (sections=1, chunks=2)
-2025-11-24 00:08:46,395 - adapters.vectorstore.supabase_store - INFO - Smart retrieve merged 2 results from 1 strategies: ['semantic_dual']
-2025-11-24 00:08:46,396 - services.pipeline.retrieval - INFO - Smart retrieval completed in 3.17s: 2 results (articles=False, keywords=False)
-2025-11-24 00:08:46,397 - services.chat_orchestrator - INFO - Retrieved 2 results (retrieval_time=3.167s, avg_score=0.345)
-2025-11-24 00:08:46,397 - services.chat_orchestrator - INFO - Building grounded prompt
-2025-11-24 00:08:46,398 - services.pipeline.grounding - WARNING - Context exceeds 8000 chars (8737 chars), truncating intelligently
-2025-11-24 00:08:46,399 - services.pipeline.grounding - INFO - Smart truncation: kept 2/2 documents (7968/8000 chars)
-2025-11-24 00:08:46,399 - services.chat_orchestrator - INFO - Starting streaming LLM generation
-2025-11-24 00:08:58,173 - services.pipeline.generation - INFO - Completed streaming generation (296 chunks)
-2025-11-24 00:08:58,174 - services.chat_orchestrator - INFO - Streaming generation complete (generation_time=11.775s, chunks=296)
-2025-11-24 00:08:58,174 - services.chat_orchestrator - INFO - Post-processing response
-2025-11-24 00:08:58,175 - services.chat_orchestrator - INFO - Streaming message processed successfully in 17.52s (retrieval=3.167s, generation=11.775s, 2 citations)
-2025-11-24 00:12:45,249 - api.v1.routes_chat - INFO - Processing streaming chat message: session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-INFO:     127.0.0.1:49388 - "POST /api/v1/chat/message/stream HTTP/1.1" 200 OK
-2025-11-24 00:12:45,251 - services.chat_orchestrator - INFO - Processing streaming message for session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1763913882228, language=en
-2025-11-24 00:12:45,253 - services.chat_orchestrator - INFO - Analyzing query with conversation context
-2025-11-24 00:12:45,254 - services.pipeline.query_analysis - INFO - Analyzing query: 'how about in Davao City?...'
-2025-11-24 00:12:47,037 - services.pipeline.query_analysis - INFO - Query analysis complete: needs_clarification=False, articles=0, concepts=0
-2025-11-24 00:12:47,037 - services.chat_orchestrator - INFO - Query analysis complete: needs_clarification=False, concepts=[], articles=[], time=1.784s
-2025-11-24 00:12:47,038 - services.chat_orchestrator - INFO - Retrieving context from knowledge base
-2025-11-24 00:12:48,364 - adapters.vectorstore.supabase_store - INFO - Smart retrieve: has_embedding=True, has_keywords=True, has_articles=True
-2025-11-24 00:12:49,823 - adapters.vectorstore.supabase_store - INFO - Dual-table query returned 4 results (sections=3, chunks=3)
-2025-11-24 00:12:49,824 - adapters.vectorstore.supabase_store - INFO - Smart retrieve merged 4 results from 1 strategies: ['semantic_dual']
-2025-11-24 00:12:49,826 - services.pipeline.retrieval - INFO - Smart retrieval completed in 2.79s: 4 results (articles=False, keywords=False)
-2025-11-24 00:12:49,826 - services.chat_orchestrator - INFO - Retrieved 4 results (retrieval_time=2.787s, avg_score=0.349)
-2025-11-24 00:12:49,826 - services.chat_orchestrator - INFO - Building grounded prompt
-2025-11-24 00:12:49,827 - services.pipeline.grounding - WARNING - Context exceeds 8000 chars (25993 chars), truncating intelligently
-2025-11-24 00:12:49,827 - services.pipeline.grounding - INFO - Smart truncation: kept 3/4 documents (7969/8000 chars)
-2025-11-24 00:12:49,828 - services.chat_orchestrator - INFO - Starting streaming LLM generation
-2025-11-24 00:12:57,280 - services.pipeline.generation - INFO - Completed streaming generation (338 chunks)
-2025-11-24 00:12:57,280 - services.chat_orchestrator - INFO - Streaming generation complete (generation_time=7.451s, chunks=338)
-2025-11-24 00:12:57,281 - services.chat_orchestrator - INFO - Post-processing response
-2025-11-24 00:12:57,282 - services.chat_orchestrator - INFO - Streaming message processed successfully in 12.03s (retrieval=2.787s, generation=7.451s, 4 citations)
+INFO:     127.0.0.1:60410 - "OPTIONS /api/v1/chat/message/stream HTTP/1.1" 200 OK
+2026-03-22 01:41:43,680 - app.containers - INFO - [containers.py:136] - Initializing LangChain memory adapter
+2026-03-22 01:41:43,680 - adapters.memory.langchain_memory - INFO - [langchain_memory.py:34] - LangChain memory initialized with token limit: 4000
+2026-03-22 01:41:43,681 - services.pipeline.conversation - INFO - [conversation.py:41] - Conversation pipeline initialized (max_messages=10, context_tokens=4000)
+2026-03-22 01:41:43,681 - app.containers - INFO - [containers.py:107] - Initializing query analysis LLM adapter (GPT-4o-mini)
+2026-03-22 01:41:43,957 - adapters.llm.openai_llm - INFO - [openai_llm.py:51] - OpenAI LLM initialized with model: gpt-4o-mini
+2026-03-22 01:41:43,957 - services.pipeline.query_analysis - INFO - [query_analysis.py:87] - Query analysis pipeline initialized: enabled=True, smart_clarification=True
+2026-03-22 01:41:43,958 - app.containers - INFO - [containers.py:79] - Initializing OpenAI embeddings adapter
+2026-03-22 01:41:43,983 - utils.embedding_cache - INFO - [embedding_cache.py:45] - Embedding cache initialized with max_size=1000
+2026-03-22 01:41:43,984 - adapters.embeddings.openai_embed - INFO - [openai_embed.py:63] - OpenAI embeddings initialized with model: text-embedding-3-small, cache_enabled: True
+2026-03-22 01:41:43,984 - app.containers - INFO - [containers.py:121] - Initializing Supabase vector store adapter
+2026-03-22 01:41:43,984 - app.containers - INFO - [containers.py:51] - Initializing Supabase client
+2026-03-22 01:41:44,009 - app.containers - INFO - [containers.py:56] - Supabase client initialized successfully
+2026-03-22 01:41:47,486 - adapters.vectorstore.supabase_store - INFO - [supabase_store.py:64] - Database connection pool initialized: min=2, max=10
+2026-03-22 01:41:47,488 - adapters.vectorstore.supabase_store - INFO - [supabase_store.py:76] - Supabase vector store initialized: table=labor_law_sections, dimension=1536, pooling_enabled=True
+2026-03-22 01:41:47,488 - services.pipeline.retrieval - INFO - [retrieval.py:47] - Retrieval pipeline initialized (top_k=5, threshold=0.3)
+2026-03-22 01:41:47,489 - services.pipeline.grounding - INFO - [grounding.py:39] - Grounding pipeline initialized (max_context=8000)
+2026-03-22 01:41:47,489 - app.containers - INFO - [containers.py:93] - Initializing OpenAI LLM adapter (GPT-4 Turbo)
+2026-03-22 01:41:47,507 - adapters.llm.openai_llm - INFO - [openai_llm.py:51] - OpenAI LLM initialized with model: gpt-4.1
+2026-03-22 01:41:47,507 - services.pipeline.generation - INFO - [generation.py:44] - Generation pipeline initialized (temp=0.3, max_tokens=2000, streaming=True)
+2026-03-22 01:41:47,507 - services.pipeline.postprocess - INFO - [postprocess.py:38] - Postprocessing pipeline initialized (disclaimer=True, redaction=False)
+2026-03-22 01:41:47,508 - services.chat_orchestrator - INFO - [chat_orchestrator.py:60] - Chat orchestrator initialized with smart query analysis
+2026-03-22 01:41:47,538 - api.v1.routes_chat - INFO - [routes_chat.py:81] - Processing streaming chat message: session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1774114903630, language=en
+INFO:     127.0.0.1:60410 - "POST /api/v1/chat/message/stream HTTP/1.1" 200 OK
+2026-03-22 01:41:47,540 - services.chat_orchestrator - INFO - [chat_orchestrator.py:137] - Processing streaming message for session=eyJhbGciOiJIUzI1NiIsImtpZCI6IkF0, conversation=conv_1774114903630, language=en
+2026-03-22 01:41:47,540 - adapters.memory.langchain_memory - INFO - [langchain_memory.py:48] - Created new memory for session: conv_1774114903630
+2026-03-22 01:41:47,542 - services.pipeline.conversation - INFO - [conversation.py:75] - Retrieved 0 messages for session conv_1774114903630
+2026-03-22 01:41:47,543 - services.pipeline.conversation - INFO - [conversation.py:105] - Added user message to session conv_1774114903630
+2026-03-22 01:41:47,544 - services.chat_orchestrator - INFO - [chat_orchestrator.py:158] - Analyzing query with conversation context
+2026-03-22 01:41:47,545 - services.pipeline.query_analysis - INFO - [query_analysis.py:118] - Analyzing query: 'what's the weather today?...'
+2026-03-22 01:41:47,546 - services.pipeline.query_analysis - INFO - [query_analysis.py:299] - Query analysis prompt built: has_context=False, history_messages=0
+2026-03-22 01:41:47,546 - services.pipeline.query_analysis - INFO - [query_analysis.py:126] - Query analysis request prepared: preferred_language=en, history_count=0, query_len=25
+2026-03-22 01:41:47,548 - adapters.llm.openai_llm - INFO - [openai_llm.py:311] - Query analysis with GPT-4o-mini: 2 messages, temp=0.1, max_tokens=500
+2026-03-22 01:41:51,336 - adapters.llm.openai_llm - INFO - [openai_llm.py:328] - Query analysis complete: tokens=1065, model=gpt-4o-mini-2024-07-18
+2026-03-22 01:41:51,336 - services.pipeline.query_analysis - INFO - [query_analysis.py:149] - Parsed query analysis payload: original_language=en, needs_clarification=False, concepts=0, keywords=0
+2026-03-22 01:41:51,337 - services.pipeline.query_analysis - INFO - [query_analysis.py:180] - Query analysis complete: needs_clarification=False, articles=0, concepts=0
+2026-03-22 01:41:51,337 - services.chat_orchestrator - INFO - [chat_orchestrator.py:179] - Query analysis complete: needs_clarification=False, concepts=[], articles=[], time=3.792s
+2026-03-22 01:41:51,337 - services.chat_orchestrator - INFO - [chat_orchestrator.py:189] - Query is out of scope for Philippine labor law
+2026-03-22 01:41:51,344 - services.pipeline.conversation - INFO - [conversation.py:135] - Added assistant message to session conv_1774114903630

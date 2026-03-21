@@ -201,6 +201,11 @@ class Settings(BaseSettings):
         gt=0.0,
         description="Timeout for query analysis in seconds"
     )
+    query_analysis_max_tokens: int = Field(
+        default=700,  # Bumped from 500: accommodates out_of_scope_message + full JSON with concepts/keywords
+        gt=0,
+        description="Max output tokens for GPT-4o-mini query analysis JSON response"
+    )
     max_clarification_questions: int = Field(
         default=4,
         ge=1,

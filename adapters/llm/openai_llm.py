@@ -275,7 +275,7 @@ class OpenAILLM(BaseLLM):
         self,
         messages: list[Message],
         temperature: float = 0.1,
-        max_tokens: int = 500,
+        max_tokens: int = 700,
         **kwargs
     ) -> LLMResponse:
         """

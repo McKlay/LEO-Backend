@@ -50,6 +50,23 @@ class QueryAnalysis(BaseModel):
         default_factory=list,
         description="Key terms for keyword-based retrieval"
     )
+    out_of_scope: bool = Field(
+        default=False,
+        description="Whether the query is outside the Philippine labor law domain"
+    )
+    out_of_scope_message: Optional[str] = Field(
+        default=None,
+        description="Friendly redirect message in user's language when query is out of scope"
+    )
+    is_meta_conversational: bool = Field(
+        default=False,
+        description=(
+            "True when the turn is purely a social/session-management exchange "
+            "(greeting, thanks, farewell, acknowledgement, conversation summary, "
+            "bot capability question) with NO new information need. "
+            "Retrieval is skipped when this is True."
+        )
+    )
 
 
 class QueryAnalysisPipeline:
@@ -128,7 +145,7 @@ class QueryAnalysisPipeline:
                     self.llm.analyze_query(
                         messages=messages,
                         temperature=0.1,  # Very low temp for structured analysis
-                        max_tokens=500  # Compact JSON response
+                        max_tokens=settings.query_analysis_max_tokens
                     ),
                     timeout=self.analysis_timeout
                 )
@@ -142,6 +159,8 @@ class QueryAnalysisPipeline:
                 "Parsed query analysis payload: "
                 f"original_language={analysis_data.get('original_language')}, "
                 f"needs_clarification={analysis_data.get('needs_clarification')}, "
+                f"out_of_scope={analysis_data.get('out_of_scope')}, "
+                f"is_meta_conversational={analysis_data.get('is_meta_conversational')}, "
                 f"concepts={len(analysis_data.get('legal_concepts', []))}, "
                 f"keywords={len(analysis_data.get('keywords', []))}"
             )
@@ -172,6 +191,8 @@ class QueryAnalysisPipeline:
             logger.info(
                 f"Query analysis complete: "
                 f"needs_clarification={analysis.needs_clarification}, "
+                f"out_of_scope={analysis.out_of_scope}, "
+                f"is_meta_conversational={analysis.is_meta_conversational}, "
                 f"articles={len(analysis.articles)}, "
                 f"concepts={len(analysis.legal_concepts)}"
             )
@@ -233,6 +254,38 @@ class QueryAnalysisPipeline:
 
         system_prompt = f"""You analyze user queries for a Philippine labor-law RAG pipeline.
 {context_section}
+===STEP 1 — META-CONVERSATIONAL GATE (evaluate this FIRST, before anything else)===
+Some turns are about managing the conversation itself, not about seeking external information.
+These are called meta-conversational intents and they are ALWAYS in-scope (out_of_scope=false).
+
+A turn is meta-conversational if it falls into ANY of these categories:
+  • Greetings / openings — e.g. "hi", "hello", "good morning", "kumusta"
+  • Thanks / appreciation — e.g. "thank you", "thanks!", "salamat", "maraming salamat", "daghan kaayo"
+  • Farewells — e.g. "goodbye", "bye", "take care"
+  • Conversational acknowledgements — e.g. "okay", "got it", "I see", "makes sense", "alright", "perfect", "great"
+  • Expressions of satisfaction or frustration about the chat — e.g. "that was helpful!", "this is confusing"
+  • Requests to summarize, recap, or review the current conversation — e.g. "can you summarize our conversation?", "what did we discuss?", "recap everything"
+  • Requests to clarify or expand on the assistant's previous answer — e.g. "what did you mean by that?", "can you explain that again?", "tell me more about that last point"
+  • Questions about bot capabilities — e.g. "what can you do?", "what topics do you cover?"
+
+CRITICAL GUARD — Mixed turns: A turn is meta-conversational ONLY if it contains NO new information request. If the query also asks a new question or references a specific labor law topic (even combined with a greeting, thanks, or acknowledgement), it is NOT meta-conversational — treat the entire turn as a regular query and continue to Step 2. Examples that are NOT meta-conversational: "okay got it, what about notice period?", "thanks! and how many days for resignation notice?", "tell me more about overtime pay".
+
+RULE: If the query is purely meta-conversational (passes the guard above), you MUST set:
+  - is_meta_conversational=true
+  - out_of_scope=false
+  - needs_clarification=false, clarification_question=null
+  - legal_concepts=[], articles=[], keywords=[]
+  - normalized_query_en="" (retrieval will be skipped — response uses conversation history only)
+Do NOT check domain scope for these turns. Proceed directly to output.
+
+===STEP 2 — DOMAIN SCOPE CHECK (only if NOT meta-conversational)===
+This system ONLY handles Philippine labor law and directly related topics: employment relationships, termination/dismissal, wages, overtime pay, benefits (13th month, SIL, etc.), leave entitlements, DOLE procedures, labor disputes, collective bargaining, contracting/subcontracting, SSS/PhilHealth/Pag-IBIG contributions, and occupational safety.
+
+If the query is clearly outside this scope (e.g., cooking recipes, weather forecast, coding/programming help, math problems, general trivia, foreign law, medical advice, personal finance unrelated to employment), set out_of_scope=true and write a short, friendly redirect message in the SAME LANGUAGE as the user's query. The message must identify the system as LEO — e.g. "Hi! I'm LEO, your Philippine labor law assistant. I can help with questions about wages, termination, benefits, DOLE, and other labor law topics. Feel free to ask!"
+
+- When out_of_scope=true: set is_meta_conversational=false, needs_clarification=false, clarification_question=null, legal_concepts=[], articles=[], keywords=[], normalized_query_en="".
+- When out_of_scope=false (the default for labor-related queries AND all meta-conversational intents): proceed with all tasks below.
+
 Your task:
     1) If the query is a follow-up, first consolidate the user's full information need from recent dialogue.
     2) Detect ambiguity/underspecification.
@@ -266,6 +319,9 @@ Return JSON with this exact shape:
 {{
     "original_language": "en|fil|ceb|mixed",
     "normalized_query_en": "english retrieval query",
+    "is_meta_conversational": false,
+    "out_of_scope": false,
+    "out_of_scope_message": null,
     "needs_clarification": true,
     "clarification_question": "single follow-up question in the specified language",
     "legal_concepts": ["..."],
@@ -331,6 +387,45 @@ Return JSON with this exact shape:
 
             if "clarification_question" not in data:
                 data["clarification_question"] = None
+
+            # Out-of-scope fields
+            if "out_of_scope" not in data or not isinstance(data.get("out_of_scope"), bool):
+                data["out_of_scope"] = False
+            if "out_of_scope_message" not in data:
+                data["out_of_scope_message"] = None
+
+            # Meta-conversational field
+            if "is_meta_conversational" not in data or not isinstance(data.get("is_meta_conversational"), bool):
+                data["is_meta_conversational"] = False
+
+            # Mutual exclusivity: a turn cannot be both out-of-scope and meta-conversational
+            if data.get("out_of_scope"):
+                data["is_meta_conversational"] = False
+
+            # When out of scope, enforce consistent state
+            if data.get("out_of_scope"):
+                data["needs_clarification"] = False
+                data["clarification_question"] = None
+                data["legal_concepts"] = []
+                data["articles"] = []
+                data["keywords"] = []
+                data["normalized_query_en"] = ""
+                # If LLM forgot to include the message, use a sensible default
+                if not data.get("out_of_scope_message"):
+                    data["out_of_scope_message"] = (
+                        "I'm LEO, your Philippine labor law assistant. "
+                        "I can only help with labor law questions — feel free to ask about "
+                        "wages, termination, benefits, DOLE, and more!"
+                    )
+
+            # When meta-conversational, enforce consistent state (no retrieval signals needed)
+            if data.get("is_meta_conversational"):
+                data["needs_clarification"] = False
+                data["clarification_question"] = None
+                data["legal_concepts"] = []
+                data["articles"] = []
+                data["keywords"] = []
+                data["normalized_query_en"] = ""
             
             # Ensure lists exist
             for key in ["legal_concepts", "articles", "keywords"]:

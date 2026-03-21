@@ -179,12 +179,78 @@ class ChatOrchestrator:
                 logger.info(
                     f"Query analysis complete: "
                     f"needs_clarification={analysis.needs_clarification}, "
+                    f"is_meta_conversational={analysis.is_meta_conversational}, "
                     f"concepts={analysis.legal_concepts}, "
                     f"articles={analysis.articles}, "
                     f"time={analysis_time:.3f}s"
                 )
                 
-                # Step 4: Check if clarification is needed (early exit)
+                # Step 4a: Check if query is out of scope (early exit)
+                if analysis.out_of_scope:
+                    logger.info("Query is out of scope for Philippine labor law")
+
+                    out_of_scope_text = analysis.out_of_scope_message or (
+                        "I'm LEO, your Philippine labor law assistant. "
+                        "I can only help with labor law questions — feel free to ask about "
+                        "wages, termination, benefits, DOLE, and more!"
+                    )
+
+                    await self.conversation.add_assistant_message(
+                        session_id=conversation_id,
+                        content=out_of_scope_text
+                    )
+
+                    processing_time = time.time() - start_time
+                    message_id = str(uuid.uuid4())
+
+                    yield {
+                        "type": "complete",
+                        "data": {
+                            "message_id": message_id,
+                            "conversation_id": conversation_id,
+                            "role": "assistant",
+                            "content": out_of_scope_text,
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "citations": [],
+                            "suggestions": [
+                                {
+                                    "id": "oos-wages",
+                                    "type": "query",
+                                    "label": "Ask about wages or overtime",
+                                    "data": {"query": "What are my rights regarding overtime pay?"}
+                                },
+                                {
+                                    "id": "oos-termination",
+                                    "type": "query",
+                                    "label": "Ask about termination",
+                                    "data": {"query": "What are the valid grounds for termination?"}
+                                },
+                                {
+                                    "id": "oos-dole",
+                                    "type": "query",
+                                    "label": "Ask about DOLE",
+                                    "data": {"query": "How do I file a complaint with DOLE?"}
+                                }
+                            ],
+                            "metadata": {
+                                "processing_time": round(processing_time, 2),
+                                "retrieval_time": 0.0,
+                                "generation_time": 0.0,
+                                "analysis_time": round(analysis_time, 3),
+                                "model": settings.query_analysis_model,
+                                "requested_language": language,
+                                "analysis_original_language": analysis.original_language,
+                                "confidence": 1.0,
+                                "disclaimer_required": False,
+                                "is_clarification": False,
+                                "is_out_of_scope": True,
+                                "tokens_used": 0
+                            }
+                        }
+                    }
+                    return
+
+                # Step 4b: Check if clarification is needed (early exit)
                 if analysis.needs_clarification:
                     logger.info("Clarification needed for current query")
                     
@@ -234,49 +300,58 @@ class ChatOrchestrator:
                 # Fallback: no query analysis
                 logger.info("Smart clarification disabled - proceeding with retrieval")
             
-            # Step 5: Retrieve relevant context
-            logger.info("Retrieving context from knowledge base")
-            
-            # Yield status event: Retrieving
-            yield {
-                "type": "status",
-                "data": {
-                    "step": "retrieve",
-                    "message": "Searching labor laws..."
-                }
-            }
-            
-            retrieval_start = time.time()
-            
-            retrieval_query = analysis.normalized_query_en if analysis and analysis.normalized_query_en else user_message
-            logger.info(
-                "Retrieval query trace: "
-                f"requested_language={language}, "
-                f"analysis_original_language={analysis.original_language if analysis else 'n/a'}, "
-                f"query_preview={repr(retrieval_query[:140])}"
-            )
-
-            retrieval_results = await self.retrieval.retrieve(
-                query=retrieval_query,
-                keywords=analysis.keywords if analysis else None,
-                articles=analysis.articles if analysis else None,
-                top_k=settings.retrieval_top_k
-            )
-            
-            retrieval_time = time.time() - retrieval_start
-            
-            # Calculate average confidence score
-            if retrieval_results:
-                avg_score = sum(r.score for r in retrieval_results) / len(retrieval_results)
-            else:
+            # Step 5: Retrieve relevant context (skipped for meta-conversational turns)
+            if analysis and analysis.is_meta_conversational:
+                logger.info(
+                    "Meta-conversational intent — skipping retrieval, "
+                    "response will use conversation history only"
+                )
+                retrieval_results = []
+                retrieval_time = 0.0
                 avg_score = 0.0
-            
-            logger.info(
-                f"Retrieved {len(retrieval_results)} results "
-                f"(retrieval_time={retrieval_time:.3f}s, avg_score={avg_score:.3f})"
-            )
-            
-            # Yield metadata event
+            else:
+                logger.info("Retrieving context from knowledge base")
+
+                # Yield status event: Retrieving
+                yield {
+                    "type": "status",
+                    "data": {
+                        "step": "retrieve",
+                        "message": "Searching labor laws..."
+                    }
+                }
+
+                retrieval_start = time.time()
+
+                retrieval_query = analysis.normalized_query_en if analysis and analysis.normalized_query_en else user_message
+                logger.info(
+                    "Retrieval query trace: "
+                    f"requested_language={language}, "
+                    f"analysis_original_language={analysis.original_language if analysis else 'n/a'}, "
+                    f"query_preview={repr(retrieval_query[:140])}"
+                )
+
+                retrieval_results = await self.retrieval.retrieve(
+                    query=retrieval_query,
+                    keywords=analysis.keywords if analysis else None,
+                    articles=analysis.articles if analysis else None,
+                    top_k=settings.retrieval_top_k
+                )
+
+                retrieval_time = time.time() - retrieval_start
+
+                # Calculate average confidence score
+                if retrieval_results:
+                    avg_score = sum(r.score for r in retrieval_results) / len(retrieval_results)
+                else:
+                    avg_score = 0.0
+
+                logger.info(
+                    f"Retrieved {len(retrieval_results)} results "
+                    f"(retrieval_time={retrieval_time:.3f}s, avg_score={avg_score:.3f})"
+                )
+
+            # Yield metadata event (always — retrieval_time=0 for meta-conversational turns)
             yield {
                 "type": "metadata",
                 "data": {
@@ -378,7 +453,8 @@ class ChatOrchestrator:
                         "model": settings.openai_llm_model,
                         "confidence": round(avg_score, 3),
                         "disclaimer_required": processed_result.get("has_disclaimer", False),
-                        "is_clarification": False
+                        "is_clarification": False,
+                        "is_meta_conversational": analysis.is_meta_conversational if analysis else False
                     }
                 }
             }
