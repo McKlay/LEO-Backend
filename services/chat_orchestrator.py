@@ -67,8 +67,8 @@ class ChatOrchestrator:
         """
         Build clarification response from query analysis.
         
-        Uses LLM-generated clarification questions and suggested topics
-        for a more helpful, specific clarification experience.
+        Uses one LLM-generated clarification question to keep
+        the interaction conversational and natural.
         
         Args:
             analysis: Query analysis result with clarification data
@@ -77,201 +77,60 @@ class ChatOrchestrator:
         Returns:
             Dictionary with clarification content and suggestions
         """
-        # Build clarification message
-        clarification_parts = []
-        
-        # Opening (language-aware)
-        if language == "fil":
-            clarification_parts.append(
-                "Salamat sa iyong tanong! Upang makapagbigay ako ng mas tumpak na sagot, "
-                "maaari mo bang linawin ang iyong katanungan?"
+        question = analysis.clarification_question
+        requested_language = (language or "en").lower()
+
+        # Guardrail: avoid returning clarification in an unexpected language.
+        use_question = bool(question)
+        if requested_language == "en" and analysis.original_language in {"fil", "ceb", "mixed"}:
+            logger.warning(
+                "Clarification language mismatch detected. "
+                f"requested_language={requested_language}, detected_original={analysis.original_language}, "
+                f"question_preview={repr((question or '')[:120])}"
             )
-        elif language == "ceb":
-            clarification_parts.append(
-                "Salamat sa imong pangutana! Aron makahatag kog mas tukma nga tubag, "
-                "mahimo ba nimong klaruhon ang imong pangutana?"
+            use_question = False
+
+        # Keep clarifications conversational: one concise follow-up question.
+        if use_question:
+            clarification_text = analysis.clarification_question
+        elif requested_language == "fil":
+            clarification_text = (
+                "Para mabigyan kita ng mas tumpak na gabay sa batas paggawa ng Pilipinas, "
+                "alin dito ang concern mo: illegal dismissal, kulang na sahod/overtime, benepisyo o leave, "
+                "o iba pang isyu sa trabaho?"
             )
-        else:  # English
-            clarification_parts.append(
-                "Thank you for your question! To provide you with the most accurate answer, "
-                "could you please clarify your question?"
+        elif requested_language == "ceb":
+            clarification_text = (
+                "Aron mahatagan tika ug mas tukmang giya sa labor law sa Pilipinas, unsa gyud ang imong concern: "
+                "ilegal nga pagtangtang sa trabaho, kulang nga sweldo/overtime, benepisyo o leave, "
+                "o laing isyu sa trabaho?"
             )
-        
-        # Add reason for clarification
-        if analysis.clarification_reason:
-            if language == "fil":
-                clarification_parts.append(f"\n\n**Dahilan**: {analysis.clarification_reason}")
-            elif language == "ceb":
-                clarification_parts.append(f"\n\n**Hinungdan**: {analysis.clarification_reason}")
-            else:
-                clarification_parts.append(f"\n\n**Why**: {analysis.clarification_reason}")
-        
-        # Add specific follow-up questions
-        if analysis.clarification_questions:
-            if language == "fil":
-                clarification_parts.append("\n\n**Halimbawa ng mga tanong na maaari mong itanong**:")
-            elif language == "ceb":
-                clarification_parts.append("\n\n**Mga pananglitan sa pangutana nga mahimo nimong ipangutana**:")
-            else:
-                clarification_parts.append("\n\n**Here are some specific questions you might ask**:")
-            
-            for i, question in enumerate(analysis.clarification_questions[:4], 1):
-                clarification_parts.append(f"\n\n{i}. {question}")
-        
-        # Add suggested topics
-        if analysis.suggested_topics:
-            if language == "fil":
-                clarification_parts.append("\n\n**O pumili mula sa mga karaniwang paksa**:")
-            elif language == "ceb":
-                clarification_parts.append("\n\n**O pagpili gikan sa mga kasagarang tema**:")
-            else:
-                clarification_parts.append("\n\n**Or choose from these common topics**:")
-            
-            for topic in analysis.suggested_topics[:5]:
-                clarification_parts.append(f"\n\n• {topic}")
-        
-        clarification_text = "".join(clarification_parts)
+        else:
+            clarification_text = (
+                "To guide you accurately under Philippine labor law, which issue best matches your concern: "
+                "possible illegal dismissal, unpaid wages or overtime, benefits or leave, "
+                "or another workplace problem?"
+            )
+        logger.info(
+            "Clarification response prepared: "
+            f"requested_language={requested_language}, detected_original={analysis.original_language}, "
+            f"used_model_question={use_question}, content_preview={repr(clarification_text[:140])}"
+        )
         
         # Build suggestions for API response
         suggestions = []
-        if analysis.clarification_questions:
-            for i, question in enumerate(analysis.clarification_questions[:4], 1):
-                suggestions.append({
-                    "id": f"clarify-q{i}",
-                    "type": "query",
-                    "label": question[:60] + "..." if len(question) > 60 else question,
-                    "data": {"query": question}
-                })
-        
-        # Add topic-based suggestions
-        if analysis.suggested_topics:
-            topic_queries = {
-                "fil": {
-                    "overtime pay": "Ano ang aking karapatan sa overtime pay?",
-                    "termination": "Ano ang aking karapatan kung ako ay tinanggal?",
-                    "13th month pay": "Ano ang 13th month pay at sino ang karapat-dapat?",
-                    "maternity leave": "Ano ang maternity leave benefits ko?",
-                    "minimum wage": "Ano ang minimum wage sa aking rehiyon?"
-                },
-                "ceb": {
-                    "overtime pay": "Unsa ang akong katungod sa overtime pay?",
-                    "termination": "Unsa ang akong katungod kon ako gitagal?",
-                    "13th month pay": "Unsa ang 13th month pay ug kinsa ang takos?",
-                    "maternity leave": "Unsa ang akong maternity leave benefits?",
-                    "minimum wage": "Unsa ang minimum wage sa akong rehiyon?"
-                },
-                "en": {
-                    "overtime pay": "What are my rights regarding overtime pay?",
-                    "termination": "What are my rights if I am terminated?",
-                    "13th month pay": "What is 13th month pay and who is eligible?",
-                    "maternity leave": "What are my maternity leave benefits?",
-                    "minimum wage": "What is the minimum wage in my region?"
-                }
-            }
-            
-            lang_queries = topic_queries.get(language, topic_queries["en"])
-            
-            for topic in analysis.suggested_topics[:3]:
-                topic_lower = topic.lower()
-                query = None
-                
-                # Try to match topic to predefined query
-                for key, predefined_query in lang_queries.items():
-                    if key in topic_lower:
-                        query = predefined_query
-                        break
-                
-                if query:
-                    suggestions.append({
-                        "id": f"topic-{topic_lower.replace(' ', '-')[:20]}",
-                        "type": "query",
-                        "label": topic,
-                        "data": {"query": query}
-                    })
+        if use_question and analysis.clarification_question:
+            suggestions.append({
+                "id": "clarify-q1",
+                "type": "query",
+                "label": analysis.clarification_question[:60] + "..." if len(analysis.clarification_question) > 60 else analysis.clarification_question,
+                "data": {"query": analysis.clarification_question}
+            })
         
         return {
             "content": clarification_text,
             "suggestions": suggestions
         }
-    
-    def _generate_clarification_suggestions(
-        self,
-        language: str
-    ) -> List[Dict[str, Any]]:
-        """
-        Generate suggested actions for clarification responses.
-        
-        Args:
-            language: Response language
-            
-        Returns:
-            List of suggested follow-up queries
-        """
-        if language == "fil":
-            suggestions = [
-                {
-                    "id": "clarify-1",
-                    "type": "query",
-                    "label": "Tanong tungkol sa overtime pay",
-                    "data": {"query": "Ano ang aking karapatan sa overtime pay?"}
-                },
-                {
-                    "id": "clarify-2",
-                    "type": "query",
-                    "label": "Tanong tungkol sa termination",
-                    "data": {"query": "Ano ang aking karapatan kung ako ay tinanggal sa trabaho?"}
-                },
-                {
-                    "id": "clarify-3",
-                    "type": "query",
-                    "label": "Tanong tungkol sa benefits",
-                    "data": {"query": "Ano ang mga benepisyo na dapat kong matanggap?"}
-                }
-            ]
-        elif language == "ceb":
-            suggestions = [
-                {
-                    "id": "clarify-1",
-                    "type": "query",
-                    "label": "Pangutana mahitungod sa overtime pay",
-                    "data": {"query": "Unsa ang akong katungod sa overtime pay?"}
-                },
-                {
-                    "id": "clarify-2",
-                    "type": "query",
-                    "label": "Pangutana mahitungod sa termination",
-                    "data": {"query": "Unsa ang akong katungod kon ako gitagal sa trabaho?"}
-                },
-                {
-                    "id": "clarify-3",
-                    "type": "query",
-                    "label": "Pangutana mahitungod sa benefits",
-                    "data": {"query": "Unsa ang mga benepisyo nga kinahanglan nakong madawat?"}
-                }
-            ]
-        else:  # English
-            suggestions = [
-                {
-                    "id": "clarify-1",
-                    "type": "query",
-                    "label": "Ask about overtime pay",
-                    "data": {"query": "What are my rights regarding overtime pay?"}
-                },
-                {
-                    "id": "clarify-2",
-                    "type": "query",
-                    "label": "Ask about termination",
-                    "data": {"query": "What are my rights if I am terminated?"}
-                },
-                {
-                    "id": "clarify-3",
-                    "type": "query",
-                    "label": "Ask about benefits",
-                    "data": {"query": "What benefits am I entitled to receive?"}
-                }
-            ]
-        
-        return suggestions
     
     async def process_message_stream(
         self,
@@ -343,7 +202,8 @@ class ChatOrchestrator:
                 
                 analysis = await self.query_analysis.analyze(
                     query=user_message,
-                    conversation_history=conversation_history
+                    conversation_history=conversation_history,
+                    preferred_language=language
                 )
                 
                 analysis_time = time.time() - analysis_start
@@ -358,9 +218,7 @@ class ChatOrchestrator:
                 
                 # Step 4: Check if clarification is needed (early exit)
                 if analysis.needs_clarification:
-                    logger.info(
-                        f"Clarification needed: {analysis.clarification_reason}"
-                    )
+                    logger.info("Clarification needed for current query")
                     
                     # Build clarification response with LLM-generated questions
                     clarification = self._build_clarification_response(
@@ -394,10 +252,11 @@ class ChatOrchestrator:
                                 "generation_time": round(analysis_time, 3),  # Query analysis time
                                 "analysis_time": round(analysis_time, 3),
                                 "model": settings.query_analysis_model,
+                                "requested_language": language,
+                                "analysis_original_language": analysis.original_language,
                                 "confidence": 0.5,
                                 "disclaimer_required": False,
                                 "is_clarification": True,
-                                "clarification_reason": analysis.clarification_reason,
                                 "tokens_used": 0  # No LLM generation for clarification
                             }
                         }
@@ -421,8 +280,16 @@ class ChatOrchestrator:
             
             retrieval_start = time.time()
             
+            retrieval_query = analysis.normalized_query_en if analysis and analysis.normalized_query_en else user_message
+            logger.info(
+                "Retrieval query trace: "
+                f"requested_language={language}, "
+                f"analysis_original_language={analysis.original_language if analysis else 'n/a'}, "
+                f"query_preview={repr(retrieval_query[:140])}"
+            )
+
             retrieval_results = await self.retrieval.retrieve(
-                query=user_message,
+                query=retrieval_query,
                 keywords=analysis.keywords if analysis else None,
                 articles=analysis.articles if analysis else None,
                 top_k=settings.retrieval_top_k

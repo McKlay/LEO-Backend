@@ -23,20 +23,20 @@ class QueryAnalysis(BaseModel):
     Contains clarification status, extracted concepts, articles,
     and keywords for optimized retrieval routing.
     """
+    original_language: str = Field(
+        default="en",
+        description="Detected language of user query: en, fil, ceb, or mixed"
+    )
+    normalized_query_en: str = Field(
+        default="",
+        description="English normalized query for retrieval"
+    )
     needs_clarification: bool = Field(
         description="Whether the query is too vague and needs clarification"
     )
-    clarification_reason: Optional[str] = Field(
+    clarification_question: Optional[str] = Field(
         default=None,
-        description="Explanation of why clarification is needed"
-    )
-    clarification_questions: Optional[List[str]] = Field(
-        default=None,
-        description="Specific follow-up questions to ask (3-4 questions)"
-    )
-    suggested_topics: Optional[List[str]] = Field(
-        default=None,
-        description="Topic suggestions for multi-choice clarification"
+        description="Single best clarifying question in user's original language"
     )
     legal_concepts: List[str] = Field(
         default_factory=list,
@@ -49,14 +49,6 @@ class QueryAnalysis(BaseModel):
     keywords: List[str] = Field(
         default_factory=list,
         description="Key terms for keyword-based retrieval"
-    )
-    query_type: str = Field(
-        default="general",
-        description="Type of query: specific, general, procedural, etc."
-    )
-    breadth: str = Field(
-        default="narrow",
-        description="Query breadth: narrow, medium, broad"
     )
 
 
@@ -83,7 +75,6 @@ class QueryAnalysisPipeline:
         self.enabled = settings.enable_query_analysis
         self.smart_clarification_enabled = settings.enable_smart_clarification
         self.analysis_timeout = settings.analysis_timeout
-        self.max_clarification_questions = settings.max_clarification_questions
         
         logger.info(
             f"Query analysis pipeline initialized: "
@@ -94,7 +85,8 @@ class QueryAnalysisPipeline:
     async def analyze(
         self,
         query: str,
-        conversation_history: Optional[List[Dict[str, Any]]] = None
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        preferred_language: Optional[str] = None
     ) -> QueryAnalysis:
         """
         Analyze a user query with context awareness.
@@ -102,6 +94,7 @@ class QueryAnalysisPipeline:
         Args:
             query: User's query text
             conversation_history: Previous messages for context (optional)
+            preferred_language: Preferred response language from request (en, fil, ceb)
             
         Returns:
             QueryAnalysis with structured analysis results
@@ -117,7 +110,17 @@ class QueryAnalysisPipeline:
             logger.info(f"Analyzing query: '{query[:100]}...'")
             
             # Build analysis prompt with conversation context
-            messages = self._build_analysis_prompt(query, conversation_history)
+            messages = self._build_analysis_prompt(
+                query=query,
+                conversation_history=conversation_history,
+                preferred_language=preferred_language
+            )
+            logger.debug(
+                "Query analysis request prepared: "
+                f"preferred_language={preferred_language or 'auto'}, "
+                f"history_count={len(conversation_history) if conversation_history else 0}, "
+                f"query_len={len(query)}"
+            )
             
             # Call LLM with timeout using specialized analyze_query method
             try:
@@ -135,43 +138,30 @@ class QueryAnalysisPipeline:
             
             # Parse JSON response
             analysis_data = self._parse_llm_response(response.content)
+            logger.debug(
+                "Parsed query analysis payload: "
+                f"original_language={analysis_data.get('original_language')}, "
+                f"needs_clarification={analysis_data.get('needs_clarification')}, "
+                f"concepts={len(analysis_data.get('legal_concepts', []))}, "
+                f"keywords={len(analysis_data.get('keywords', []))}"
+            )
             
             # Create QueryAnalysis object
             analysis = QueryAnalysis(**analysis_data)
 
-            # Post-processing: override LLM clarification decision when there
-            # are strong, unambiguous topic signals in the query or in the
-            # extracted analysis. This is a lightweight, deterministic
-            # guard to reduce false-positive clarification for clearly
-            # scoped legal questions (e.g. "What is the minimum wage?").
-            #
-            # IMPORTANT: We do not modify the analysis prompt here per
-            # request; instead we apply a small heuristic after the LLM
-            # returns. This keeps the LLM prompt intact while avoiding
-            # overly-strict clarification behavior.
-            if analysis.needs_clarification:
-                qlower = query.lower()
-                topic_keywords = [
-                    "minimum wage", "wage", "overtime", "13th month",
-                    "maternity", "termination", "severance", "contractual",
-                    "holiday pay", "sick leave", "hazard pay", "probation"
-                ]
+            # Ensure normalized query is always populated for retrieval.
+            if not analysis.normalized_query_en:
+                analysis.normalized_query_en = query
 
-                keywords_in_analysis = [k.lower() for k in analysis.keywords or []]
-                legal_concepts_lower = [c.lower() for c in analysis.legal_concepts or []]
+            if not analysis.needs_clarification:
+                analysis.clarification_question = None
 
-                has_strong_topic = (
-                    any(k in qlower for k in topic_keywords)
-                    or bool(analysis.articles)
-                    or any(k in kw for kw in keywords_in_analysis for k in ["wage", "overtime", "minimum", "13th", "maternity", "termination"]) 
-                    or any(k in lc for lc in legal_concepts_lower for k in ["wage", "overtime", "minimum", "maternity", "termination"]) 
+            if preferred_language and analysis.needs_clarification:
+                logger.info(
+                    "Clarification language trace: "
+                    f"preferred={preferred_language}, detected_original={analysis.original_language}, "
+                    f"question_preview={repr((analysis.clarification_question or '')[:120])}"
                 )
-
-                if has_strong_topic:
-                    logger.info("Overriding LLM clarification decision based on strong topic signals")
-                    analysis.needs_clarification = False
-                    analysis.clarification_reason = None
-                    analysis.clarification_questions = []
             
             # Enhance with regex-based article extraction
             articles = self._extract_articles_regex(query)
@@ -196,7 +186,8 @@ class QueryAnalysisPipeline:
     def _build_analysis_prompt(
         self,
         query: str,
-        conversation_history: Optional[List[Dict[str, Any]]]
+        conversation_history: Optional[List[Dict[str, Any]]],
+        preferred_language: Optional[str] = None
     ) -> List[Message]:
         """
         Build LLM prompt for query analysis with conversation context.
@@ -204,6 +195,7 @@ class QueryAnalysisPipeline:
         Args:
             query: Current user query
             conversation_history: Previous messages for context
+            preferred_language: Preferred response language from request (en, fil, ceb)
             
         Returns:
             List of messages for LLM
@@ -221,40 +213,62 @@ class QueryAnalysisPipeline:
                 context_lines = []
                 for msg in relevant_history:
                     role = msg.get("role", "unknown")
-                    content = msg.get("content", "")[:300]  # Increased truncation limit
+                    content = (msg.get("content") or msg.get("text") or "")[:300]
                     context_lines.append(f"{role.upper()}: {content}")
                 context_str = "\n".join(context_lines)
         
         if has_context:
             context_section = f"Previous conversation:\n{context_str}\n\n"
-            clarification_rules = """CRITICAL CLARIFICATION RULES:
-- **NEVER clarify** if query references conversation context (e.g., "How often is it updated?", "What about that?", "Tell me more")
-- **NEVER clarify** pronouns ("it", "they", "that") when previous context exists
-- **DO clarify** only if BOTH conditions: (1) vague query AND (2) NO relevant context in conversation
-- **NO clarify** for: follow-ups, pronoun references with context, topic continuations
-
-CLARIFY ONLY if: First query AND vague ("my rights"), no context AND ambiguous ("they"), standalone unclear question
-"""
         else:
             context_section = "This is the first query in the conversation.\n\n"
-            clarification_rules = """CLARIFICATION RULES:
-CLARIFY if: vague ("my rights"), ambiguous pronouns without context ("they"), no specific topic ("I have problem")
-NO CLARIFY if: specific topic, article reference, clear legal concept
-"""
-        
-        system_prompt = f"""Analyze Philippine labor law query. {context_section}{clarification_rules}
 
-Return JSON only:
+        if preferred_language in {"en", "fil", "ceb"}:
+            preferred_language_line = (
+                f"Preferred response language for clarification_question: {preferred_language}."
+            )
+        else:
+            preferred_language_line = (
+                "Preferred response language for clarification_question: match the user's latest message language."
+            )
+
+        system_prompt = f"""You analyze user queries for a Philippine labor-law RAG pipeline.
+{context_section}{preferred_language_line}
+
+Your task:
+    1) If the query is a follow-up, first consolidate the user's full information need from recent dialogue.
+    2) Detect ambiguity/underspecification.
+    3) Extract legal concepts, keywords, and explicit legal references.
+    4) Detect original language (en, fil, ceb, mixed).
+    5) Produce normalized_query_en for retrieval (always English).
+
+    Consolidation rule:
+    - For follow-up or pronoun-heavy turns, infer the full intent from prior messages.
+    - legal_concepts and keywords must represent the consolidated intent, not only the latest short utterance.
+
+Clarification policy:
+- Ask clarification only when missing details materially change legal outcome.
+- If context resolves pronouns/follow-up references, do not clarify.
+- Typical clarification cases: no region for minimum wage, unknown holiday type, unknown basis for separation pay, unknown leave type, unknown employment status, vague complaint with no concrete facts.
+- If no clarification is needed, set clarification_question to null.
+- If clarification is needed, make ONE strong, topic-guiding question that is specific to Philippine labor law.
+- The question should guide the user toward concrete issue categories when relevant (for example: termination, unpaid wages/overtime, benefits, leave, discrimination/harassment, contracting status).
+- Keep clarification_question in the preferred response language above unless the user clearly wrote in a different language.
+
+Output requirements:
+- Return strict JSON only. No markdown.
+- clarification_question must be ONE best question in the user's language.
+- Keep keywords concise and retrieval-oriented.
+- Keep normalized_query_en short but complete.
+
+Return JSON with this exact shape:
 {{
-  "needs_clarification": bool,
-  "clarification_reason": "why" (if true),
-  "clarification_questions": ["specific Q1", "Q2", "Q3"] (if true, 3-4 questions),
-  "suggested_topics": ["topic1", "topic2"] (if true),
-  "legal_concepts": ["concept1"],
-  "articles": ["Article 123"],
-  "keywords": ["key1", "key2"],
-  "query_type": "specific|general|procedural|rights|benefits",
-  "breadth": "narrow|medium|broad"
+    "original_language": "en|fil|ceb|mixed",
+    "normalized_query_en": "english retrieval query",
+    "needs_clarification": true,
+    "clarification_question": "single follow-up question in original language",
+    "legal_concepts": ["..."],
+    "articles": ["Article 297", "RA 10361"],
+    "keywords": ["..."]
 }}"""
 
         user_prompt = f"Analyze this query: \"{query}\""
@@ -306,15 +320,29 @@ Return JSON only:
             # Validate required fields
             if "needs_clarification" not in data:
                 data["needs_clarification"] = False
+
+            if "normalized_query_en" not in data or not isinstance(data.get("normalized_query_en"), str):
+                data["normalized_query_en"] = ""
+
+            if "original_language" not in data or not isinstance(data.get("original_language"), str):
+                data["original_language"] = "en"
+
+            if "clarification_question" not in data:
+                data["clarification_question"] = None
             
             # Ensure lists exist
             for key in ["legal_concepts", "articles", "keywords"]:
                 if key not in data or not isinstance(data[key], list):
                     data[key] = []
-            
-            # Limit clarification questions
-            if data.get("clarification_questions"):
-                data["clarification_questions"] = data["clarification_questions"][:self.max_clarification_questions]
+
+            if data.get("needs_clarification") and not data.get("clarification_question"):
+                data["clarification_question"] = (
+                    "To guide you accurately under Philippine labor law, is your concern about "
+                    "termination, unpaid wages or overtime, benefits or leave, or another workplace issue?"
+                )
+
+            if not data.get("needs_clarification"):
+                data["clarification_question"] = None
             
             return data
             
@@ -400,27 +428,21 @@ Return JSON only:
         ]
         needs_clarification = any(indicator in query.lower() for indicator in vague_indicators)
         
-        # Determine breadth
-        if len(query.split()) <= 5:
-            breadth = "narrow"
-        elif len(query.split()) <= 15:
-            breadth = "medium"
-        else:
-            breadth = "broad"
-        
         return QueryAnalysis(
+            original_language="en",
+            normalized_query_en=query,
             needs_clarification=needs_clarification and self.smart_clarification_enabled,
+            clarification_question=None,
             legal_concepts=[],
             articles=articles,
-            keywords=keywords,
-            query_type="general",
-            breadth=breadth
+            keywords=keywords
         )
     
     async def analyze_query(
         self,
         query: str,
-        conversation_history: Optional[List[Dict[str, Any]]] = None
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        preferred_language: Optional[str] = None
     ) -> QueryAnalysis:
         """
         Alias for analyze() method for backward compatibility.
@@ -428,8 +450,9 @@ Return JSON only:
         Args:
             query: User's query text
             conversation_history: Previous messages for context (optional)
+            preferred_language: Preferred response language from request (en, fil, ceb)
             
         Returns:
             QueryAnalysis with structured analysis results
         """
-        return await self.analyze(query, conversation_history)
+        return await self.analyze(query, conversation_history, preferred_language)

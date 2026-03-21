@@ -5,7 +5,7 @@ Tests smart clarification detection, concept extraction, article parsing,
 and context awareness.
 """
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from services.pipeline.query_analysis import QueryAnalysisPipeline, QueryAnalysis
 from adapters.llm.base import LLMResponse
 
@@ -25,7 +25,6 @@ def mock_settings(monkeypatch):
     monkeypatch.setattr(settings, "enable_smart_clarification", True)
     monkeypatch.setattr(settings, "query_analysis_model", "gpt-4o-mini")
     monkeypatch.setattr(settings, "analysis_timeout", 3.0)
-    monkeypatch.setattr(settings, "max_clarification_questions", 4)
     return settings
 
 
@@ -85,12 +84,11 @@ class TestSmartClarificationDetection:
         query = "What about my rights?"
         
         # Mock LLM response
-        mock_llm.generate.return_value = LLMResponse(
-            content='{"needs_clarification": true, "clarification_reason": "Query is too vague", '
-                    '"clarification_questions": ["Are you asking about termination?", "Are you asking about wages?"], '
-                    '"suggested_topics": ["Termination", "Wages", "Benefits"], '
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                    '"clarification_question": "What specific labor right are you asking about?", '
                     '"legal_concepts": [], "articles": [], "keywords": ["rights"], '
-                    '"query_type": "general", "breadth": "broad"}',
+                    '"normalized_query_en": "employee rights philippines"}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -98,9 +96,7 @@ class TestSmartClarificationDetection:
         result = await analysis_pipeline.analyze(query)
         
         assert result.needs_clarification is True
-        assert result.clarification_reason is not None
-        assert len(result.clarification_questions) >= 2
-        assert len(result.suggested_topics) >= 2
+        assert result.clarification_question is not None
     
     @pytest.mark.asyncio
     async def test_clear_query_no_clarification(self, analysis_pipeline, mock_llm):
@@ -108,11 +104,10 @@ class TestSmartClarificationDetection:
         query = "What is 13th month pay?"
         
         # Mock LLM response
-        mock_llm.generate.return_value = LLMResponse(
+        mock_llm.analyze_query.return_value = LLMResponse(
             content='{"needs_clarification": false, '
                     '"legal_concepts": ["13th month pay", "employee benefits"], '
-                    '"articles": [], "keywords": ["13th", "month", "pay"], '
-                    '"query_type": "specific", "breadth": "narrow"}',
+                    '"articles": [], "keywords": ["13th", "month", "pay"]}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -129,12 +124,10 @@ class TestSmartClarificationDetection:
         query = "Can they do this to me?"
         
         # Mock LLM response
-        mock_llm.generate.return_value = LLMResponse(
-            content='{"needs_clarification": true, "clarification_reason": "Ambiguous pronouns", '
-                    '"clarification_questions": ["Who is \'they\'?", "What action are they taking?"], '
-                    '"suggested_topics": ["Termination", "Harassment", "Demotion"], '
-                    '"legal_concepts": [], "articles": [], "keywords": [], '
-                    '"query_type": "general", "breadth": "broad"}',
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                    '"clarification_question": "Who is \'they\' and what action did they take?", '
+                    '"legal_concepts": [], "articles": [], "keywords": []}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -142,7 +135,7 @@ class TestSmartClarificationDetection:
         result = await analysis_pipeline.analyze(query)
         
         assert result.needs_clarification is True
-        assert len(result.clarification_questions) >= 2
+        assert result.clarification_question is not None
 
 
 class TestContextAwareness:
@@ -158,11 +151,10 @@ class TestContextAwareness:
         ]
         
         # Mock LLM response (should understand context)
-        mock_llm.generate.return_value = LLMResponse(
+        mock_llm.analyze_query.return_value = LLMResponse(
             content='{"needs_clarification": false, '
                     '"legal_concepts": ["13th month pay", "calculation"], '
-                    '"articles": [], "keywords": ["calculated", "computation"], '
-                    '"query_type": "procedural", "breadth": "narrow"}',
+                    '"articles": [], "keywords": ["calculated", "computation"]}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -179,13 +171,10 @@ class TestContextAwareness:
         conversation_history = []
         
         # Mock LLM response
-        mock_llm.generate.return_value = LLMResponse(
-            content='{"needs_clarification": true, "clarification_reason": "Too broad", '
-                    '"clarification_questions": ["Are you asking about overtime pay rates?", '
-                    '"Are you asking about overtime work hours?"], '
-                    '"suggested_topics": ["Overtime Pay", "Overtime Hours", "Night Differential"], '
-                    '"legal_concepts": ["overtime"], "articles": [], "keywords": ["overtime"], '
-                    '"query_type": "general", "breadth": "broad"}',
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                    '"clarification_question": "Are you asking about overtime pay rates or overtime work hours?", '
+                    '"legal_concepts": ["overtime"], "articles": [], "keywords": ["overtime"]}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -203,6 +192,7 @@ class TestFallbackAnalysis:
         """Test that fallback still extracts articles using regex."""
         from core import settings
         monkeypatch.setattr(settings, "enable_query_analysis", False)
+        analysis_pipeline.enabled = False
         
         query = "What does Article 123 say?"
         result = await analysis_pipeline.analyze(query)
@@ -214,6 +204,7 @@ class TestFallbackAnalysis:
         """Test that fallback extracts basic keywords."""
         from core import settings
         monkeypatch.setattr(settings, "enable_query_analysis", False)
+        analysis_pipeline.enabled = False
         
         query = "What is overtime pay calculation?"
         result = await analysis_pipeline.analyze(query)
@@ -233,7 +224,7 @@ class TestFallbackAnalysis:
             await asyncio.sleep(5)  # Longer than timeout
             return LLMResponse(content='{}', model="gpt-4o-mini", tokens_used=0)
         
-        mock_llm.generate = slow_generate
+        mock_llm.analyze_query = slow_generate
         
         result = await analysis_pipeline.analyze(query)
         
@@ -243,24 +234,18 @@ class TestFallbackAnalysis:
 
 
 class TestClarificationQuestionQuality:
-    """Test quality of generated clarification questions."""
+    """Test quality of generated single clarification question."""
     
     @pytest.mark.asyncio
     async def test_specific_questions_not_generic(self, analysis_pipeline, mock_llm):
         """Test that clarification questions are specific, not generic."""
         query = "I have a problem"
         
-        # Mock LLM response with specific questions
-        mock_llm.generate.return_value = LLMResponse(
-            content='{"needs_clarification": true, "clarification_reason": "Too vague", '
-                    '"clarification_questions": ['
-                    '"Is this about termination or dismissal?", '
-                    '"Is this about wages or benefits?", '
-                    '"Is this about working conditions or harassment?"'
-                    '], '
-                    '"suggested_topics": ["Termination", "Wages", "Working Conditions"], '
-                    '"legal_concepts": [], "articles": [], "keywords": [], '
-                    '"query_type": "general", "breadth": "broad"}',
+        # Mock LLM response with specific question
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                '"clarification_question": "Is your concern about termination, wages, or working conditions?", '
+                '"legal_concepts": [], "articles": [], "keywords": []}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -269,26 +254,20 @@ class TestClarificationQuestionQuality:
         
         # Check that questions are specific
         assert result.needs_clarification is True
-        assert len(result.clarification_questions) >= 3
-        
-        # Questions should be specific (contain actual topics)
-        for question in result.clarification_questions:
-            assert len(question) > 20  # Not too short
-            # Should not be generic like "Please clarify"
-            assert "please clarify" not in question.lower()
+        assert result.clarification_question is not None
+        assert len(result.clarification_question) > 20
+        assert "please clarify" not in result.clarification_question.lower()
     
     @pytest.mark.asyncio
-    async def test_suggested_topics_provided(self, analysis_pipeline, mock_llm):
-        """Test that suggested topics are provided for multi-choice clarification."""
+    async def test_single_question_used_when_present(self, analysis_pipeline, mock_llm):
+        """Test that single clarification question is preserved."""
         query = "What are my rights?"
         
         # Mock LLM response
-        mock_llm.generate.return_value = LLMResponse(
-            content='{"needs_clarification": true, "clarification_reason": "Too broad", '
-                    '"clarification_questions": ["What specific right?"], '
-                    '"suggested_topics": ["Termination Rights", "Wage Rights", "Leave Benefits", "Safety Rights"], '
-                    '"legal_concepts": [], "articles": [], "keywords": ["rights"], '
-                    '"query_type": "general", "breadth": "broad"}',
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                    '"clarification_question": "Are you asking about wage rights, termination rights, or leave benefits?", '
+                    '"legal_concepts": [], "articles": [], "keywords": ["rights"]}',
             model="gpt-4o-mini",
             tokens_used=100
         )
@@ -296,27 +275,61 @@ class TestClarificationQuestionQuality:
         result = await analysis_pipeline.analyze(query)
         
         assert result.needs_clarification is True
-        assert len(result.suggested_topics) >= 3
-        # Topics should be specific labor law topics
-        assert all(len(topic) > 5 for topic in result.suggested_topics)
+        assert result.clarification_question is not None
+        assert "rights" in result.clarification_question.lower() or "wage" in result.clarification_question.lower()
     
     @pytest.mark.asyncio
-    async def test_max_clarification_questions_limit(self, analysis_pipeline, mock_llm):
-        """Test that clarification questions are limited to max setting."""
+    async def test_default_question_backfilled_when_missing(self, analysis_pipeline, mock_llm):
+        """Test default clarification question fallback when model omits it."""
         query = "Tell me about labor law"
         
-        # Mock LLM response with many questions
-        mock_llm.generate.return_value = LLMResponse(
-            content='{"needs_clarification": true, "clarification_reason": "Too broad", '
-                    '"clarification_questions": ["Q1?", "Q2?", "Q3?", "Q4?", "Q5?", "Q6?", "Q7?"], '
-                    '"suggested_topics": ["T1", "T2"], '
-                    '"legal_concepts": [], "articles": [], "keywords": [], '
-                    '"query_type": "general", "breadth": "broad"}',
+        # Mock LLM response without clarification question
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                    '"legal_concepts": [], "articles": [], "keywords": []}',
             model="gpt-4o-mini",
             tokens_used=100
         )
         
         result = await analysis_pipeline.analyze(query)
         
-        # Should be limited to max_clarification_questions (4 by default)
-        assert len(result.clarification_questions) <= 4
+        assert result.needs_clarification is True
+        assert result.clarification_question is not None
+
+
+class TestStage1ContractAlignment:
+    """Test alignment with Stage 1 structured output contract."""
+
+    @pytest.mark.asyncio
+    async def test_normalized_query_fallback_to_original_query(self, analysis_pipeline, mock_llm):
+        """If LLM omits normalized_query_en, pipeline should fallback to original query."""
+        query = "Magkano ang minimum wage sa NCR ngayon?"
+
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": false, "keywords": ["minimum wage", "NCR"]}',
+            model="gpt-4o-mini",
+            tokens_used=50
+        )
+
+        result = await analysis_pipeline.analyze(query)
+
+        assert result.normalized_query_en == query
+
+    @pytest.mark.asyncio
+    async def test_single_clarification_question_kept(self, analysis_pipeline, mock_llm):
+        """Single clarification_question should be used as-is."""
+        query = "What's the minimum wage?"
+
+        mock_llm.analyze_query.return_value = LLMResponse(
+            content='{"needs_clarification": true, '
+                    '"clarification_question": "Could you specify your region?", '
+                    '"normalized_query_en": "minimum wage philippines by region", '
+                    '"keywords": ["minimum wage", "region"]}',
+            model="gpt-4o-mini",
+            tokens_used=80
+        )
+
+        result = await analysis_pipeline.analyze(query)
+
+        assert result.needs_clarification is True
+        assert result.clarification_question == "Could you specify your region?"
