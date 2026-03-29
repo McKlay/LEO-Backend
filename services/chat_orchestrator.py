@@ -152,9 +152,9 @@ class ChatOrchestrator:
                 content=user_message
             )
             
-            # Step 3: Smart query analysis with clarification detection (if enabled)
+            # Step 3: Query analysis (Stage 1) — gated by enable_query_analysis
             analysis = None
-            if settings.enable_smart_clarification:
+            if settings.enable_query_analysis:
                 logger.info("Analyzing query with conversation context")
                 
                 # Yield status event: Analyzing
@@ -251,7 +251,9 @@ class ChatOrchestrator:
                     return
 
                 # Step 4b: Check if clarification is needed (early exit)
-                if analysis.needs_clarification:
+                # Gated separately: enable_smart_clarification=False skips the gate but
+                # preserves the enriched analysis (keywords/articles) for retrieval.
+                if settings.enable_smart_clarification and analysis.needs_clarification:
                     logger.info("Clarification needed for current query")
                     
                     # Build clarification response with LLM-generated questions
@@ -297,15 +299,19 @@ class ChatOrchestrator:
                     }
                     return
             else:
-                # Fallback: no query analysis
-                logger.info("Smart clarification disabled - proceeding with retrieval")
+                # Query analysis disabled (enable_query_analysis=False, e.g. "Stage 2 Only" variant):
+                # skip Stage 1 entirely; retrieval uses raw user_message with no enrichment.
+                logger.info("Query analysis disabled - proceeding with raw query retrieval")
             
-            # Step 5: Retrieve relevant context (skipped for meta-conversational turns)
-            if analysis and analysis.is_meta_conversational:
-                logger.info(
-                    "Meta-conversational intent — skipping retrieval, "
-                    "response will use conversation history only"
-                )
+            # Step 5: Retrieve relevant context (skipped for meta-conversational turns and LLM-only mode)
+            if (analysis and analysis.is_meta_conversational) or settings.retrieval_mode == "none":
+                if settings.retrieval_mode == "none":
+                    logger.info("retrieval_mode=none — LLM-only baseline, skipping retrieval")
+                else:
+                    logger.info(
+                        "Meta-conversational intent — skipping retrieval, "
+                        "response will use conversation history only"
+                    )
                 retrieval_results = []
                 retrieval_time = 0.0
                 avg_score = 0.0
@@ -323,11 +329,24 @@ class ChatOrchestrator:
 
                 retrieval_start = time.time()
 
-                retrieval_query = analysis.normalized_query_en if analysis and analysis.normalized_query_en else user_message
+                # When translation is disabled and the query is non-English, use the
+                # original-language user_message so the ablation test is meaningful.
+                # For English queries or when translation is enabled, always use the
+                # LLM-normalized English query for better retrieval quality.
+                _original_lang = analysis.original_language if analysis else "en"
+                _translation_active = (
+                    settings.enable_translation or _original_lang in ("en", "mixed", "")
+                )
+                retrieval_query = (
+                    analysis.normalized_query_en
+                    if (analysis and analysis.normalized_query_en and _translation_active)
+                    else user_message
+                )
                 logger.info(
                     "Retrieval query trace: "
                     f"requested_language={language}, "
-                    f"analysis_original_language={analysis.original_language if analysis else 'n/a'}, "
+                    f"analysis_original_language={_original_lang}, "
+                    f"translation_active={_translation_active}, "
                     f"query_preview={repr(retrieval_query[:140])}"
                 )
 

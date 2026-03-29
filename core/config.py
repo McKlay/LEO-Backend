@@ -109,16 +109,20 @@ class Settings(BaseSettings):
         description="Embedding vector dimension"
     )
     retrieval_top_k: int = Field(
-        default=5,
+        default=10,
         ge=1,
         le=20,
-        description="Number of chunks to retrieve"
+        description="Number of chunks to retrieve (10 ensures all gold chunks for procedural multi-section queries fit within RRF top-k)"
     )
     retrieval_similarity_threshold: float = Field(
         default=0.3,  # Lowered to 0.3 for better recall with small KB
         ge=0.0,
         le=1.0,
         description="Minimum similarity score for retrieval"
+    )
+    retrieval_mode: Literal["hybrid", "dense", "lexical", "symbolic", "none"] = Field(
+        default="hybrid",
+        description="Retrieval strategy for pipeline variant testing: hybrid=all three strategies + RRF, dense=HNSW only, lexical=FTS only, symbolic=keywords GIN only, none=LLM-only baseline"
     )
     
     # Memory Settings
@@ -140,9 +144,9 @@ class Settings(BaseSettings):
     
     # Grounding & Generation Settings
     max_context_length: int = Field(
-        default=8000,
+        default=80000,
         gt=0,
-        description="Maximum context length in characters"
+        description="Maximum context length in characters (sized for top_k=5 full-text, GPT-4.1 1M window)"
     )
     enable_auto_disclaimer: bool = Field(
         default=True,
@@ -193,16 +197,16 @@ class Settings(BaseSettings):
         description="Enable smart clarification detection for vague queries"
     )
     query_analysis_model: str = Field(
-        default="gpt-4o-mini",
+        default="gpt-4o-mini",  # Prompt fix confirmed working with mini model
         description="LLM model for query analysis"
     )
     analysis_timeout: float = Field(
-        default=10.0,  # Increased from 5.0 to handle cold start latency
+        default=10.0,  # Sufficient for gpt-4o-mini
         gt=0.0,
         description="Timeout for query analysis in seconds"
     )
     query_analysis_max_tokens: int = Field(
-        default=700,  # Bumped from 500: accommodates out_of_scope_message + full JSON with concepts/keywords
+        default=1000,  # Allows for comprehensive JSON responses
         gt=0,
         description="Max output tokens for GPT-4o-mini query analysis JSON response"
     )

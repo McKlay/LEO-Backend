@@ -140,7 +140,7 @@ class TestRankingPriority:
         assert results[1].id == "chunk-1"
     
     def test_same_priority_sorts_by_score(self, vectorstore):
-        """Test that within same priority, results preserve input order."""
+        """Test that within the same priority tier, results are sorted by score descending."""
         chunks = [
             QueryResult(
                 id="chunk-1",
@@ -164,14 +164,10 @@ class TestRankingPriority:
         
         results = vectorstore._merge_and_rank_dual_table([], chunks, limit=10)
         
-        # All have same priority (>0.85), algorithm preserves input order
-        # But we should verify all results are present
+        # All fall in the same priority tier (>0.85 chunks → priority 4).
+        # Within a tier, sort must be descending by score.
         assert len(results) == 3
-        result_ids = {r.id for r in results}
-        assert result_ids == {"chunk-1", "chunk-2", "chunk-3"}
-        # All should be in high-priority bucket (>0.85)
-        for result in results:
-            assert result.score > 0.85
+        assert [r.id for r in results] == ["chunk-2", "chunk-3", "chunk-1"]  # 0.92, 0.89, 0.87
     
     def test_complex_mixed_ranking(self, vectorstore):
         """Test complex scenario with multiple priorities."""
@@ -213,11 +209,36 @@ class TestRankingPriority:
         
         results = vectorstore._merge_and_rank_dual_table(sections, chunks, limit=10)
         
-        # Expected order: chunk-1 (P4), section-1 (P1), chunk-2 (P2), section-2 (P3), chunk-3 (P0)
+        # Expected order: chunk-1 (P4) > section-1 (P3) > chunk-2 (P2) > section-2 (P1) > chunk-3 (P0)
         expected_order = ["chunk-1", "section-1", "chunk-2", "section-2", "chunk-3"]
         actual_order = [r.id for r in results]
         
         assert actual_order == expected_order
+    
+    def test_tier0_real_kb_scores_sorted_descending(self, vectorstore):
+        """
+        Regression test: all scores below 0.70 (real KB range) must be sorted
+        descending within tier 0. The previous bug (ranking_key returned
+        (priority, -score) with reverse=True) caused ascending order here,
+        returning the worst matches first.
+        """
+        sections = [
+            QueryResult(id="gold", content="Gold article", metadata={"_source_table": "sections"}, score=0.50),
+            QueryResult(id="low-1", content="Irrelevant", metadata={"_source_table": "sections"}, score=0.31),
+            QueryResult(id="low-2", content="Irrelevant", metadata={"_source_table": "sections"}, score=0.33),
+        ]
+        chunks = [
+            QueryResult(id="best-chunk", content="Best chunk", metadata={"_source_table": "chunks", "section_id": "other"}, score=0.57),
+            QueryResult(id="mid-chunk", content="Mid chunk", metadata={"_source_table": "chunks", "section_id": "other2"}, score=0.45),
+        ]
+        
+        results = vectorstore._merge_and_rank_dual_table(sections, chunks, limit=5)
+        
+        # Must be descending by score; gold section at 0.50 must appear before low-scoring items
+        scores = [r.score for r in results]
+        assert scores == sorted(scores, reverse=True), f"Expected descending scores, got {scores}"
+        assert results[0].id == "best-chunk"  # 0.57
+        assert results[1].id == "gold"        # 0.50
 
 
 class TestChunkMetadata:

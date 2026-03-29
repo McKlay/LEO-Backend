@@ -8,11 +8,20 @@ from typing import List, Optional, Dict, Any
 import time
 
 from core import get_logger, AppError
+from core.config import settings
 from adapters.embeddings.base import BaseEmbeddings
 from adapters.vectorstore.base import BaseVectorStore, QueryResult
 
 
 logger = get_logger(__name__)
+
+_MODE_TO_STRATEGIES = {
+    "hybrid":   {"symbolic", "lexical", "dense"},
+    "dense":    {"dense"},
+    "lexical":  {"lexical"},
+    "symbolic": {"symbolic"},
+    "none":     set(),
+}
 
 
 class RetrievalPipeline:
@@ -46,7 +55,8 @@ class RetrievalPipeline:
         
         logger.info(
             f"Retrieval pipeline initialized (top_k={default_top_k}, "
-            f"threshold={similarity_threshold})"
+            f"threshold={similarity_threshold}, "
+            f"retrieval_mode={settings.retrieval_mode})"
         )
     
     async def retrieve(
@@ -85,7 +95,13 @@ class RetrievalPipeline:
             
             # Use default top_k if not specified
             k = top_k or self.default_top_k
-            
+
+            # Derive enabled strategies from retrieval_mode config
+            enabled_strategies = _MODE_TO_STRATEGIES[settings.retrieval_mode]
+            if not enabled_strategies:
+                logger.info("retrieval_mode=none — skipping retrieval (LLM-only baseline)")
+                return []
+
             logger.info(f"Retrieving context for query: {query[:100]}...")
             
             # 1. Generate query embedding (always needed for fallback)
@@ -101,17 +117,31 @@ class RetrievalPipeline:
                 keywords=keywords,
                 articles=articles,
                 limit=k,
-                threshold=self.similarity_threshold
+                threshold=self.similarity_threshold,
+                enabled_strategies=enabled_strategies
             )
             
             elapsed = time.time() - start_time
-            
+
+            # Strategy breakdown from RRF metadata (INFO)
+            strategy_counts: dict = {}
+            for r in results:
+                for s in r.metadata.get("_contributing_strategies", [r.metadata.get("_strategy", "unknown")]):
+                    strategy_counts[s] = strategy_counts.get(s, 0) + 1
             logger.info(
                 f"Smart retrieval completed in {elapsed:.2f}s: "
-                f"{len(results)} results "
+                f"{len(results)} results, strategy_breakdown={strategy_counts} "
                 f"(articles={bool(articles)}, keywords={bool(keywords)})"
             )
-            
+
+            # Per-result strategy attribution — supports §4.5.5 trace logging
+            for i, r in enumerate(results):
+                logger.info(
+                    f"  [{i+1}] id={r.id} score={r.score:.4f} "
+                    f"strategies={r.metadata.get('_contributing_strategies')} "
+                    f"ranks={r.metadata.get('_strategy_ranks')}"
+                )
+
             return results
             
         except Exception as e:

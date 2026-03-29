@@ -160,6 +160,7 @@ class QueryAnalysisPipeline:
                 f"original_language={analysis_data.get('original_language')}, "
                 f"needs_clarification={analysis_data.get('needs_clarification')}, "
                 f"out_of_scope={analysis_data.get('out_of_scope')}, "
+                f"out_of_scope_message={analysis_data.get('out_of_scope_message')}, "
                 f"is_meta_conversational={analysis_data.get('is_meta_conversational')}, "
                 f"concepts={len(analysis_data.get('legal_concepts', []))}, "
                 f"keywords={len(analysis_data.get('keywords', []))}"
@@ -224,10 +225,14 @@ class QueryAnalysisPipeline:
         # Build conversation context string
         context_str = ""
         has_context = False
+        
         if conversation_history and len(conversation_history) > 0:
-            # Exclude the current user message (last message) since it's already being analyzed
-            # Take up to the last 6 messages (3 exchanges) before the current query
-            relevant_history = conversation_history[:-1][-6:] if len(conversation_history) > 1 else []
+            # NOTE: conversation_history already excludes the current query being analyzed
+            # (it's retrieved BEFORE adding the current message in chat_orchestrator)
+            # So we should NOT exclude the last message - it's the previous exchange.
+            
+            # Take up to the last 6 messages (3 exchanges)
+            relevant_history = conversation_history[-6:] if conversation_history else []
             
             if relevant_history:
                 has_context = True
@@ -254,78 +259,61 @@ class QueryAnalysisPipeline:
 
         system_prompt = f"""You analyze user queries for a Philippine labor-law RAG pipeline.
 {context_section}
-===STEP 1 — META-CONVERSATIONAL GATE (evaluate this FIRST, before anything else)===
-Some turns are about managing the conversation itself, not about seeking external information.
-These are called meta-conversational intents and they are ALWAYS in-scope (out_of_scope=false).
+===STEP 1 — META-CONVERSATIONAL GATE===
+If the query is purely conversational with NO new information request, mark as meta-conversational:
+  • Greetings, thanks, farewells, acknowledgements ("hi", "salamat", "okay", "bye")
+  • Requests to summarize/recap the conversation
+  • Questions about bot capabilities
 
-A turn is meta-conversational if it falls into ANY of these categories:
-  • Greetings / openings — e.g. "hi", "hello", "good morning", "kumusta"
-  • Thanks / appreciation — e.g. "thank you", "thanks!", "salamat", "maraming salamat", "daghan kaayo"
-  • Farewells — e.g. "goodbye", "bye", "take care"
-  • Conversational acknowledgements — e.g. "okay", "got it", "I see", "makes sense", "alright", "perfect", "great"
-  • Expressions of satisfaction or frustration about the chat — e.g. "that was helpful!", "this is confusing"
-  • Requests to summarize, recap, or review the current conversation — e.g. "can you summarize our conversation?", "what did we discuss?", "recap everything"
-  • Requests to clarify or expand on the assistant's previous answer — e.g. "what did you mean by that?", "can you explain that again?", "tell me more about that last point"
-  • Questions about bot capabilities — e.g. "what can you do?", "what topics do you cover?"
+Mixed turns (greeting + new question) are NOT meta-conversational.
 
-CRITICAL GUARD — Mixed turns: A turn is meta-conversational ONLY if it contains NO new information request. If the query also asks a new question or references a specific labor law topic (even combined with a greeting, thanks, or acknowledgement), it is NOT meta-conversational — treat the entire turn as a regular query and continue to Step 2. Examples that are NOT meta-conversational: "okay got it, what about notice period?", "thanks! and how many days for resignation notice?", "tell me more about overtime pay".
+If meta-conversational: set is_meta_conversational=true, out_of_scope=false, needs_clarification=false, all arrays empty, normalized_query_en="". Stop here.
 
-RULE: If the query is purely meta-conversational (passes the guard above), you MUST set:
-  - is_meta_conversational=true
-  - out_of_scope=false
-  - needs_clarification=false, clarification_question=null
-  - legal_concepts=[], articles=[], keywords=[]
-  - normalized_query_en="" (retrieval will be skipped — response uses conversation history only)
-Do NOT check domain scope for these turns. Proceed directly to output.
+===STEP 2 — DOMAIN SCOPE CHECK===
+Only handle Philippine labor law: employment, termination, wages, overtime, benefits, DOLE, SSS/PhilHealth/Pag-IBIG, safety.
 
-===STEP 2 — DOMAIN SCOPE CHECK (only if NOT meta-conversational)===
-This system ONLY handles Philippine labor law and directly related topics: employment relationships, termination/dismissal, wages, overtime pay, benefits (13th month, SIL, etc.), leave entitlements, DOLE procedures, labor disputes, collective bargaining, contracting/subcontracting, SSS/PhilHealth/Pag-IBIG contributions, and occupational safety.
+If out of scope: set out_of_scope=true, write out_of_scope_message in user's language identifying system as LEO, set all other fields empty/false.
 
-If the query is clearly outside this scope (e.g., cooking recipes, weather forecast, coding/programming help, math problems, general trivia, foreign law, medical advice, personal finance unrelated to employment), set out_of_scope=true and write a short, friendly redirect message in the SAME LANGUAGE as the user's query. The message must identify the system as LEO — e.g. "Hi! I'm LEO, your Philippine labor law assistant. I can help with questions about wages, termination, benefits, DOLE, and other labor law topics. Feel free to ask!"
+===STEP 3 — QUERY ANALYSIS===
+🚨 CRITICAL: If the assistant ALREADY ASKED a clarification question and the user is RESPONDING to it, the ambiguity is RESOLVED. Set needs_clarification=false and proceed with analysis.
 
-- When out_of_scope=true: set is_meta_conversational=false, needs_clarification=false, clarification_question=null, legal_concepts=[], articles=[], keywords=[], normalized_query_en="".
-- When out_of_scope=false (the default for labor-related queries AND all meta-conversational intents): proceed with all tasks below.
+Tasks:
+1) Consolidate follow-ups with conversation context (include prior context in legal_concepts/keywords)
+2) Extract: language (en/fil/ceb/mixed), legal concepts, explicit article references
+3) Produce normalized_query_en: Complete self-contained English query merging full conversation intent.
+   Example: "May karapatan sa separation pay?" + answer "serious misconduct, regular, 3 yrs" → "Is a regular employee with 3 years entitled to separation pay after dismissal for serious misconduct?"
+4) Determine if clarification needed
 
-Your task:
-    1) If the query is a follow-up, first consolidate the user's full information need from recent dialogue.
-    2) Detect ambiguity/underspecification.
-    3) Extract legal concepts, keywords, and explicit legal references.
-    4) Detect original language (en, fil, ceb, mixed).
-    5) Produce normalized_query_en for retrieval (always English).
+When to clarify (ONLY if no prior clarification exchange):
+  ✓ Missing region for minimum wage lookup
+  ✓ Holiday type unspecified for pay computation
+  ✓ Employment status unknown when it changes the rule
+  ✓ First-turn vague query with zero details ("what are my rights?")
 
-    Consolidation rule:
-    - For follow-up or pronoun-heavy turns, infer the full intent from prior messages.
-    - legal_concepts and keywords must represent the consolidated intent, not only the latest short utterance.
-    - If the conversation history shows the assistant previously asked a clarification question, and the current user message is a direct response to that question, the ambiguity is RESOLVED. Consolidate the full context into a normalized query and set needs_clarification=false — do NOT ask another clarification.
+When NOT to clarify:
+  ✗ User responding to assistant's prior clarification question
+  ✗ Query has legally specific terms ("without just cause", "constructive dismissal", "retrenchment")
+  ✗ Context resolves pronouns/follow-ups
+  ✗ Specific scenario stated ("I was terminated", "not paying overtime")
 
-Clarification policy:
-- Ask clarification only when missing details materially change legal outcome.
-- If context resolves pronouns/follow-up references, do not clarify.
-- NEVER ask a second clarification if the user is directly responding to the assistant's prior clarification question — treat the response as resolving the ambiguity regardless of how brief it is.
-- Legally specific terms carry sufficient legal meaning and do NOT require further specification: "without just cause" (= illegal dismissal, Art. 294), "constructive dismissal", "retrenchment", "redundancy", "closure", "disease termination", "forced resignation", "security of tenure".
-- Typical clarification cases (ONLY when no prior exchange has already narrowed the topic): no region specified for a minimum wage rate lookup; holiday type completely unspecified for pay-rate computation; employment status entirely unknown and it changes the applicable rule; a bare vague complaint with zero factual detail and no prior exchange (e.g., first-turn "what are my rights?" alone).
-- NOT clarification cases: user states a specific scenario in response to a prior clarification (e.g., "I was terminated without just cause", "my employer is not paying my overtime", "I was forced to resign"); query includes a legally defined term that is self-sufficient for retrieval.
-- If no clarification is needed, set clarification_question to null.
-- If clarification is needed, make ONE strong, topic-guiding question that is specific to Philippine labor law.
-- The question should guide the user toward concrete issue categories when relevant (for example: termination, unpaid wages/overtime, benefits, leave, discrimination/harassment, contracting status).
-- {clarification_lang_instruction}
+Clarification format: ONE topic-guiding question in user's language. {clarification_lang_instruction}
 
-Output requirements:
-- Return strict JSON only. No markdown.
-- Keep keywords concise and retrieval-oriented.
-- Keep normalized_query_en short but complete.
+Keyword rules:
+- Extract 2-4 SPECIFIC, DISTINCTIVE terms only
+- NEVER extract: "Philippines", "Philippine", "labor law", "Labor Code", "worker", "employee", "employer"
+- Extract: specific benefits ("13th month", "SIL"), procedures ("retrenchment"), regions ("NCR"), article numbers
 
-Return JSON with this exact shape:
+Return JSON (no markdown):
 {{
     "original_language": "en|fil|ceb|mixed",
-    "normalized_query_en": "english retrieval query",
+    "normalized_query_en": "Complete English query merging conversation intent (not just current message translation)",
     "is_meta_conversational": false,
     "out_of_scope": false,
     "out_of_scope_message": null,
-    "needs_clarification": true,
-    "clarification_question": "single follow-up question in the specified language",
+    "needs_clarification": false,
+    "clarification_question": null,
     "legal_concepts": ["..."],
-    "articles": ["Article 297", "RA 10361"],
+    "articles": ["Article 297"],
     "keywords": ["..."]
 }}"""
 
@@ -466,6 +454,9 @@ Return JSON with this exact shape:
         - "Presidential Decree 442"
         - "RA 10361"
         - "Republic Act 10361"
+        - "Department Order 147-15"
+        - "DOLE Department Order 147-15"
+        - "DO 147-15"
         
         Args:
             query: User query text
@@ -492,6 +483,19 @@ Return JSON with this exact shape:
         matches = re.finditer(ra_pattern, query, re.IGNORECASE)
         for match in matches:
             articles.append(f"RA {match.group(1)}")
+
+        # Pattern for Department Orders: "DOLE Department Order 147-15",
+        # "Department Order 147-15", or "DO 147-15".
+        # Canonical output form: "Department Order N-NN".
+        do_pattern = r'\b(?:DOLE\s+)?Department\s+Order\s+([\d]+-[\w]+)\b'
+        matches = re.finditer(do_pattern, query, re.IGNORECASE)
+        for match in matches:
+            articles.append(f"Department Order {match.group(1)}")
+
+        do_abbrev_pattern = r'\bDO\s+([\d]+-[\w]+)\b'
+        matches = re.finditer(do_abbrev_pattern, query, re.IGNORECASE)
+        for match in matches:
+            articles.append(f"Department Order {match.group(1)}")
         
         return list(set(articles))  # Deduplicate
     
