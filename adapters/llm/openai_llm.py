@@ -279,18 +279,18 @@ class OpenAILLM(BaseLLM):
         **kwargs
     ) -> LLMResponse:
         """
-        Analyze query using GPT-4o-mini for fast, structured analysis.
+        Analyze query using configured model for fast, structured analysis.
         
         Optimized specifically for query analysis:
-        - Uses GPT-4o-mini model (faster, cheaper than GPT-4 Turbo)
+        - Uses model specified in settings.query_analysis_model (default: gpt-4o-mini)
         - Very low temperature (0.1) for deterministic JSON output
-        - Lower max_tokens (500) for compact structured responses
+        - Lower max_tokens for compact structured responses
         - Separate from main response generation pipeline
         
         Args:
             messages: Analysis prompt (system + user query)
             temperature: Very low for structured output (default: 0.1)
-            max_tokens: Tokens for JSON response (default: 500)
+            max_tokens: Tokens for JSON response (default: 700)
             **kwargs: Additional OpenAI-specific parameters
             
         Returns:
@@ -309,13 +309,13 @@ class OpenAILLM(BaseLLM):
                     openai_messages.append({"role": msg.role, "content": msg.content})
             
             logger.info(
-                f"Query analysis with GPT-4o-mini: "
+                f"Query analysis with {self.model}: "
                 f"{len(messages)} messages, temp={temperature}, max_tokens={max_tokens}"
             )
             
-            # Use GPT-4o-mini for fast, cost-effective structured analysis
+            # Use configured model for query analysis (respects settings.query_analysis_model)
             response = await self.client.chat.completions.create(
-                model="gpt-4o-mini",  # Fast model for analysis
+                model=self.model,  # Respects config (default: gpt-4o-mini)
                 messages=openai_messages,
                 temperature=temperature,  # Very low for deterministic output
                 max_tokens=max_tokens,  # Compact JSON response

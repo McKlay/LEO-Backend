@@ -545,14 +545,29 @@ class SupabaseVectorStore(BaseVectorStore):
                 logger.warning("Keyword search called with empty keywords")
                 return []
             
-            # Build search query (join keywords with OR)
-            search_terms = " | ".join(keywords)
+            # Build search query with OR semantics using websearch_to_tsquery.
+            # plainto_tsquery does not support | or OR — it treats all input as AND.
+            # websearch_to_tsquery understands the OR keyword natively, but treats
+            # hyphens as negation operators (e.g. "daily-paid" → "daily AND NOT paid").
+            # Strip hyphens from each keyword so they are handled as word separators.
+            cleaned_keywords = [k.replace('-', ' ') for k in keywords]
+            search_terms = " OR ".join(cleaned_keywords)
             
             conn = self._get_connection()
             cursor = conn.cursor()
             
             try:
-                # Use PostgreSQL FTS with ts_rank for relevance scoring
+                # Use PostgreSQL FTS with ts_rank for relevance scoring.
+                # Dual-signal FTS: GREATEST() of keyword-term query and raw query_text query.
+                #
+                # Rationale: extracted keywords (e.g. 'labor complaint', 'DOLE procedures')
+                # are sometimes too generic and fail to match NLRC-specific procedural sections
+                # that contain the same concepts but use domain-specific terminology
+                # (e.g. 'summons', 'conciliation', 'position paper'). The raw query_text
+                # websearch query produces higher ts_rank for those sections because it
+                # includes all natural-language terms that partially overlap with their content.
+                # GREATEST() selects whichever signal ranks the doc higher; OR in WHERE
+                # ensures neither signal excludes relevant docs.
                 cursor.execute("""
                     SELECT 
                         s.id,
@@ -564,16 +579,25 @@ class SupabaseVectorStore(BaseVectorStore):
                         s.chapter,
                         s.summary,
                         s.keywords,
-                        ts_rank(to_tsvector('english', s.full_text), plainto_tsquery('english', %s)) as rank,
+                        GREATEST(
+                            ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s)),
+                            ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
+                        ) as rank,
                         src.url,
                         src.title AS source_title
                     FROM labor_law_sections s
                     LEFT JOIN labor_law_sources src ON s.source_id = src.id
-                    WHERE to_tsvector('english', s.full_text) @@ plainto_tsquery('english', %s)
-                    AND ts_rank(to_tsvector('english', s.full_text), plainto_tsquery('english', %s)) > %s
+                    WHERE (
+                        to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                        OR to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                    )
+                    AND GREATEST(
+                        ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s)),
+                        ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
+                    ) > %s
                     ORDER BY rank DESC
                     LIMIT %s
-                """, (search_terms, search_terms, search_terms, threshold, limit))
+                """, (search_terms, query, search_terms, query, search_terms, query, threshold, limit))
                 
                 results = []
                 for row in cursor.fetchall():
@@ -588,7 +612,8 @@ class SupabaseVectorStore(BaseVectorStore):
                         'keywords': row[8] if row[8] else [],
                         'source_url': row[10],
                         'source_title': row[11],
-                        '_source_table': 'sections'
+                        '_source_table': 'sections',
+                        '_strategy': 'lexical',
                     }
                     
                     results.append(QueryResult(
@@ -613,112 +638,215 @@ class SupabaseVectorStore(BaseVectorStore):
             # Don't fail entire pipeline - return empty results
             return []
     
+    def _normalize_article_refs(self, article_ref: str) -> List[str]:
+        """
+        Expand short-form article references to canonical forms stored in DB keywords.
+
+        The DB keywords column is LLM-curated and stores canonical forms such as
+        "Article 297", "Republic Act No. 10361", "Presidential Decree No. 442",
+        "Department Order 147-15".
+        query_analysis.py may produce abbreviated or prefixed forms ("RA 10361",
+        "PD 442", "Art. 297", "DO 147-15", "DOLE Department Order 147-15") that
+        must be expanded/normalised before GIN lookup.
+        """
+        ref = article_ref.strip()
+        candidates = [ref]
+
+        # Art. N  →  Article N
+        if re.match(r'^Art\.\s*\d', ref, re.IGNORECASE):
+            candidates.append(re.sub(r'^Art\.\s*', 'Article ', ref, flags=re.IGNORECASE))
+
+        # RA N  →  Republic Act No. N  +  Republic Act N
+        m = re.match(r'^RA\s+(\d+)', ref, re.IGNORECASE)
+        if m:
+            n = m.group(1)
+            candidates += [f"Republic Act No. {n}", f"Republic Act {n}"]
+
+        # PD N  →  Presidential Decree No. N  +  Presidential Decree N
+        m = re.match(r'^PD\s+(\d+)', ref, re.IGNORECASE)
+        if m:
+            n = m.group(1)
+            candidates += [f"Presidential Decree No. {n}", f"Presidential Decree {n}"]
+
+        # Department Order variants — LLM sometimes prepends "DOLE" or abbreviates as "DO".
+        # All forms resolve to the canonical DB keyword: "Department Order N-NN".
+        #
+        #   "DOLE Department Order 147-15" → "Department Order 147-15"
+        #   "DO 147-15"                    → "Department Order 147-15"
+        #   "Department Order 147-15"      → unchanged (already canonical)
+        m = re.match(
+            r'^(?:DOLE\s+)?Department\s+Order\s+([\d]+-[\w]+)',
+            ref, re.IGNORECASE
+        )
+        if m:
+            num = m.group(1)
+            candidates += [f"Department Order {num}", f"DO {num}"]
+        else:
+            m = re.match(r'^DO\s+([\d]+-[\w]+)', ref, re.IGNORECASE)
+            if m:
+                num = m.group(1)
+                candidates.append(f"Department Order {num}")
+
+        # Deduplicate while preserving order
+        return list(dict.fromkeys(candidates))
+
+    # Compiled once at class level — matches known source-law identifier patterns
+    _SOURCE_LAW_RE = re.compile(
+        r'\b(labor code|presidential decree|republic act|batas kasambahay|'
+        r'omnibus rules|department order|pd\s*\d+|ra\s*\d+|do\s*\d+)\b',
+        re.IGNORECASE,
+    )
+
+    def _extract_source_law_hints(self, keywords: List[str]) -> List[str]:
+        """Return keywords that look like source-law identifiers for GIN disambiguation."""
+        return [kw for kw in keywords if self._SOURCE_LAW_RE.search(kw)]
+
     async def direct_article_lookup(
         self,
-        articles: List[str]
+        articles: List[str],
+        keywords: Optional[List[str]] = None,
+        limit: int = 10
     ) -> List[QueryResult]:
         """
-        Direct lookup of specific articles by reference.
-        
-        Searches for exact article matches in metadata or content.
-        
+        Symbolic lookup of specific articles via keywords GIN array containment.
+
+        Uses the GIN-indexed `keywords` column (idx_sections_keywords) for precise
+        symbolic retrieval. Only sections where the article reference is a *primary*
+        keyword are returned — cross-reference mentions in full_text are excluded
+        because the LLM-curated keywords column omits cross-references by design.
+
         Args:
-            articles: List of article references (e.g., ["Article 123", "PD 442"])
-            
+            articles: Article references from query analysis
+                      (e.g., ["Article 297", "RA 10361"]).
+            keywords: Full keyword list from query analysis used to derive source-law
+                      disambiguation hints (e.g., "Labor Code"). Optional.
+            limit: Maximum results to return.
+
         Returns:
-            List of matching documents with perfect scores
-            
-        Raises:
-            AppError: If lookup fails
+            Sections ranked by keyword overlap count (best-first, for RRF rank input).
         """
         try:
             if not articles:
                 logger.warning("Direct article lookup called with empty articles")
                 return []
-            
+
+            # Step 1: normalize all article refs → canonical forms stored in DB keywords
+            all_article_terms: List[str] = []
+            for ref in articles:
+                all_article_terms.extend(self._normalize_article_refs(ref))
+            all_article_terms = list(dict.fromkeys(all_article_terms))
+
+            # Step 2: derive source-law disambiguation hints from broader keywords
+            source_hints = self._extract_source_law_hints(keywords or [])
+
             conn = self._get_connection()
             cursor = conn.cursor()
-            
+
             try:
-                results = []
-                
-                for article_ref in articles:
-                    # Try multiple pattern variations
-                    patterns = [
-                        article_ref,
-                        article_ref.replace("Article ", "Art. "),
-                        article_ref.replace("Art. ", "Article "),
-                    ]
-                    
-                    for pattern in patterns:
-                        # Search in full_text and article fields
-                        cursor.execute("""
-                            SELECT 
-                                s.id, 
-                                s.full_text, 
-                                s.article_number, 
-                                s.article_title, 
-                                s.book, 
-                                s.title_name, 
-                                s.chapter,
-                                s.summary,
-                                s.keywords,
-                                src.url,
-                                src.title AS source_title
-                            FROM labor_law_sections s
-                            LEFT JOIN labor_law_sources src ON s.source_id = src.id
-                            WHERE s.full_text ILIKE %s
-                            OR s.article_number ILIKE %s
-                            OR s.article_title ILIKE %s
-                            LIMIT 5
-                        """, (f"%{pattern}%", f"%{pattern}%", f"%{pattern}%"))
-                        
-                        for row in cursor.fetchall():
-                            # Build metadata from individual columns
-                            metadata = {
-                                'article_number': row[2],
-                                'article_title': row[3],
-                                'book': row[4],
-                                'title_name': row[5],
-                                'chapter': row[6],
-                                'summary': row[7],
-                                'keywords': row[8] if row[8] else [],
-                                'source_url': row[9],
-                                'source_title': row[10],
-                                '_source_table': 'sections'
-                            }
-                            
-                            results.append(QueryResult(
-                                id=row[0],
-                                content=row[1],  # full_text
-                                metadata=metadata,
-                                score=1.0  # Perfect score for direct match
-                            ))
-                        
-                        if results:
-                            break  # Found matches, no need to try other patterns
-                    
+                _SELECT = """
+                    SELECT
+                        s.id,
+                        s.full_text,
+                        s.article_number,
+                        s.article_title,
+                        s.book,
+                        s.title_name,
+                        s.chapter,
+                        s.summary,
+                        s.keywords,
+                        src.url,
+                        src.title AS source_title
+                    FROM labor_law_sections s
+                    LEFT JOIN labor_law_sources src ON s.source_id = src.id
+                """
+
+                if source_hints:
+                    # Try narrow query first: keywords must overlap BOTH article terms
+                    # AND a source-law identifier to prevent cross-statute false positives
+                    # when the same article number exists in multiple laws (e.g., "Article 12").
+                    # Fall back to article-terms-only if no rows match — source-law identifiers
+                    # such as "Labor Code" are not always stored as DB keywords.
+                    cursor.execute(
+                        _SELECT + """
+                        WHERE s.keywords && %s::text[]
+                        AND   s.keywords && %s::text[]
+                        LIMIT %s
+                        """,
+                        (all_article_terms, source_hints, limit * 3),
+                    )
+                    if cursor.rowcount == 0:
+                        logger.debug(
+                            f"Symbolic lookup: AND+source_hints returned 0 rows — "
+                            f"falling back to article-terms-only GIN search "
+                            f"(source_hints={source_hints})"
+                        )
+                        cursor.execute(
+                            _SELECT + """
+                            WHERE s.keywords && %s::text[]
+                            LIMIT %s
+                            """,
+                            (all_article_terms, limit * 3),
+                        )
+                else:
+                    cursor.execute(
+                        _SELECT + """
+                        WHERE s.keywords && %s::text[]
+                        LIMIT %s
+                        """,
+                        (all_article_terms, limit * 3),
+                    )
+
+                all_query_terms = set(all_article_terms) | set(source_hints)
+
+                results: List[QueryResult] = []
+                seen_ids: set = set()
+
+                for row in cursor.fetchall():
+                    section_id = row[0]
+                    if section_id in seen_ids:
+                        continue
+                    seen_ids.add(section_id)
+
+                    db_keywords: set = set(row[8]) if row[8] else set()
+                    overlap_count = len(db_keywords & all_query_terms)
+
+                    metadata = {
+                        'article_number': row[2],
+                        'article_title': row[3],
+                        'book': row[4],
+                        'title_name': row[5],
+                        'chapter': row[6],
+                        'summary': row[7],
+                        'keywords': row[8] if row[8] else [],
+                        'source_url': row[9],
+                        'source_title': row[10],
+                        '_source_table': 'sections',
+                        '_strategy': 'symbolic',
+                        '_overlap_count': overlap_count,
+                    }
+
+                    results.append(QueryResult(
+                        id=section_id,
+                        content=row[1],  # full_text
+                        metadata=metadata,
+                        score=float(overlap_count),  # rank proxy for RRF (not score=1.0)
+                    ))
+
+                # Best-first ordering so RRF receives a properly ranked list
+                results.sort(key=lambda r: r.metadata['_overlap_count'], reverse=True)
+                results = results[:limit]
+
                 logger.info(
-                    f"Direct article lookup returned {len(results)} results "
-                    f"(articles: {articles})"
+                    f"Symbolic lookup (GIN) returned {len(results)} results "
+                    f"(article_terms={all_article_terms}, source_hints={source_hints})"
                 )
-                
-                # Deduplicate by ID
-                seen_ids = set()
-                unique_results = []
-                for result in results:
-                    if result.id not in seen_ids:
-                        seen_ids.add(result.id)
-                        unique_results.append(result)
-                
-                return unique_results
-                
+                return results
+
             finally:
                 self._return_connection(conn, cursor)
-                
+
         except Exception as e:
             logger.error(f"Direct article lookup error: {str(e)}", exc_info=True)
-            # Don't fail entire pipeline - return empty results
             return []
     
     async def query_with_chunks(
@@ -950,27 +1078,31 @@ class SupabaseVectorStore(BaseVectorStore):
         # Define ranking key
         def ranking_key(result: QueryResult) -> Tuple[int, float]:
             """
-            Returns (priority, -similarity) for sorting.
+            Returns (priority, similarity) for sorting with reverse=True.
             Higher priority number = higher rank.
-            Negative similarity for descending order.
+            Positive similarity so reverse=True yields descending score within each tier.
             """
             score = result.score
             is_chunk = result.metadata.get('_source_table') == 'chunks'
             
             if is_chunk and score > 0.85:
-                return (4, -score)  # Highest priority
+                return (4, score)  # Highest priority
             elif not is_chunk and score > 0.80:
-                return (3, -score)
+                return (3, score)
             elif is_chunk and score > 0.75:
-                return (2, -score)
+                return (2, score)
             elif not is_chunk and score > 0.70:
-                return (1, -score)
+                return (1, score)
             else:
-                return (0, -score)  # Lowest priority, still sorted by score
+                return (0, score)  # Lowest priority, sorted by score descending
         
         # Sort by ranking key
         all_results.sort(key=ranking_key, reverse=True)
-        
+
+        # Tag dense strategy on all results
+        for r in all_results:
+            r.metadata["_strategy"] = "dense"
+
         # Limit results
         return all_results[:limit]
     
@@ -981,110 +1113,118 @@ class SupabaseVectorStore(BaseVectorStore):
         keywords: Optional[List[str]] = None,
         articles: Optional[List[str]] = None,
         limit: int = 10,
-        threshold: float = 0.3
+        threshold: float = 0.3,
+        enabled_strategies: Optional[set] = None,  # None = all applicable strategies
     ) -> List[QueryResult]:
         """
-        Smart multi-strategy retrieval orchestrator.
-        
-        Executes retrieval strategies in parallel based on available inputs:
-        1. Direct article lookup (if articles provided) - HIGHEST priority
-        2. Keyword search (if keywords provided)
-        3. Semantic search with dual-table (if embedding provided)
-        
-        Results are merged, deduplicated, and ranked by strategy priority.
-        
+        Multi-strategy retrieval orchestrator with RRF fusion.
+
+        Runs enabled strategies in parallel, then merges via Reciprocal Rank Fusion
+        (k=60). Strategy gating is controlled by ``enabled_strategies``:
+
+        - ``None``     → all applicable strategies (default, equivalent to hybrid)
+        - ``set()``    → no retrieval; returns [] immediately (LLM-only mode)
+        - ``{"dense"}``→ only dense HNSW search, even if articles/keywords present
+
         Args:
-            query_embedding: Query vector for semantic search
-            query_text: Original query text
-            keywords: Extracted keywords for FTS
-            articles: Article references for direct lookup
-            limit: Maximum total results to return
-            threshold: Minimum similarity/relevance threshold
-            
+            query_embedding: Query vector for dense HNSW search.
+            query_text: Original query text (required for lexical search).
+            keywords: Extracted keywords for FTS lexical search.
+            articles: Article references for GIN symbolic search.
+            limit: Maximum results to return.
+            threshold: Minimum similarity/relevance threshold.
+            enabled_strategies: Explicit set of strategy names to run.
+                                 Allowed values: ``"symbolic"``, ``"lexical"``, ``"dense"``.
+
         Returns:
-            Merged and ranked list of query results
-            
+            RRF-merged and ranked list of query results.
+
         Raises:
-            AppError: If all strategies fail
+            AppError: If all active strategies raise exceptions.
         """
+        from retrieval.ranking import reciprocal_rank_fusion
+
+        _STRATEGY_DEFAULTS = {"symbolic", "lexical", "dense"}
+        active = enabled_strategies if enabled_strategies is not None else _STRATEGY_DEFAULTS
+
+        # LLM-only mode: caller explicitly disabled all retrieval
+        if not active:
+            logger.info("smart_retrieve: enabled_strategies=set() — skipping retrieval (LLM-only mode)")
+            return []
+
         try:
-            logger.info(
-                f"Smart retrieve: "
-                f"has_embedding={query_embedding is not None}, "
-                f"has_keywords={keywords is not None}, "
-                f"has_articles={articles is not None}"
-            )
-            
-            # Execute strategies in parallel
-            tasks = []
-            strategy_names = []
-            
-            # 1. Direct article lookup (highest priority)
-            if articles:
-                tasks.append(self.direct_article_lookup(articles))
-                strategy_names.append("direct")
-            
-            # 2. Keyword search
-            if keywords and query_text:
-                tasks.append(self.keyword_search(query_text, keywords, limit, threshold * 0.3))
-                strategy_names.append("keyword")
-            
-            # 3. Semantic search with dual-table querying
-            if query_embedding:
-                tasks.append(self.query_with_chunks(query_embedding, limit, threshold))
-                strategy_names.append("semantic_dual")
-            
+            # Build parallel task list, gated by active set
+            tasks: List = []
+            strategy_names: List[str] = []
+
+            # Per-strategy candidate pool: fetch more candidates than the final limit
+            # so RRF sees a rich pool and cross-strategy agreement boosts the best docs.
+            # Without this, with limit=8 and two strategies (no overlap), the merged list
+            # strictly alternates, meaning dense-rank-6 ends up at merged position 12 —
+            # well outside the final cut. Fetching 2× candidates ensures gold chunks
+            # at per-strategy rank 6-9 can appear in both strategy pools and receive
+            # the cross-strategy RRF boost that lifts them into the final top-k.
+            candidate_limit = max(limit * 2, 10)
+
+            # 1. Symbolic — keywords GIN array lookup
+            if "symbolic" in active and articles:
+                tasks.append(self.direct_article_lookup(articles, keywords=keywords, limit=candidate_limit))
+                strategy_names.append("symbolic")
+
+            # 2. Lexical — PostgreSQL FTS ts_rank
+            # Note: FTS ts_rank scores are much lower than cosine similarity (0.01-0.1 range).
+            # Use a minimal threshold (0.01) to filter only truly irrelevant results while
+            # letting RRF handle relevance ranking across strategies.
+            if "lexical" in active and keywords and query_text:
+                tasks.append(self.keyword_search(query_text, keywords, candidate_limit, threshold=0.01))
+                strategy_names.append("lexical")
+
+            # 3. Dense — dual-table HNSW cosine similarity
+            if "dense" in active and query_embedding:
+                tasks.append(self.query_with_chunks(query_embedding, candidate_limit, threshold))
+                strategy_names.append("dense")
+
             if not tasks:
-                logger.warning("No retrieval strategies available")
+                logger.warning(
+                    f"smart_retrieve: no tasks launched "
+                    f"(active={sorted(active)}, has_articles={bool(articles)}, "
+                    f"has_keywords={bool(keywords)}, has_embedding={query_embedding is not None})"
+                )
                 return []
-            
-            # Execute all strategies in parallel
-            strategy_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Merge results with priority-based ranking
-            merged_results = []
-            result_map: Dict[str, Tuple[QueryResult, str, int]] = {}  # id -> (result, strategy, priority)
-            
-            strategy_priority = {"direct": 3, "keyword": 2, "semantic_dual": 1}
-            
-            for strategy_name, results in zip(strategy_names, strategy_results):
+
+            # Execute all active strategies in parallel
+            raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Tag each result with its originating strategy and collect per-strategy lists
+            rrf_input: Dict[str, List[QueryResult]] = {}
+            for strategy_name, results in zip(strategy_names, raw_results):
                 if isinstance(results, Exception):
-                    logger.error(f"{strategy_name} strategy failed: {str(results)}")
+                    logger.error(f"smart_retrieve: {strategy_name} strategy failed: {results}")
                     continue
-                
                 if not results:
                     continue
-                
-                priority = strategy_priority.get(strategy_name, 0)
-                
-                for result in results:
-                    if result.id in result_map:
-                        # Keep result from higher priority strategy
-                        existing_priority = result_map[result.id][2]
-                        if priority > existing_priority:
-                            result_map[result.id] = (result, strategy_name, priority)
-                    else:
-                        result_map[result.id] = (result, strategy_name, priority)
-            
-            # Convert to list and sort by priority, then score
-            merged_results = [
-                item[0] for item in sorted(
-                    result_map.values(),
-                    key=lambda x: (x[2], x[0].score),  # Sort by priority, then score
-                    reverse=True
-                )
-            ]
-            
-            # Limit results
-            merged_results = merged_results[:limit]
-            
+                # Tag strategy on each result (dense results from _merge_and_rank_dual_table
+                # may already have _source_table set; we add _strategy here)
+                for r in results:
+                    r.metadata["_strategy"] = strategy_name
+                rrf_input[strategy_name] = results
+
+            if not rrf_input:
+                logger.warning("smart_retrieve: all strategies returned empty or failed")
+                return []
+
+            # Merge via RRF (k=60, Cormack et al. 2009)
+            merged = reciprocal_rank_fusion(rrf_input, k=60)
+            merged = merged[:limit]
+
+            # Build per-strategy count summary for INFO log
+            counts = ", ".join(f"{s}={len(rrf_input[s])}" for s in strategy_names if s in rrf_input)
             logger.info(
-                f"Smart retrieve merged {len(merged_results)} results from "
-                f"{len(strategy_names)} strategies: {strategy_names}"
+                f"smart_retrieve: active={sorted(active)} [{counts}] -> rrf_merged={len(merged)}"
             )
-            
-            return merged_results
-            
+
+            return merged
+
         except Exception as e:
             logger.error(f"Smart retrieve error: {str(e)}", exc_info=True)
             raise AppError(
