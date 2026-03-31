@@ -49,6 +49,9 @@ htmlcov/
 .tox/
 .hypothesis/
 
+# Benchmark results (generated outputs)
+tests/benchmark/results/
+
 # Type checking
 .mypy_cache/
 .dmypy.json
