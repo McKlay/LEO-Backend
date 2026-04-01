@@ -22,27 +22,22 @@ def normalize_chunk_id(chunk_id: str) -> str:
     """
     Normalise a chunk identifier for consistent comparison.
 
-    Handles two canonical forms used in this project:
-    - Source-path form: ``DOLE-Handbook/02-minimum-wage.md``  (gold chunks)
-    - Metadata-constructed form: identical path built by ResultCollector
+    Chunk identifiers are the canonical ``chunk_id`` values declared in each
+    chunk's YAML frontmatter and stored in ``metadata.chunk_id`` in the vector
+    store (e.g. ``dole_handbook_2023_min_wage_eemr_formulas``,
+    ``RA-11058-06``, ``ra-11199-14-sec29-33-final-provisions``).
+    Gold chunks in ``benchmark-queries.json`` use the same identifiers.
 
-    Steps:
-    1. Strip ``kb/chunks/`` or ``kb\\chunks\\`` prefix (some paths carry it).
-    2. Normalise path separators to ``/``.
-    3. Lowercase the whole string.
+    The only transformation required is lowercasing — chunk_ids use mixed
+    conventions (snake_case, kebab-case, UPPER-kebab) across document sets.
 
     Args:
         chunk_id: Raw chunk identifier string.
 
     Returns:
-        Normalised string suitable for equality comparison.
+        Lowercased string suitable for equality comparison.
     """
-    chunk_id = chunk_id.replace("\\", "/")
-    for prefix in ("kb/chunks/", "kb/"):
-        if chunk_id.lower().startswith(prefix):
-            chunk_id = chunk_id[len(prefix):]
-            break
-    return chunk_id.lower()
+    return chunk_id.strip().lower()
 
 
 def recall_at_k(

@@ -129,25 +129,25 @@ Reference: [`PHASE_3_AUTOMATED_TESTING_SPECIFICATION.md`](PHASE_3_AUTOMATED_TEST
 
 ### 6a: CSV Exporter (`csv_exporter.py`) — §5
 
-- [ ] Expert evaluation CSV (§5.1): blinded, randomized config labels (X/Y/Z), shuffled rows, columns for expert scoring
-- [ ] Produce for 3 configs only: LLM-only, Stage 2 Only, Full Pipeline
-- [ ] Multi-turn conversation history CSV (§5.2): full dialog per query–variant
-- [ ] Raw results CSV (§5.3): all 680 runs with all metrics + generated/reference answers
-- [ ] Store blinding mapping file separately
-- [ ] CLI: `python -m tests.benchmark.exporters.csv_exporter --input ... --output ... --expert-blind`
+- [x] Expert evaluation CSV (§5.1): blinded, randomized config labels (X/Y/Z), shuffled rows, columns for expert scoring
+- [x] Produce for 3 configs only: LLM-only, Stage 2 Only, Full Pipeline
+- [x] Multi-turn conversation history CSV (§5.2): full dialog per query–variant
+- [x] Raw results CSV (§5.3): all 680 runs with all metrics + generated/reference answers
+- [x] Store blinding mapping file separately
+- [x] CLI: `python -m tests.benchmark.exporters.csv_exporter --input ... --output ... --expert-blind`
 
 ### 6b: Chart Generator (`chart_generator.py`) — §6
 
-- [ ] 6.1 — Retrieval comparison grouped bar (Table 2): Dense/Lexical/Symbolic/Hybrid × Recall@3/5/10, Hit Rate@5, MRR
-- [ ] 6.2 — Retrieval by target subset heatmap (Table 3): MRR + Recall@5 per `retrieval_target` subset
-- [ ] 6.3 — Translation impact grouped bar (Table 4): with/without translation × Filipino/Cebuano/English
-- [ ] 6.4 — Answer quality grouped bar (Table 6): Config A/B/C × Mean Expert Score, Token F1, ROUGE-L
-- [ ] 6.5 — Hallucination & citation bar (Table 9): hallucination rate, fabricated citation rate, citation P/R
-- [ ] 6.6 — RAG Triad radar chart (Table 10): Config B vs C on 3 axes
-- [ ] 6.7 — Ablation heatmap (Table 11): 8 variants × 5 key metrics
-- [ ] 6.8 — Per-topic horizontal bar (Recall@5 or MRR by 19 topic categories)
-- [ ] Output PDF + PNG at 300 DPI, consistent academic palette
-- [ ] CLI: `python -m tests.benchmark.exporters.chart_generator --input ... --output ...`
+- [x] 6.1 — Retrieval comparison grouped bar (Table 2): Dense/Lexical/Symbolic/Hybrid × Recall@3/5/10, Hit Rate@5, MRR
+- [x] 6.2 — Retrieval by target subset heatmap (Table 3): MRR + Recall@5 per `retrieval_target` subset
+- [x] 6.3 — Translation impact grouped bar (Table 4): with/without translation × Filipino/Cebuano/English
+- [x] 6.4 — Answer quality grouped bar (Table 6): Config A/B/C × Mean Expert Score, Token F1, ROUGE-L
+- [x] 6.5 — Hallucination & citation bar (Table 9): hallucination rate, fabricated citation rate, citation P/R
+- [x] 6.6 — RAG Triad radar chart (Table 10): Config B vs C on 3 axes
+- [x] 6.7 — Ablation heatmap (Table 11): 8 variants × 5 key metrics
+- [x] 6.8 — Per-topic horizontal bar (Recall@5 or MRR by 19 topic categories)
+- [x] Output PDF + PNG at 300 DPI, consistent academic palette
+- [x] CLI: `python -m tests.benchmark.exporters.chart_generator --input ... --output ...`
 
 ---
 

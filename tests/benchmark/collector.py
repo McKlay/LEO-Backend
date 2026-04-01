@@ -271,22 +271,29 @@ class ResultCollector:
     @staticmethod
     def _resolve_chunk_id(result: Any) -> str:
         """
-        Derive a source-path identifier from a QueryResult for matching against
-        gold_chunks in the benchmark dataset. Gold chunks use the format
-        ``{folder}/{stem}.md`` (e.g. ``DOLE-Handbook/02-minimum-wage.md``).
+        Return the canonical ``chunk_id`` for a QueryResult.
 
-        Strategy:
-        1. Construct from metadata ``short_name`` (= document folder) + ``file_stem``.
-        2. Fall back to metadata ``chunk_id`` (snake_case slug).
-        3. Final fall back: raw DB id (UUID — cannot match gold, but at least non-empty).
+        The ``chunk_id`` is the stable identifier declared in every chunk's
+        YAML frontmatter and stored as ``metadata.chunk_id`` in the vector
+        store.  It is always present and does not depend on file-path
+        reconstruction, making it the preferred comparison key against
+        ``gold_chunks`` in the benchmark dataset.
+
+        Fallback chain (for chunks ingested before frontmatter standardisation):
+        1. ``metadata.chunk_id``   → e.g. ``dole_handbook_2023_min_wage_eemr_formulas``
+        2. ``metadata.short_name`` + ``metadata.file_stem`` → path form
+        3. Raw DB id (UUID — cannot match gold, but avoids empty strings)
         """
         meta = getattr(result, "metadata", None) or {}
+        chunk_id = meta.get("chunk_id", "")
+        if chunk_id:
+            return chunk_id
+        # Fallback: reconstruct source-path form for pre-standardised chunks
         short_name = meta.get("short_name", "")
         file_stem = meta.get("file_stem", "")
         if short_name and file_stem:
             return f"{short_name}/{file_stem}.md"
-        chunk_id = meta.get("chunk_id", "")
-        return chunk_id or result.id
+        return result.id
 
     def record_retrieval(self, results: Any, retrieval_time_s: float = 0.0) -> None:
         """

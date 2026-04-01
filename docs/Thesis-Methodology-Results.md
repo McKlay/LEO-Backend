@@ -212,7 +212,7 @@ Eight pipeline variants are defined to cover all baselines and ablations:
 - **Recall@K** — proportion of gold chunks retrieved in top-$K$ results [1]
 - **Hit Rate@K** — binary indicator: at least one gold chunk appears in top $K$
 - **MRR** — reciprocal rank of the first relevant document [1]
-- $K$ values reported: $K = 3, 5$ (Recall@10 is excluded because the maximum number of gold chunks per query is 3, making Recall@10 near-trivially high and non-discriminating)
+- $K$ values reported: $K = 3, 5, 10$
 
 **Answer quality metrics (automated, Tier 2 supplement):**
 
@@ -278,6 +278,7 @@ We compare four retrieval settings:
 |--------|-----------|-------------|--------------|--------|
 | Recall@3 | — | — | — | — |
 | Recall@5 | — | — | — | — |
+| Recall@10 | — | — | — | — |
 | Hit Rate@5 | — | — | — | — |
 | MRR | — | — | — | — |
 
