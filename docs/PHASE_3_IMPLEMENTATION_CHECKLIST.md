@@ -153,8 +153,8 @@ Reference: [`PHASE_3_AUTOMATED_TESTING_SPECIFICATION.md`](PHASE_3_AUTOMATED_TEST
 
 ## Milestone 7: Integration & Execution
 
-- [ ] Verify `benchmark-queries.json` schema: 100 queries, all required fields (`gold_chunks`, `gold_article_refs`, `reference_answer`, `conversation_history` for multi-turn, `expected_clarification` for ambiguous)
-- [ ] End-to-end dry run: `--smoke` passes on all 5 representative queries
+- [x] Verify `benchmark-queries.json` schema: 100 queries, all required fields (`gold_chunks`, `gold_article_refs`, `reference_answer`, `conversation_history` for multi-turn, `expected_clarification` for ambiguous)
+- [x] End-to-end dry run: `--smoke` passes on all 5 representative queries
 - [ ] Run `--validate all` — both clarification and multi-turn pass
 - [ ] Execute Phase 1 retrieval-only runs (Tables 2–4)
 - [ ] Execute Phase 1c analysis-only run (Table 5)

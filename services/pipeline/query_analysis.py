@@ -278,7 +278,7 @@ If out of scope: set out_of_scope=true, write out_of_scope_message in user's lan
 🚨 CRITICAL: If the assistant ALREADY ASKED a clarification question and the user is RESPONDING to it, the ambiguity is RESOLVED. Set needs_clarification=false and proceed with analysis.
 
 Tasks:
-1) Consolidate follow-ups with conversation context (include prior context in legal_concepts/keywords)
+1) Always consolidate follow-ups and multi-turn queries with conversation context (include prior context in legal_concepts/keywords)
 2) Extract: language (en/fil/ceb/mixed), legal concepts, explicit article references
 3) Produce normalized_query_en: Complete self-contained English query merging full conversation intent.
    Example: "May karapatan sa separation pay?" + answer "serious misconduct, regular, 3 yrs" → "Is a regular employee with 3 years entitled to separation pay after dismissal for serious misconduct?"
@@ -289,6 +289,11 @@ When to clarify (ONLY if no prior clarification exchange):
   ✓ Holiday type unspecified for pay computation
   ✓ Employment status unknown when it changes the rule
   ✓ First-turn vague query with zero details ("what are my rights?")
+  ✓ Only described a specific scenario without asking a clear question ("I was terminated for absenteeism")
+  ✓ Scenario where multiple legal interpretations are possible and user didn't specify which angle they're asking about ("I want to resign, what benefits can I get?" — clarify if they mean "what benefits do I lose?" or "what benefits am I entitled to?")
+  ✓ When the query is about employee compensation or benefits and the user hasn't specified key details that would affect the answer (e.g. "How much severance pay do I get?" → clarify about years of service, employment type, reason for termination, severity of accident, etc.)
+  ✓ When it comes to labor_relations topics, clarify vague collective action intent (union vs. complaint vs. strike) since it requires clarification before mapping to ULP and right to self-organization provisions
+  ✓ When query is about contractor liability, clarify nature of contractor relationship and work since it affects which provisions apply
 
 When NOT to clarify:
   ✗ User responding to assistant's prior clarification question
