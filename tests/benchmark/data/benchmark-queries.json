@@ -7,23 +7,23 @@
     "description": "Benchmark dataset for evaluating the Three-Stage Hybrid RAG pipeline on Philippine labor-law question answering under multilingual and multi-turn conditions.",
     "distribution": {
       "by_language": {
-        "en": 50,
-        "fil": 30,
-        "ceb": 20
+        "en": 35,
+        "fil": 35,
+        "ceb": 30
       },
       "by_type": {
-        "single_turn": 76,
-        "multi_turn": 24
+        "single_turn": 70,
+        "multi_turn": 30
       },
       "by_ambiguity": {
         "ambiguous": 30,
         "clear": 70
       },
       "by_retrieval_target": {
-        "symbolic": 15,
+        "symbolic": 25,
         "lexical": 25,
         "dense": 25,
-        "hybrid": 35
+        "hybrid": 25
       }
     },
     "topic_coverage": {
@@ -48,13 +48,13 @@
       "recruitment_overseas": 1
     },
     "corpus_reference": "kb/chunks/ — 10 document folders, 161 chunk files",
-    "labeling_notes": "Each query includes gold_chunks (chunk IDs from kb/chunks/) and gold_article_refs (statute citations). reference_answer provides the canonical expected response. For multi-turn queries, conversation_history records the Phase 1 dialog (Turns 1-3); turn5_query and turn6_reference_answer extend the conversation into Phase 2 for multi-turn summarization evaluation. gold_chunks and gold_article_refs target Turn 4 (Tables 1, 2, 6); gold_chunks_turn6 and gold_article_refs_turn6 target the Turn 6 follow-up (Table 7). For ambiguous single-turn queries (n=6), conversation_history records the full 3-turn clarification exchange (Turn 1: initial query; Turn 2: system clarification question from expected_clarification; Turn 3: scripted user reply), enabling Config C to produce a ratable Turn 4 answer evaluated in Table 6. expected_clarification is retained as a top-level reference field showing the ideal Turn 2 question. For ambiguous queries (all types), expected_clarification gives the system's ideal Turn 2 follow-up question."
+    "labeling_notes": "Each query includes gold_chunks (chunk IDs from kb/chunks/) and gold_article_refs (statute citations). reference_answer provides the canonical expected response. For multi-turn queries, conversation_history records the Phase 1 dialog (Turns 1-3); turn5_query and turn6_reference_answer extend the conversation into Phase 2 for multi-turn summarization evaluation. gold_chunks and gold_article_refs target Turn 4 (Tables 1, 2, 6); gold_chunks_turn6 and gold_article_refs_turn6 target the Turn 6 follow-up (Table 8). All 30 ambiguous queries are multi-turn: Phase 1 (Turns 1-3) is the clarification exchange enabling a ratable Turn 4 answer evaluated in Table 7; Phase 2 (Turns 5-6) tests Stage 1 history summarization evaluated in Table 8. expected_clarification is retained as a top-level reference field showing the ideal Turn 2 question."
   },
   "queries": [
     {
       "query_id": "Q001",
-      "query_text": "What is the current minimum wage rate for workers in Metro Manila?",
-      "language": "en",
+      "query_text": "Ano ang kasalukuyang minimum wage rate para sa mga manggagawa sa Metro Manila?",
+      "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "wages_minimum_wage",
@@ -66,8 +66,8 @@
         "Wage Order NCR-24",
         "RA 6727"
       ],
-      "reference_answer": "The minimum wage in the NCR is set by the RTWPB through Wage Orders. As of the latest DOLE Handbook, daily minimum wage rates are specified per sector (non-agriculture, agriculture, etc.) in the NCR.",
-      "notes": "Tests lexical retrieval on specific wage-rate lookup. Keyword 'minimum wage Metro Manila' should match handbook chunk."
+      "reference_answer": "Ang minimum wage sa NCR ay itinatatag ng RTWPB sa pamamagitan ng Wage Orders. Ayon sa pinakabagong DOLE Handbook, ang pang-araw-araw na minimum wage ay tinukoy ayon sa sektor (non-agriculture, agriculture, atbp.) sa NCR.",
+      "notes": "Tests lexical retrieval on specific wage-rate lookup. Filipino translation — keyword 'minimum wage Metro Manila' should still match handbook chunk after Stage 1 translation pivot."
     },
     {
       "query_id": "Q002",
@@ -90,7 +90,7 @@
       "query_id": "Q003",
       "query_text": "How much should a regular worker should be paid at the very least?",
       "language": "en",
-      "query_type": "single_turn",
+      "query_type": "multi_turn",
       "is_ambiguous": true,
       "topic": "wages_minimum_wage",
       "retrieval_target": "dense",
@@ -118,7 +118,17 @@
         "RA 6727"
       ],
       "reference_answer": "Under the Labor Code and RA 6727, all workers are entitled to receive at least the minimum wage rate set by the Regional Tripartite Wages and Productivity Board for their region and sector.",
-      "notes": "Tests dense/semantic retrieval. Paraphrased query without legal keywords; requires semantic understanding of 'paid at the very least' = minimum wage."
+      "notes": "Retrieval target: dense — Initial query paraphrases 'minimum wage' as 'paid at the very least' with no legal keywords or statute citations; only semantic retrieval can map the colloquial phrasing. Tests dense/semantic retrieval and translation pivot.",
+      "turn5_query": "If my employer has been paying me below the correct minimum wage for the past year, how long do I have to file a claim for the underpayment? Is there a deadline?",
+      "turn6_reference_answer": "Under Article 306 of the Labor Code (formerly Article 291 prior to renumbering), money claims arising from employer-employee relations — including underpayment of wages — must be filed within three (3) years from the time the cause of action accrued. The prescriptive period runs separately for each pay period in which underpayment occurred: the 3-year clock starts from each payroll date on which the correct minimum wage was not paid. This means if your employer has been underpaying you for the past year, you can still recover all 12 months of underpayment as long as you file within 3 years of each payroll period. Practical step: file a Request for Assistance (RFA) at the nearest DOLE Regional or Field Office under the Single Entry Approach (SEnA) — this is the mandatory first step before formal litigation before the NLRC or DOLE arbitration.",
+      "gold_chunks_turn6": [
+        "book6-title2-book7-articles287-302-retirement-penal-provisions",
+        "sena_rule2_rfa_procedures"
+      ],
+      "gold_article_refs_turn6": [
+        "Labor Code Art. 306",
+        "SEnA Rules"
+      ]
     },
     {
       "query_id": "Q004",
@@ -139,7 +149,7 @@
     },
     {
       "query_id": "Q005",
-      "query_text": "Pila ang minimum nga suweldo sa Metro Manila karon?",
+      "query_text": "Bag-o lang ko nagsugod og trabaho sa usa ka restaurant sa Makati ug gusto nako masiguro nga sakto ang akong nadawat nga sweldo. Pila ang minimum nga suweldo sa Metro Manila karon para sa mga trabahante sa non-agriculture sector?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -152,13 +162,13 @@
         "Wage Order NCR-24"
       ],
       "reference_answer": "Ang minimum nga suweldo sa NCR gi-set sa RTWPB pinaagi sa Wage Orders. Ang pinakabag-o nga daily minimum wage rate makita sa DOLE Handbook.",
-      "notes": "Tests translation pivot: Cebuano query. Dense retrieval alone would fail without translation to English."
+      "notes": "Retrieval target: dense — Cebuano query with no legal keywords; 'minimum nga suweldo' requires semantic understanding after translation pivot. Added personal employment context for realistic framing."
     },
     {
       "query_id": "Q006",
       "query_text": "What's the minimum wage?",
       "language": "en",
-      "query_type": "single_turn",
+      "query_type": "multi_turn",
       "is_ambiguous": true,
       "topic": "wages_minimum_wage",
       "retrieval_target": "hybrid",
@@ -184,7 +194,15 @@
         "RA 6727"
       ],
       "reference_answer": "The minimum wage in the Philippines varies by region, as set by Regional Tripartite Wages and Productivity Boards. Please specify your region for the exact rate.",
-      "notes": "Ambiguous: no region specified. Tests clarification detection. System should flag needs_clarification=true."
+      "notes": "Retrieval target: hybrid — After clarification, the consolidated query combines the keyword 'minimum wage' (lexical match) with region/sector specifics that benefit from semantic matching across handbook tables. No statute citation rules out symbolic. Tests clarification detection (needs_clarification=true).",
+      "turn5_query": "Now that I know the minimum wage rate in NCR, if my employer requires me to work on Christmas Day, which is a regular holiday, how much should I be paid for that day?",
+      "turn6_reference_answer": "Under Article 94 of the Labor Code and the DOLE Handbook, if you actually work on a regular holiday, you are entitled to 200% of your daily wage rate (i.e., your regular daily rate × 2). If the regular holiday also coincides with your scheduled rest day, the premium increases to 260% of your daily wage rate. This means if your daily minimum wage in NCR is the rate set under the applicable Wage Order, your pay for working on Christmas Day is twice that daily rate. If your employer does not require you to work on a regular holiday, you are still entitled to receive your regular daily rate (100%) — this is the 'no-work, still-paid' rule that applies to regular holidays for all covered employees.",
+      "gold_chunks_turn6": [
+        "dole_handbook_2023_holiday_pay"
+      ],
+      "gold_article_refs_turn6": [
+        "Labor Code Art. 94"
+      ]
     },
     {
       "query_id": "Q007",
@@ -217,7 +235,7 @@
         "Wage Order Calabarzon"
       ],
       "reference_answer": "Ayon sa DOLE Handbook, ang minimum wage sa Calabarzon para sa non-agricultural workers ay mas mataas sa ₱400. Kung kulang ang sahod mo, maaari kang mag-file ng complaint sa DOLE Regional Office.",
-      "notes": "Multi-turn + ambiguous + Filipino. Tests: (1) clarification detection for vague complaint, (2) multi-turn summarization, (3) translation pivot.",
+      "notes": "Retrieval target: dense — The clarified query 'kulang ang sahod' uses no legal terms; requires semantic understanding to map the colloquial Filipino complaint to minimum wage underpayment. Tests clarification detection, multi-turn summarization, and translation pivot.",
       "turn5_query": "Kung ganun, paano naman kung hindi ko natanggap ang 13th month pay noong nakaraang taon? May karapatan ba ako sa kumita niyon kahit minimum wage lang ang sahod ko?",
       "turn6_reference_answer": "Oo. Sa ilalim ng Presidential Decree 851, lahat ng rank-and-file employees sa private sector ay may karapatan sa 13th month pay, anuman ang antas ng sahod, kasama na ang mga minimum wage earners. Ang halaga ay katumbas ng isang-buwang basic salary (o 1/12 ng kabuuang basic pay para sa buong taon). Kung hindi ka nakatanggap ng 13th month pay noong nakaraang taon, maaari kang maghain ng reklamo sa DOLE o SEnA para mabawi ang hindi naihatid na halaga.",
       "gold_chunks_turn6": [
@@ -231,8 +249,8 @@
     },
     {
       "query_id": "Q008",
-      "query_text": "Can my employer pay me less than the minimum wage if I'm an apprentice?",
-      "language": "en",
+      "query_text": "Mahimo bang bayran ko sa akong employer og menos sa minimum wage kung apprentice ako?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "wages_minimum_wage",
@@ -244,13 +262,13 @@
       "gold_article_refs": [
         "Labor Code Art. 61"
       ],
-      "reference_answer": "Under the Labor Code, apprentices may be paid not less than 75% of the applicable minimum wage. The DOLE Handbook confirms that apprentices are entitled to at least 75% of the regional minimum wage.",
-      "notes": "Tests hybrid: needs semantic understanding of apprentice-wage relationship plus keyword match to apprenticeship provisions."
+      "reference_answer": "Base sa Labor Code, ang mga apprentice mahimong bayran og dili moubos sa 75% sa applicable nga minimum wage. Gikumpirma sa DOLE Handbook nga ang mga apprentice adunay katungod sa labing menos 75% sa regional minimum wage.",
+      "notes": "Tests hybrid: needs semantic understanding of apprentice-wage relationship plus keyword match to apprenticeship provisions. Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q009",
-      "query_text": "How is the Equivalent Monthly Rate (EEMR) for a daily-paid worker computed?",
-      "language": "en",
+      "query_text": "Giunsa ang pagkwenta sa Equivalent Monthly Rate (EEMR) alang sa usa ka daily-paid nga trabahante?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "wages_minimum_wage",
@@ -259,8 +277,8 @@
         "dole_handbook_2023_min_wage_eemr_formulas"
       ],
       "gold_article_refs": [],
-      "reference_answer": "EEMR = (Daily Rate × Applicable Days Factor) / 12. The DOLE Handbook provides multiple formulas depending on whether the worker works 6 days/week with paid holidays, or other arrangements.",
-      "notes": "Tests lexical retrieval on specific formula. Keyword 'EEMR' and 'Equivalent Monthly Rate' should match handbook chunk with has_formula=true."
+      "reference_answer": "Ang EEMR = (Daily Rate × Applicable Days Factor) / 12. Ang DOLE Handbook naghatag og daghang pormula depende kung ang trabahante nagtrabaho og 6 ka adlaw/semana nga adunay bayad nga holidays, o uban pang mga kahimtang.",
+      "notes": "Tests lexical retrieval on specific formula. Keyword 'EEMR' and 'Equivalent Monthly Rate' retained in Cebuano query; should still match handbook chunk with has_formula=true after translation pivot."
     },
     {
       "query_id": "Q010",
@@ -334,7 +352,7 @@
     },
     {
       "query_id": "Q014",
-      "query_text": "Pila ka oras ang normal nga trabaho sa Pilipinas base sa balaod sa labor?",
+      "query_text": "Nagtrabaho ko sa usa ka call center sa Cebu ug kanunay ko mag-overtime pero wala ko kasiguro kung sakto ba ang oras sa normal nga trabaho. Pila ka oras ang normal nga trabaho sa Pilipinas base sa balaod sa labor?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -347,7 +365,7 @@
         "Labor Code Art. 83"
       ],
       "reference_answer": "Base sa Article 83 sa Labor Code, ang normal nga oras sa pagtrabaho dili mosobra sa walo (8) ka oras matag adlaw.",
-      "notes": "Cebuano query. Tests translation pivot to English for retrieval."
+      "notes": "Retrieval target: dense — Cebuano query paraphrasing 'normal working hours' without citing Art. 83; requires semantic retrieval after translation pivot. Added call center context for realistic framing."
     },
     {
       "query_id": "Q015",
@@ -381,7 +399,7 @@
         "Labor Code Art. 93"
       ],
       "reference_answer": "For work performed on a rest day that falls on a regular holiday, the first 8 hours are paid at 200% of the daily rate × 130% (rest day premium), and overtime hours (beyond 8) are paid at an additional 30% of the hourly rate on that day.",
-      "notes": "Multi-turn + ambiguous. Tests clarification, then complex computation query needing handbook tables.",
+      "notes": "Retrieval target: hybrid — After clarification, 'rest day,' 'regular holiday,' and 'overtime' provide keyword matches, while computing the correct combined rate from multiple handbook tables requires semantic understanding. Tests clarification then complex computation.",
       "turn5_query": "If my employer refuses to pay the correct premium for that day, what are my options for recovering the underpayment?",
       "turn6_reference_answer": "You should first file a Request for Assistance (RFA) under SEnA at the nearest DOLE Regional or Field Office. SEnA provides mandatory conciliation-mediation within 30 days. If conciliation fails, you may file a money claim complaint before the NLRC Regional Arbitration Branch having jurisdiction over your workplace. Money claims for unpaid wages and premium pay must be filed within three (3) years from the date each cause of action accrued (i.e., each payroll period the underpayment occurred). Retain payslips and attendance records as evidence.",
       "gold_chunks_turn6": [
@@ -425,7 +443,7 @@
         "Labor Code Art. 85"
       ],
       "reference_answer": "Oo. Ayon sa Article 85 ng Labor Code, ang bawat employer ay dapat magbigay ng hindi bababa sa 60 minuto na break para sa regular meals.",
-      "notes": "Vague complaint about no rest at work. Dense retrieval should map to Art. 85 meal period provisions after clarification of work type.",
+      "notes": "Retrieval target: dense — The clarified scenario (9-hour continuous work, 5PM-2AM, no break) contains no legal keywords like 'meal period' or 'Art. 85'; requires semantic understanding to map the situation to meal period provisions. Tests clarification + translation pivot.",
       "turn5_query": "kung ako ay nagtatrabaho sa Cebu City (Region 7), magkano dapat and makukuha kung halaga ng night differential and overtime pay? minimum wage lang yong sahod ko ngayon at kasalukuyang nasa probationary period.",
       "turn6_reference_answer": "Ang minimum wage sa Cebu City ay ₱435 kada araw, kung saan ang night shift differential ay dagdag na 10% kada oras mula 10PM–6AM at ang overtime pay ay dagdag na 25% kada oras lampas sa 8 oras ng trabaho (mas mataas kung sabay itong night shift). Sa kabuuan, ang sahod ay binubuo ng basic pay, night differential kung meron, at overtime pay, at lahat ng ito ay dapat ibigay kahit probationary employee pa lamang.",
       "gold_chunks_turn6": [
@@ -440,8 +458,8 @@
     },
     {
       "query_id": "Q017",
-      "query_text": "What are the regular holidays in the Philippines and what is the holiday pay rate?",
-      "language": "en",
+      "query_text": "Ano ang mga regular holiday sa Pilipinas at magkano ang holiday pay rate?",
+      "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "holiday_rest_premium",
@@ -453,8 +471,8 @@
       "gold_article_refs": [
         "Labor Code Art. 94"
       ],
-      "reference_answer": "Under Article 94 of the Labor Code, regular holidays include New Year's Day, Maundy Thursday, Good Friday, Araw ng Kagitingan, Labor Day, Independence Day, National Heroes Day, Bonifacio Day, Christmas Day, Rizal Day, and others declared by proclamation. Workers who do not work receive 100% of daily wage; those who work receive 200%.",
-      "notes": "Lexical-friendly with specific keywords: 'regular holidays', 'holiday pay rate'."
+      "reference_answer": "Sa ilalim ng Article 94 ng Labor Code, ang mga regular holiday ay kinabibilangan ng New Year's Day, Maundy Thursday, Good Friday, Araw ng Kagitingan, Labor Day, Independence Day, National Heroes Day, Bonifacio Day, Christmas Day, Rizal Day, at iba pang idineklara ng proklamasyon. Ang mga manggagawang hindi nagtrabaho ay tumatanggap ng 100% ng kanilang araw-araw na sahod; ang mga nagtrabaho ay tumatanggap ng 200%.",
+      "notes": "Lexical-friendly with specific keywords: 'regular holiday', 'holiday pay rate'. Filipino translation — tests translation pivot."
     },
     {
       "query_id": "Q018",
@@ -540,7 +558,7 @@
         "Labor Code Art. 93"
       ],
       "reference_answer": "If you worked on Christmas Day (a regular holiday) that fell on your rest day, you are entitled to 200% of your daily rate × 130% (additional 30% for rest day), totaling 260% of your daily rate for the first 8 hours.",
-      "notes": "Multi-turn + ambiguous. Tests clarification (holiday type + employment type) then complex rate computation.",
+      "notes": "Retrieval target: hybrid — After clarification, 'regular holiday,' 'rest day,' 'daily-paid' provide keyword matches, while computing the 260% rate requires semantic reasoning across multiple holiday + premium pay handbook chunks. Tests clarification (holiday type + employment type).",
       "turn5_query": "What if I also worked on New Year's Eve, which is a special non-working holiday, and it was not my rest day?",
       "turn6_reference_answer": "For work performed on a special non-working holiday (such as New Year's Eve under Proclamation No. 9492), you are entitled to an additional 30% of your daily rate for the first 8 hours, making the total 130% of your basic daily rate. If you worked overtime on that special non-working day, the overtime premium is an additional 30% of your hourly rate for the extra hours. Note that if a special non-working day falls on your rest day, the applicable rate increases to 150% for the first 8 hours. Since New Year's Eve was not your rest day in this case, the applicable rate is 130%.",
       "gold_chunks_turn6": [
@@ -555,7 +573,7 @@
     },
     {
       "query_id": "Q022",
-      "query_text": "Kailangan bang magbayad ang employer kapag hindi nagtrabaho ang empleyado sa regular holiday?",
+      "query_text": "Regular employee po ako sa isang manufacturing company at hindi ako pumasok noong Araw ng Kagitingan kasi rest day ko rin iyun. Kailangan bang magbayad ang employer kapag hindi nagtrabaho ang empleyado sa regular holiday?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -569,12 +587,12 @@
         "Labor Code Art. 94"
       ],
       "reference_answer": "Oo. Ayon sa Article 94 ng Labor Code, ang bawat manggagawa ay dapat bayaran ng kanyang regular daily wage kahit hindi siya pumasok sa araw ng regular holiday, basta siya ay present o on leave with pay sa araw bago ang holiday.",
-      "notes": "Filipino semantic query. Tests: no-work-still-paid concept requires dense understanding."
+      "notes": "Retrieval target: dense — Filipino query without citing Art. 94; paraphrases 'no-work-still-paid' concept using a scenario, requiring semantic understanding to match holiday pay provisions."
     },
     {
       "query_id": "Q023",
-      "query_text": "How many days of maternity leave am I entitled to in the Philippines?",
-      "language": "en",
+      "query_text": "Pila ka adlaw nga maternity leave ang akong katungod sa Pilipinas?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "leave_benefits",
@@ -585,8 +603,8 @@
       "gold_article_refs": [
         "RA 11210"
       ],
-      "reference_answer": "Under RA 11210 (Expanded Maternity Leave Law), female workers in the private sector are entitled to 105 days of paid maternity leave, with an option to extend for 30 days without pay. Solo mothers get an additional 15 days.",
-      "notes": "Lexical match on 'maternity leave' and 'days'."
+      "reference_answer": "Sa ilalim sa RA 11210 (Expanded Maternity Leave Law), ang mga babaye nga trabahante sa private sector adunay katungod sa 105 ka adlaw nga paid maternity leave, uban sa opsyon nga i-extend og 30 ka adlaw nga walay bayad. Ang mga solo mother makakadawat og dugang 15 ka adlaw.",
+      "notes": "Lexical match on 'maternity leave' and 'adlaw'. Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q024",
@@ -625,7 +643,7 @@
     },
     {
       "query_id": "Q026",
-      "query_text": "Pila ka adlaw ang maternity leave sa Pilipinas?",
+      "query_text": "Buntis ko karon ug nagplano na ko mag-leave sa akong trabaho sa opisina sa Davao City para makapahuwoy. Pila ka adlaw ang maternity leave sa Pilipinas ug pwede ba ko mag-extend kung kinahanglan?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -638,7 +656,7 @@
         "RA 11210"
       ],
       "reference_answer": "Base sa RA 11210, ang mga babaye nga trabahante sa private sector adunay katungod sa 105 ka adlaw nga paid maternity leave, uban sa opsyon nga i-extend og 30 ka adlaw nga walay bayad.",
-      "notes": "Cebuano maternity leave query. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano maternity leave query without citing RA 11210; requires semantic understanding to match the 105-day provision. Tests translation pivot."
     },
     {
       "query_id": "Q027",
@@ -671,7 +689,7 @@
         "RA 11861"
       ],
       "reference_answer": "Under RA 8972 (Solo Parents' Welfare Act), as amended by RA 11861, solo parents who have rendered at least one year of service are entitled to a parental leave of not more than seven (7) working days with pay every year.",
-      "notes": "Multi-turn + ambiguous. Tests clarification (which leave type?) then solo parent leave lookup.",
+      "notes": "Retrieval target: hybrid — After clarification, 'solo parent' provides keyword match, but 'sick child' + 'time off' requires semantic mapping to solo parent leave under RA 8972. Tests clarification (which leave type?) then cross-chunk retrieval.",
       "turn5_query": "Am I also entitled to service incentive leave (SIL) on top of the solo parent leave?",
       "turn6_reference_answer": "Yes. Under Article 95 of the Labor Code, every employee who has rendered at least one (1) year of service is entitled to five (5) days of service incentive leave (SIL) per year, which may be used as paid vacation or sick leave. This entitlement is separate from solo parent leave under RA 8972 (as amended by RA 11861). Your total paid leave entitlement therefore includes both the 7-day solo parent leave (for qualified solo parents with at least 1 year of service) and the 5-day SIL, assuming you meet the applicable tenure and qualification requirements for each.",
       "gold_chunks_turn6": [
@@ -718,8 +736,8 @@
     },
     {
       "query_id": "Q030",
-      "query_text": "What is the 13th month pay and how is it computed?",
-      "language": "en",
+      "query_text": "Unsa ang 13th month pay ug giunsa kini pagkwenta?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "thirteenth_month_pay",
@@ -732,8 +750,8 @@
       "gold_article_refs": [
         "PD 851"
       ],
-      "reference_answer": "The 13th month pay is mandated by PD 851. It is equivalent to one-twelfth (1/12) of the total basic salary earned by an employee within a calendar year. It must be paid not later than December 24 of each year.",
-      "notes": "Core factoid query. Multiple chunks contain relevant info (PD 851 + handbook)."
+      "reference_answer": "Ang 13th month pay gitugotan sa PD 851. Katumbas kini sa usa ka ika-dose (1/12) sa kinatibuk-ang basic salary nga nakita sa usa ka empleyado sa sulod sa usa ka calendar year. Kinahanglan kining bayran dili molapas sa Disyembre 24 sa matag tuig.",
+      "notes": "Core factoid query. Multiple chunks contain relevant info (PD 851 + handbook). Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q031",
@@ -773,7 +791,7 @@
     },
     {
       "query_id": "Q033",
-      "query_text": "Kanus-a ang deadline sa pagbayad sa 13th month pay?",
+      "query_text": "Wala pa gyud ko kadawat sa akong 13th month pay ug hapit na matapos ang Disyembre. Kanus-a ang deadline sa pagbayad sa 13th month pay ug pwede ba ang employer mag-delay niini?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -787,7 +805,7 @@
         "PD 851"
       ],
       "reference_answer": "Base sa PD 851, ang deadline sa pagbayad sa 13th month pay kay dili molapas sa December 24 matag tuig.",
-      "notes": "Cebuano query. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query paraphrasing the deadline question without citing PD 851; requires semantic retrieval to locate the December 24 deadline provision. Tests translation pivot."
     },
     {
       "query_id": "Q034",
@@ -821,7 +839,7 @@
         "PD 851"
       ],
       "reference_answer": "Even if you resigned, you are entitled to a proportionate 13th month pay for the 8 months you worked (8/12 of your total basic salary for those months). You can file a complaint with DOLE if your employer refuses to pay.",
-      "notes": "Multi-turn + ambiguous. Tests proportionate computation and complaint filing guidance.",
+      "notes": "Retrieval target: hybrid — After clarification, '13th month pay' and 'resigned' provide keyword matches, while computing proportionate entitlement for a resigned employee requires semantic understanding of PD 851 implementing rules. Tests proportionate computation.",
       "turn5_query": "Aside from the 13th month pay, what other amounts am I entitled to receive as part of my final pay when I resign?",
       "turn6_reference_answer": "Upon resignation, an employee is generally entitled to receive all earned but unpaid wages, proportionate 13th month pay under PD 851, and the cash equivalent of unused leave credits if provided by law, company policy, or contract, as well as any other due benefits under applicable agreements and possible tax adjustments. However, separation pay and retirement benefits are typically not required upon voluntary resignation unless expressly provided by the Labor Code or specific company policies, and final pay must be released within the period prescribed by labor regulations",
       "gold_chunks_turn6": [
@@ -854,8 +872,8 @@
     },
     {
       "query_id": "Q036",
-      "query_text": "How is separation pay computed for redundancy?",
-      "language": "en",
+      "query_text": "Paano kinukwenta ang separation pay sa redundancy?",
+      "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "separation_pay",
@@ -867,8 +885,8 @@
       "gold_article_refs": [
         "Labor Code Art. 298"
       ],
-      "reference_answer": "For redundancy, the separation pay is equivalent to at least one (1) month pay or one (1) month pay for every year of service, whichever is higher. A fraction of at least six (6) months is considered one whole year.",
-      "notes": "Lexical match on 'separation pay' + 'redundancy'."
+      "reference_answer": "Para sa redundancy, ang separation pay ay katumbas ng hindi bababa sa isang (1) buwang sahod o isang (1) buwang sahod para sa bawat taon ng serbisyo, alinman ang mas mataas. Ang fraction na hindi bababa sa anim (6) na buwan ay ibibilang na isang buong taon.",
+      "notes": "Lexical match on 'separation pay' + 'redundancy'. Filipino translation — tests translation pivot."
     },
     {
       "query_id": "Q037",
@@ -920,7 +938,7 @@
         "DO 147-15 Sec. 5.2"
       ],
       "reference_answer": "Wala. Ang mga empleyadong tinanggal dahil sa just causes karaniwang hindi may karapatan sa separation pay.",
-      "notes": "Dense retrieval. Paraphrased query requires understanding that just cause dismissal = no separation pay.",
+      "notes": "Retrieval target: dense — The clarified query describes a misconduct scenario without terms like 'just cause' or 'Art. 297'; requires semantic reasoning to map serious misconduct = generally no separation pay. Tests clarification + translation pivot.",
       "turn5_query": "Kung patunayang hindi talaga ako nagkasala ng serious misconduct, paano ko ito maaaring labanan sa legal?",
       "turn6_reference_answer": "Kung naniniwala kang hindi valid ang dahilan ng iyong pagtitiwalag, maaari kang maghain ng reklamo para sa illegal dismissal. Una, pumunta sa DOLE o pinakamalapit na Regional/Field Office at maghain ng Request for Assistance (RFA) sa ilalim ng SEnA para sa mandatory conciliation. Kung hindi malutas sa loob ng 30 araw, maaari kang maghain ng formal na reklamo sa NLRC Regional Arbitration Branch. Sa ilalim ng Article 294 ng Labor Code, kung napatunayang illegal ang dismissal, entitled ka sa reinstatement nang walang pagkawala ng seniority rights at full backwages mula sa petsa ng tiwalag hanggang aktwal na reinstatement. Preserving employment records, payslips, at termination notice ay mahalaga bilang ebidensya.",
       "gold_chunks_turn6": [
@@ -936,7 +954,7 @@
     },
     {
       "query_id": "Q039",
-      "query_text": "May separation pay ba kung gi-close ang kompanya?",
+      "query_text": "Ang kompanya kung gitrabahuan nagsira na tungod sa grabe nga pagkalugi ug wala na gyud silay kwarta. May separation pay ba kung gi-close ang kompanya ug nalugi na — o wala na gyud makuha ang mga empleyado?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -950,7 +968,7 @@
         "Labor Code Art. 298"
       ],
       "reference_answer": "Oo. Kung gisira ang negosyo o establisyimento, ang mga empleyado adunay katungod sa separation pay nga katumbas sa usa ka bulan nga suweldo o usa ka bulan matag tuig nga serbisyo, bisan asa mas dako. Apan kung ang pagsira tungod sa serious financial losses, mahimong walay separation pay.",
-      "notes": "Cebuano query on closure-related separation pay. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query about closure + financial losses scenario; requires semantic understanding to distinguish between closure with and without serious financial losses for separation pay entitlement. Tests translation pivot."
     },
     {
       "query_id": "Q040",
@@ -983,7 +1001,7 @@
         "Labor Code Art. 298"
       ],
       "reference_answer": "Yes. For redundancy, separation pay is one (1) month pay per year of service. With 5 years of service at ₱20,000/month, your minimum separation pay would be ₱100,000 (5 × ₱20,000).",
-      "notes": "Multi-turn + ambiguous. Tests clarification, then computation.",
+      "notes": "Retrieval target: hybrid — After clarification, 'redundancy' and 'separation pay' provide keyword matches, while the specific computation (5 years × monthly salary) requires semantic understanding of the separation pay formula. Tests clarification then computation.",
       "turn5_query": "When exactly should my employer release the separation pay, and am I also entitled to a 13th month pay for the portion of the year I worked?",
       "turn6_reference_answer": "Under DOLE Labor Advisory 06 Series of 2020, final pay — which includes separation pay — must be released within thirty (30) days from the date of your separation, unless a company policy, employment contract, or CBA stipulates a shorter period. Regarding 13th month pay: yes, you are also entitled to a prorated 13th month pay for the months you worked during the calendar year before the redundancy took effect. For example, if your redundancy took effect in October, you are entitled to 10/12 of your monthly basic salary as 13th month pay for that year. The employer may not withhold 13th month pay on the ground that employment has ended in the middle of the year.",
       "gold_chunks_turn6": [
@@ -998,8 +1016,8 @@
     },
     {
       "query_id": "Q041",
-      "query_text": "What is the retirement pay formula under Philippine law?",
-      "language": "en",
+      "query_text": "Ano ang formula ng retirement pay sa ilalim ng batas ng Pilipinas?",
+      "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "retirement_pay",
@@ -1011,8 +1029,8 @@
       "gold_article_refs": [
         "Labor Code Art. 302"
       ],
-      "reference_answer": "Under Article 302 (formerly Art. 287), the retirement pay is at least one-half (1/2) month salary for every year of service. The term 'one-half month salary' includes 15 days plus 1/12 of the 13th month pay and the cash equivalent of 5 days of service incentive leave, totaling 22.5 days.",
-      "notes": "Lexical match on retirement pay formula."
+      "reference_answer": "Sa ilalim ng Article 302 (dating Art. 287), ang retirement pay ay hindi bababa sa kalahating (1/2) buwang sahod para sa bawat taon ng serbisyo. Ang termino na 'kalahating buwang sahod' ay kinabibilangan ng 15 araw kasama ang 1/12 ng 13th month pay at ang cash equivalent ng 5 araw na service incentive leave, na kabuuang 22.5 araw.",
+      "notes": "Lexical match on retirement pay formula. Filipino translation — tests translation pivot."
     },
     {
       "query_id": "Q042",
@@ -1063,7 +1081,7 @@
         "Labor Code Art. 302"
       ],
       "reference_answer": "Ayon sa Labor Code ng Pilipinas, ang retirement pay na tinutukoy sa Article 302 (dating Article 287) ay para sa mga empleyado ng pribadong sektor. Nakasaad po na ang mga empleyado ng gobyerno ay hindi sakop ng retirement pay na ito.",
-      "notes": "Dense retrieval. Situational query needing semantic understanding to match retirement provisions.",
+      "notes": "Retrieval target: dense — The clarified query reveals a government employee asking about Labor Code retirement; requires semantic understanding that Art. 302 covers only private-sector employees — not retrievable via keywords alone. Tests situational understanding + translation pivot.",
       "turn5_query": "Maraming salamat sa paglilinaw. Yong asawa ko namn ay nagtatrabaho sa pribadong kompanya ng mahigit benteng taon na. Maliban sa retirement pay ng kumpanya, may makukuha pa ba siyang benepisyo mula sa SSS?",
       "turn6_reference_answer": "Oo. Bilang SSS member, karapat-dapat ka sa SSS retirement benefit kung natutugunan mo ang mga kinakailangan. Sa ilalim ng Section 12-B ng RA 11199, ang miyembro na umabot na sa edad na 60 (optional retirement) at may hindi bababa sa 120 monthly contributions ay maaaring mag-avail ng monthly pension sa buwan-buwan o kaya ay lump sum payment. Kung wala pang 120 contributions, maaari kang matanggap ng lump sum equivalent sa lahat ng imong mga kontribusyon kasama ang interest. Ang SSS retirement benefit at ang company retirement pay ay magkahiwalay at maaaring parehong matanggap.",
       "gold_chunks_turn6": [
@@ -1076,7 +1094,7 @@
     },
     {
       "query_id": "Q044",
-      "query_text": "Unsay formula sa retirement pay base sa Labor Code?",
+      "query_text": "Ang akong amahan hapit na mag-retire gikan sa iyang trabaho sa pribadong kompanya human sa 20 ka tuig nga serbisyo. Unsay formula sa retirement pay base sa Labor Code ug unsa ang gilakip sa kalkulasyon?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -1089,7 +1107,7 @@
         "Labor Code Art. 302"
       ],
       "reference_answer": "Base sa Article 302 sa Labor Code, ang retirement pay kay tunga (1/2) ka bulan nga suweldo matag tuig nga serbisyo. Ang 'tunga ka bulan' naglakip sa 15 ka adlaw + 1/12 sa 13th month pay + cash equivalent sa 5 ka adlaw SIL = 22.5 ka adlaw.",
-      "notes": "Cebuano query. Tests translation pivot for retirement formula."
+      "notes": "Retrieval target: dense — Cebuano query asking about retirement pay formula without citing Art. 302; requires semantic understanding to match the 22.5-day computation. Tests translation pivot."
     },
     {
       "query_id": "Q045",
@@ -1141,7 +1159,7 @@
         "DO 147-15 Sec. 5.2"
       ],
       "reference_answer": "Habitual tardiness may fall under 'gross and habitual neglect of duties,' which is a just cause for termination under Article 297. However, the employer must follow due process (the twin notice rule) before dismissal.",
-      "notes": "Dense retrieval. Vague job loss concern requires clarification to reveal lateness context before mapping to gross and habitual neglect.",
+      "notes": "Retrieval target: dense — After clarification, the scenario (late 3 times, no written warning) uses no legal terms; requires semantic reasoning to map tardiness to 'gross and habitual neglect of duties' under Art. 297 and assess due process requirements.",
       "turn5_query": "If my employer decides not to terminate me but instead suspends me for repeated tardiness, what are the legal limits on suspension under Philippine law?",
       "turn6_reference_answer": "An employer may impose suspension for repeated tardiness as part of its management prerogative, provided the penalty is reasonable, proportionate, and consistent with company policy and the principle of progressive discipline under labor laws. However, due process must be observed through proper notice and opportunity to be heard, and the suspension must not be excessive or indefinite, otherwise it may be considered illegal or constructive dismissal.",
       "gold_chunks_turn6": [
@@ -1174,7 +1192,7 @@
       "query_id": "Q048",
       "query_text": "Naa koy sakit. Naguol ko kaayo sa akong trabaho.",
       "language": "ceb",
-      "query_type": "single_turn",
+      "query_type": "multi_turn",
       "is_ambiguous": true,
       "topic": "termination_due_process",
       "retrieval_target": "hybrid",
@@ -1202,7 +1220,16 @@
         "DO 147-15 Sec. 5.4"
       ],
       "reference_answer": "An employer may terminate an employee due to disease only if: (1) the disease cannot be cured within 6 months, and (2) continued employment is prejudicial to the employee's health or co-workers, as certified by a competent public health authority. Separation pay of at least one month or one-half month per year of service is required.",
-      "notes": "Cebuano + ambiguous. The query is vague about disease type. Tests clarification + translation."
+      "notes": "Retrieval target: hybrid — After clarification and translation, 'sakit' (disease), 'terminate,' and 'benefits' provide partial keyword matches, while determining that disease is an authorized cause for termination (Art. 299) with separation pay requirements needs semantic retrieval from multiple sources.",
+      "turn5_query": "Samtang nagkasakit pa ko ug naa pa koy trabaho, pwede ba kong mag-apply sa SSS sickness benefit? Unsa ang mga requirements ug pila ang mabayad nako?",
+      "turn6_reference_answer": "Oo, bilang regular employee ug SSS member, pwede kang mag-claim sa SSS sickness benefit samtang naa ka pa sa trabaho. Ang mga requirements: (1) Kinahanglan adunay labing menos tulo (3) ka buwan nga contributions sa sulod sa doseng (12) buwan sa wala pa ang semester sa sakit; (2) I-notify ang imong employer sulod sa lima (5) ka adlaw gikan sa kagib-onon sa sakit — ang employer ang mag-file sa sickness notification sa SSS; (3) Ang benepisyo gibase sa average daily salary credit (ADSC): 90% sa ADSC matag adlaw sa valid sick leave confinement. Ang employer ang magabayad una ug unya mag-claim sa SSS para sa reimbursement. Importante: Ang SSS sickness benefit ug ang ECP benefit ubos sa PD 626 lain-laing programa — kung ang imong sakit work-related, pwede silang i-claim pareho.",
+      "gold_chunks_turn6": [
+        "ra-11199-08-sec14-14b-sickness-maternity-unemployment",
+        "dole_handbook_2023_chunk_16"
+      ],
+      "gold_article_refs_turn6": [
+        "RA 11199 Sec. 14"
+      ]
     },
     {
       "query_id": "Q049",
@@ -1235,7 +1262,7 @@
         "DO 147-15 Sec. 5.2"
       ],
       "reference_answer": "Serious misconduct is a just cause for termination under Article 297. However, the misconduct must be serious and connected to the employee's work. An accidental equipment breakage may not meet the threshold of 'serious misconduct' unless it was willful or grossly negligent. Your employer must still observe due process.",
-      "notes": "Multi-turn + ambiguous. Classic ambiguity test from the evaluation document example.",
+      "notes": "Retrieval target: hybrid — After clarification, 'serious misconduct' and 'fired' provide keyword matches to DO 147-15 just causes, while the nuance of 'accidentally broke a machine' vs. threshold of 'serious' misconduct requires semantic reasoning. Classic ambiguity test.",
       "turn5_query": "If my employer proceeds to terminate me, what is the step-by-step process for challenging the dismissal?",
       "turn6_reference_answer": "If you are terminated and believe it is illegal or without valid just cause, follow these steps: (1) File a Request for Assistance (RFA) under the Single Entry Approach (SEnA) at the nearest DOLE Regional or Field Office — this is mandatory before formal litigation. A desk officer will attempt to settle the dispute through conciliation-mediation within 30 days. (2) If SEnA conciliation fails, file a verified complaint for illegal dismissal before the NLRC Regional Arbitration Branch with jurisdiction over your workplace. (3) Attach: your employment contract (if any), payslips, company ID, the dismissal notice, and any written communications with your employer. (4) The parties will submit position papers; a Labor Arbiter will decide. The decision may be appealed to the NLRC Commission en banc. Note that the prescriptive period for illegal dismissal is four (4) years.",
       "gold_chunks_turn6": [
@@ -1268,8 +1295,8 @@
     },
     {
       "query_id": "Q051",
-      "query_text": "What is the twin notice rule in Philippine labor law?",
-      "language": "en",
+      "query_text": "Gi-terminate ang akong silingan sa iyang trabaho ug wala daw siya gihatagan og bisan unsang notice o hearing. Unsa ang twin notice rule sa balaod sa paggawa sa Pilipinas ug unsay mahitabo kung wala kini gisunod sa employer?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "termination_due_process",
@@ -1280,8 +1307,8 @@
       "gold_article_refs": [
         "DO 147-15 Sec. 5.1"
       ],
-      "reference_answer": "The twin notice rule (or two-notice rule) requires that an employer serve two written notices before dismissing an employee for just cause: (1) a notice to explain specifying the grounds, and (2) a notice of termination after the employee has been given an opportunity to be heard.",
-      "notes": "Dense retrieval. The term 'twin notice rule' is a legal term of art that maps semantically to the due process requirements."
+      "reference_answer": "Ang twin notice rule (o two-notice rule) nagkinahanglan nga ang usa ka employer maghatag og duha ka written notice sa wala pa i-dismiss ang usa ka empleyado alang sa just cause: (1) notice to explain nga nagbutyag sa mga rason, ug (2) notice of termination human mahatagan ang empleyado og pagkakataon nga mamahimong madungog.",
+      "notes": "Retrieval target: dense — The term 'twin notice rule' is a legal term of art that maps semantically to due process requirements in DO 147-15; no explicit article citation present, requiring dense/semantic retrieval. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q052",
@@ -1315,7 +1342,7 @@
         "DO 147-15 Sec. 5.3"
       ],
       "reference_answer": "Para sa redundancy (authorized cause), ang employer ay obligadong magbigay ng 30-day written notice sa empleyado at sa DOLE bago ang termination. Kung walang notice, ito ay paglabag sa due process. May karapatan ka rin sa separation pay na katumbas ng one month pay per year of service.",
-      "notes": "Multi-turn + ambiguous + Filipino. Tests clarification, translation, and retrieval of 30-day notice requirement.",
+      "notes": "Retrieval target: hybrid — After clarification and translation, 'redundant' and 'termination' provide keyword matches, while determining the 30-day notice violation from '1-day notice' requires semantic reasoning across DO 147-15 and handbook provisions.",
       "turn5_query": "Kung valid naman ang redundancy, magkano ang dapat kong matanggap na separation pay? tatlong taon na ako sa kumpanya.",
       "turn6_reference_answer": "Para sa redundancy (isang authorized cause sa ilalim ng Article 298 ng Labor Code), ang separation pay ay katumbas ng isang (1) buwang basic salary o isang (1) buwang basic salary bawat taon ng serbisyo, alinman ang mas mataas. Sa iyong kaso na 3 taon ng serbisyo, ang separation pay mo ay katumbas ng 3 buwang basic salary. Halimbawa, kung ang iyong buwanang basic pay ay ₱15,000, ang separation pay mo ay ₱45,000. Kahit may nakitang paglabag sa procedural due process (hindi pagbibigay ng 30-day notice), entitled ka pa rin sa full separation pay basta valid ang substantive dahilan ng redundancy.",
       "gold_chunks_turn6": [
@@ -1329,8 +1356,8 @@
     },
     {
       "query_id": "Q053",
-      "query_text": "What are the authorized causes for termination?",
-      "language": "en",
+      "query_text": "Unsa ang mga authorized causes sa pagpapahinto sa trabaho?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "termination_due_process",
@@ -1342,8 +1369,8 @@
       "gold_article_refs": [
         "Labor Code Art. 298-299"
       ],
-      "reference_answer": "The authorized causes for termination under Articles 298-299 include: (a) installation of labor-saving devices, (b) redundancy, (c) retrenchment to prevent losses, (d) closure or cessation of business, and (e) disease where continued employment is prohibited by law.",
-      "notes": "Lexical match on 'authorized causes termination'."
+      "reference_answer": "Ang mga authorized causes sa pagpapahinto sa trabaho ubos sa Articles 298-299 naglakip sa: (a) pag-install sa mga labor-saving devices, (b) redundancy, (c) retrenchment aron mapigilan ang mga pagkawala, (d) pagsira o paghunong sa negosyo, ug (e) sakit diin ipinagbabawal ng balaod ang pagpapatuloy sa trabaho.",
+      "notes": "Lexical match on 'authorized causes' and 'termination'. Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q054",
@@ -1376,7 +1403,7 @@
         "DO 147-15 Sec. 5.3"
       ],
       "reference_answer": "Kung hindi sumunod sa due process ngunit valid ang dahilan, maaaring obligadong magbayad ng nominal damages. Kung parehong nilabag, illegal dismissal.",
-      "notes": "Dense retrieval. Personal statement about dismissal requiring clarification on what due process steps were (or were not) followed.",
+      "notes": "Retrieval target: dense — The clarified query describes sudden dismissal (no notice, no hearing, claimed redundancy) using colloquial Filipino without legal terms like 'due process' or 'authorized cause'; requires semantic reasoning to map to the legal concept of valid cause + procedural violation = nominal damages.",
       "turn5_query": "Kung mapatunayang valid ang redundancy pero walang sinunod na tamang proseso ang employer ko, magkano ang nominal damages na maaari nilang ipataw?",
       "turn6_reference_answer": "Sa ilalim ng Jaka Food Processing Corp. v. Pacot (G.R. No. 151378) na pinagtibay ng DO 147-15, kung ang termination ay para sa isang authorized cause (tulad ng redundancy) ngunit hindi sinunod ang procedural due process (30-day written notice sa empleyado at DOLE), ang employer ay mananagot sa nominal damages na karaniwang nagtatakda ng halagang ₱50,000. Ito ay hiwalay at karagdagang kabayaran sa separation pay na may karapatang matanggap mo. Ang nominal damages ay hindi pinaruparusa ang employer para sa pagkawala ng trabaho kundi para sa paglabag sa proseso. Kung, sa kabilang banda, parehong nilabag ang substantive at procedural due process (ibig sabihin, walang valid na dahilan at walang proseso), magiging illegal dismissal ang kaso at ang remedyo ay full backwages at reinstatement — na mas malaki kaysa sa simpleng nominal damages.",
       "gold_chunks_turn6": [
@@ -1438,7 +1465,7 @@
         "DO 147-15 Sec. 5.1"
       ],
       "reference_answer": "Kung gi-terminate ka nga walay valid cause ug walay due process, posible kini nga illegal dismissal. Mahimo kang mag-file og Request for Assistance (RFA) sa SEnA para sa conciliation-mediation, o direkta nga mag-file og complaint sa NLRC para sa illegal dismissal, reinstatement, ug full back wages.",
-      "notes": "Cebuano + multi-turn + ambiguous. Tests translation pivot, clarification, and cross-source retrieval (termination + SEnA + NLRC).",
+      "notes": "Retrieval target: hybrid — After clarification and translation, 'terminated' and 'no notice' provide partial keyword matches, while cross-domain retrieval from termination law (DO 147-15), SEnA (filing RFA), and NLRC (illegal dismissal) requires both keyword and semantic retrieval.",
       "turn5_query": "Kung mapatunayang illegal dismissal ang nahitabo, unsa ang mga remedyo nga mahimo nako?",
       "turn6_reference_answer": "Ubos sa Article 294 sa Labor Code, kung mapatunayang illegal ang imong dismissal, adunay duha ka nag-unang remedyo: (1) Reinstatement: Ang imong pagbabalik sa imong trabaho nga walay pagkawala sa seniority rights ug uban pang pribilehiyo, apil na ang pagbayad sa full backwages gikan sa petsa sa imong pagka-dismiss hangtod sa aktwal nga reinstatement. (2) Separation Pay in lieu of Reinstatement: Kung dili na posible ang reinstatement (halimbawa, nga human na ang posisyon o dako na ang buwag tali sa employer ug empleyado), ang Labor Arbiter o NLRC mahimong mag-award og separation pay (kasagaran isang buwan kada tuig sa serbisyo) ingon kapuli sa reinstatement, apil na ang backwages. Mahimo usab mag-award ang NLRC og moral ug exemplary damages kung napatunayan ang malice o bad faith sa dismissal.",
       "gold_chunks_turn6": [
@@ -1452,8 +1479,8 @@
     },
     {
       "query_id": "Q057",
-      "query_text": "What is the minimum wage for kasambahay in Metro Manila?",
-      "language": "en",
+      "query_text": "Adunay ko og kasambahay nga mag-abot na og usa ka tuig sa among panimalay sa Quezon City. Pila ang minimum wage alang sa kasambahay sa Metro Manila ug nagbag-o ba kini karong tuiga?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "kasambahay",
@@ -1465,8 +1492,8 @@
       "gold_article_refs": [
         "RA 10361 Sec. 24"
       ],
-      "reference_answer": "Under RA 10361 (Batas Kasambahay), the minimum monthly wage for kasambahay in the NCR is ₱5,000 (subject to RTWPB adjustments). The rates differ for cities/municipalities outside NCR.",
-      "notes": "Lexical match on 'minimum wage kasambahay'."
+      "reference_answer": "Base sa RA 10361 (Batas Kasambahay), ang minimum monthly wage alang sa kasambahay sa NCR kay ₱5,000 (supikto sa mga pag-adjust sa RTWPB). Ang mga rate lain-lain alang sa mga siyudad/munisipyo gawas sa NCR.",
+      "notes": "Retrieval target: lexical — Keywords 'minimum wage' + 'kasambahay' + 'Metro Manila' yield strong BM25 matches against RA 10361 and DOLE Handbook chunks. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q058",
@@ -1532,7 +1559,7 @@
         "RA 10361 Sec. 29-31"
       ],
       "reference_answer": "Under RA 10361, kasambahay are entitled to 5 days of service incentive leave after one year of service. They must also be covered by SSS, PhilHealth, and Pag-IBIG, with premiums shared between the employer and the domestic worker.",
-      "notes": "Multi-turn + ambiguous. Broad initial query clarified to leave/social security.",
+      "notes": "Retrieval target: hybrid — After clarification, 'leave' and 'social security benefits' provide keyword matches, while 'live-in worker' requires semantic mapping to 'kasambahay' under RA 10361 for targeted law retrieval. Tests clarification then kasambahay-specific benefits.",
       "turn5_query": "What is the minimum wage for a kasambahay (household worker) in Manila and how must the employer pay it?",
       "turn6_reference_answer": "Under Section 24 of RA 10361 (Domestic Workers Act / Batas Kasambahay), the minimum monthly cash wage for kasambahay is set by the Regional Tripartite Wages and Productivity Boards. Currently, the minimum monthly wage for kasambahay in the National Capital Region (NCR) is ₱6,500 (as updated by the NCR Wage Board). Rates are lower in other regions. The wage must be paid in cash at least once a month, directly to the kasambahay. Payment in kind (food, lodging) may be provided but cannot be used to offset the cash wage requirement. Non-payment or underpayment of the mandated minimum wage exposes the employer to criminal and civil liability under RA 10361.",
       "gold_chunks_turn6": [
@@ -1545,8 +1572,8 @@
     },
     {
       "query_id": "Q061",
-      "query_text": "Can a domestic worker be terminated without 5 days' notice?",
-      "language": "en",
+      "query_text": "Ang among kasambahay gusto na moundang pero usa ra ka adlaw ang iyang gihatag nga abiso. Mahimo bang i-terminate ang usa ka kasambahay nga wala ang 5 ka adlaw nga abiso ug unsa ang legal consequences kung wala kini gisunod?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "kasambahay",
@@ -1557,12 +1584,12 @@
       "gold_article_refs": [
         "RA 10361 Sec. 32-34"
       ],
-      "reference_answer": "Under RA 10361 Sec. 33-34, either party may terminate the employment by serving a written notice at least five (5) days before the intended date. Termination without notice may occur only for specific just causes (e.g., serious misconduct, physical abuse, commission of a crime).",
-      "notes": "Dense retrieval. Tests understanding of kasambahay-specific termination notice requirement (5 days, not 30)."
+      "reference_answer": "Base sa RA 10361 Sec. 33-34, ang bisan asa sa duha ka partido mahimong mohunong sa trabaho pinaagi sa paghatod og written notice labing menos lima (5) ka adlaw sa wala pa ang gitinguha nga petsa. Ang pagpapahinto nga wala'y abiso mahitabo ra alang sa piho nga just causes (pananglitan, serious misconduct, physical abuse, paghimo og krimen).",
+      "notes": "Retrieval target: dense — Tests understanding of kasambahay-specific termination notice requirement (5 days, not 30 days for regular employees) which requires semantic matching to RA 10361 Sec. 32-34. The '5 ka adlaw' phrasing is Cebuano, not a legal keyword. Tests translation pivot."
     },
     {
       "query_id": "Q062",
-      "query_text": "Pila ang edad nga pwede magtrabaho ang kasambahay?",
+      "query_text": "Adunay nag-offer nga bata nga motrabaho isip kasambahay sa among balay pero bata pa kaayo siya tan-awon. Pila ang minimum nga edad nga pwede magtrabaho ang kasambahay base sa balaod ug aduna bay espesyal nga proteksyon para sa bata nga kasambahay?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -1575,13 +1602,13 @@
         "RA 10361 Sec. 16"
       ],
       "reference_answer": "Base sa RA 10361 Sec. 16, ang minimum nga edad aron magtrabaho isip kasambahay kay 15 ka tuig. Ang mga kasambahay nga nag-edad 15-17 adunay mga espesyal nga proteksyon ug kinahanglan nga magpadayon sa pag-eskwela.",
-      "notes": "Cebuano query on minimum age for kasambahay."
+      "notes": "Retrieval target: hybrid — Keywords 'kasambahay' and 'edad' provide lexical match, while the follow-up about special protections for child domestic workers requires semantic understanding across RA 10361 provisions. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q063",
       "query_text": "I need to make a claim from SSS. What are my options?",
       "language": "en",
-      "query_type": "single_turn",
+      "query_type": "multi_turn",
       "is_ambiguous": true,
       "topic": "sss_benefits",
       "retrieval_target": "dense",
@@ -1609,16 +1636,26 @@
         "RA 11199"
       ],
       "reference_answer": "Under RA 11199, SSS members are entitled to: sickness benefit, maternity benefit, retirement benefit, disability benefit, death benefit, funeral benefit, and unemployment insurance (involuntary separation benefit).",
-      "notes": "Dense retrieval. Vague SSS claim query requires clarification on specific benefit type before targeted retrieval."
+      "notes": "Retrieval target: dense — The initial query is extremely vague ('claim from SSS'); even after clarification to maternity benefit, the answer integrates eligibility criteria across RA 11199 and the DOLE Handbook without the user using precise legal terms like 'Sec. 14-A' or 'daily salary credit.'",
+      "turn5_query": "How many days of maternity leave am I entitled to, and will I receive full pay during that period — or only what SSS provides?",
+      "turn6_reference_answer": "Under RA 11210 (Expanded Maternity Leave Law), you are entitled to 105 days of paid maternity leave for a live childbirth (vaginal or caesarian). An additional 15 days is granted if you are a solo mother, and you may optionally extend your leave by 30 days without pay. Your maternity leave benefit is funded by SSS: the Daily Maternity Allowance (DMA) is computed as your average daily salary credit (ADSC) multiplied by the number of maternity leave days. Your employer is required to advance the full maternity benefit to you on or before your leave commences, then seek reimbursement from SSS. In practice, if your actual daily salary exceeds your SSS salary credit ceiling, the SSS-computed DMA may be slightly less than your full take-home pay — the law mandates at minimum the SSS-computed amount. Your employer cannot reduce your other benefits or terminate you by reason of pregnancy or maternity leave.",
+      "gold_chunks_turn6": [
+        "dole_handbook_2023_chunk_09",
+        "ra-11199-08-sec14-14b-sickness-maternity-unemployment"
+      ],
+      "gold_article_refs_turn6": [
+        "RA 11210 Sec. 6",
+        "RA 11199 Sec. 14-A"
+      ]
     },
     {
       "query_id": "Q064",
-      "query_text": "Paano mag-apply ng SSS sickness benefit?",
+      "query_text": "Nagkasakit po ako nitong mga nakaraang araw at hindi na ako makapasok sa trabaho. Nabasa ko na sa RA 11199 na may SSS sickness benefit na pwedeng ma-avail ng mga employed members — ano po ang mga requirements at paano ang proseso ng pag-apply base sa nasabing batas?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "sss_benefits",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "ra-11199-08-sec14-14b-sickness-maternity-unemployment",
         "dole_handbook_2023_chunk_16"
@@ -1627,16 +1664,16 @@
         "RA 11199 Sec. 14"
       ],
       "reference_answer": "Para makapag-apply ng SSS sickness benefit, ang empleyado ay kailangang: (1) magkaroon ng hindi bababa sa 3 buwan ng contributions sa loob ng 12 buwang prior to sickness, (2) maipasuri sa physician, at (3) magpasa ng sickness notification sa employer sa loob ng 5 araw mula sa pagkakasakit.",
-      "notes": "Filipino query on SSS sickness benefit process."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'RA 11199,' triggering symbolic lookup via law_reference GIN search. Added real-life personal sickness scenario for noisy but realistic framing. Filipino query — tests translation pivot alongside symbolic matching."
     },
     {
       "query_id": "Q065",
-      "query_text": "Pila ang maternity benefit sa SSS?",
+      "query_text": "Buntis na ko karon ug gusto nako mahibal-an kung unsa ang akong makuha gikan sa SSS. Base sa RA 11199 Section 14-A, unsa ang maternity benefit nga gi-provide sa SSS ug giunsa kini pag-compute?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "sss_benefits",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "ra-11199-08-sec14-14b-sickness-maternity-unemployment",
         "dole_handbook_2023_chunk_16"
@@ -1645,7 +1682,7 @@
         "RA 11199 Sec. 14-A"
       ],
       "reference_answer": "Ang SSS maternity benefit gi-compute base sa average daily salary credit (ADSC) ug ang gidaghanon sa mga adlaw nga gi-grant sa RA 11210 (105 ka adlaw para sa live childbirth).",
-      "notes": "Cebuano query on SSS maternity benefit amount."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'RA 11199 Section 14-A,' triggering symbolic lookup. Added personal pregnancy context for realistic framing while retaining the statutory citation as primary retrieval signal. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q066",
@@ -1678,7 +1715,7 @@
         "RA 11199 Sec. 9, 11"
       ],
       "reference_answer": "As a self-employed or small business owner, you may voluntarily contribute to government programs like SSS, PhilHealth, and Pag-IBIG to gain access to social security, healthcare, and housing or loan benefits, while BMBE registration under applicable laws may provide tax incentives and business support. These programs serve as legal mechanisms for financial protection and compliance, and participation is generally based on voluntary enrollment subject to the rules of each governing law and agency.",
-      "notes": "Dense retrieval. Situational query mapping to voluntary/compulsory coverage provisions.",
+      "notes": "Retrieval target: dense — The clarified query describes a sari-sari store owner's situation without using terms like 'voluntary SSS member' or 'BMBE'; requires semantic understanding to map 'small store owner' to self-employed voluntary coverage and micro-enterprise provisions.",
       "turn5_query": "If I get sick and cannot run my store for a week, am I eligible to claim SSS sickness benefit as a self-employed member?",
       "turn6_reference_answer": "Yes. Under Section 14 of RA 11199, self-employed SSS members are entitled to sickness benefit provided: (1) you have paid at least three (3) monthly contributions in the twelve (12)-month period immediately before the semester of sickness; (2) you are confined in a hospital for at least four (4) days, or confined at home for at least four (4) days with proper notification to SSS; (3) you have used up all available company sick leaves with pay (not applicable for self-employed); and (4) you notify SSS of your confinement within five (5) calendar days from the start of confinement. The benefit is equivalent to 90% of your average daily salary credit (ADSC), paid for each day of approved confinement up to 120 days per year.",
       "gold_chunks_turn6": [
@@ -1719,7 +1756,7 @@
         "RA 11199 Sec. 14-B"
       ],
       "reference_answer": "Under Section 14-B of RA 11199, involuntarily separated employees who have paid at least 36 monthly contributions (12 of which in the 18 months preceding involuntary separation) may receive an unemployment benefit equivalent to 50% of the average monthly salary credit for a maximum of 2 months.",
-      "notes": "Multi-turn + ambiguous. Tests clarification to identify which benefit, then specific unemployment insurance lookup.",
+      "notes": "Retrieval target: hybrid — After clarification, 'involuntarily separated' and 'unemployment benefit' provide keyword matches to RA 11199 Sec. 14-B, while routing from the general 'SSS benefit' to the specific unemployment insurance program requires semantic understanding.",
       "turn5_query": "Will my existing SSS contributions still count toward a retirement pension in the future, even after being involuntarily separated?",
       "turn6_reference_answer": "Yes. Under Section 12-B of RA 11199, all SSS contributions you have made — whether as an employed or self-employed member — are permanently accumulated in your SSS record and count toward your retirement benefit entitlement. After involuntary separation, you have the option to continue contributing as a voluntary member to preserve or build your contribution count. To qualify for the monthly retirement pension (as opposed to a one-time lump sum), you need a minimum of one hundred twenty (120) monthly contributions and must be at least sixty (60) years old (optional retirement) or sixty-five (65) years old (compulsory retirement). If you reach 60 with fewer than 120 contributions, you receive a lump sum equivalent to all contributions plus accrued interest.",
       "gold_chunks_turn6": [
@@ -1748,8 +1785,8 @@
     },
     {
       "query_id": "Q069",
-      "query_text": "What health insurance benefits can an employee get from PhilHealth?",
-      "language": "en",
+      "query_text": "Ano ang mga benepisyo sa health insurance na makukuha ng isang empleyado mula sa PhilHealth?",
+      "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "philhealth_pagibig",
@@ -1761,17 +1798,17 @@
         "RA 7875",
         "RA 11223"
       ],
-      "reference_answer": "Under PhilHealth (NHIP), members are entitled to: inpatient benefits (room and board, medicines, professional fees), outpatient benefits (day surgeries, primary care), and special packages (Z-benefits for catastrophic illnesses, maternity care, TB-DOTS, etc.).",
-      "notes": "Lexical match on 'PhilHealth benefits employee'."
+      "reference_answer": "Sa ilalim ng PhilHealth (NHIP), ang mga miyembro ay may karapatang makatanggap ng: inpatient benefits (room and board, gamot, professional fees), outpatient benefits (day surgeries, primary care), at espesyal na pakete (Z-benefits para sa catastrophic illnesses, maternity care, TB-DOTS, atbp.).",
+      "notes": "Lexical match on 'PhilHealth benefits empleyado'. Filipino translation — tests translation pivot."
     },
     {
       "query_id": "Q070",
-      "query_text": "Magkano ang Pag-IBIG multi-purpose loan at paano mag-apply?",
+      "query_text": "Kailangan ko po ng pera para sa emergency na gastusin sa bahay at naisip kong mag-loan sa Pag-IBIG. Ano po ang sinasabi ng RA 9679 tungkol sa Pag-IBIG multi-purpose loan — magkano ang maximum na pwedeng hiramin at ano ang mga requirements sa pag-apply?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "philhealth_pagibig",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "dole_handbook_2023_chunk_17"
       ],
@@ -1779,11 +1816,11 @@
         "RA 9679"
       ],
       "reference_answer": "Ang Pag-IBIG Multi-Purpose Loan ay maaaring mag-apply ang mga qualified na member na nakapagbayad ng hindi bababa sa 24 na monthly contributions. Ang maximum na halaga ay depende sa total Pag-IBIG savings at earning capacity ng member.",
-      "notes": "Filipino query on Pag-IBIG loan."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'RA 9679,' triggering symbolic lookup via law_reference GIN search. Added personal financial context (emergency home expenses) for realistic user framing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q071",
-      "query_text": "What is the PhilHealth premium contribution rate for employees?",
+      "query_text": "I noticed a deduction on my payslip labeled 'PhilHealth' but I'm not sure if the amount is correct — it seems higher than what my coworkers are paying. What is the current PhilHealth premium contribution rate for employed members and how is it shared between employer and employee?",
       "language": "en",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -1796,16 +1833,16 @@
         "RA 11223"
       ],
       "reference_answer": "Under the Universal Health Care Act (RA 11223), the PhilHealth premium rate for employed members is set at 4.5% of monthly salary (shared equally by employer and employee), with a salary floor and ceiling.",
-      "notes": "Lexical match on 'PhilHealth premium contribution rate'."
+      "notes": "Retrieval target: lexical — Keywords 'PhilHealth premium contribution rate' and 'employed members' yield strong BM25/full-text matches against the DOLE Handbook PhilHealth chapter."
     },
     {
       "query_id": "Q072",
-      "query_text": "Unsa ang mga benepisyo sa Pag-IBIG para sa mga trabahante?",
+      "query_text": "Lima na ka tuig ko nagtrabaho ug regular ang akong contribution sa Pag-IBIG. Base sa RA 9679, unsa ang mga benepisyo nga akong maangkon gikan sa Pag-IBIG — sama sa loan, savings, ug housing benefits?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "philhealth_pagibig",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "dole_handbook_2023_chunk_17"
       ],
@@ -1813,13 +1850,13 @@
         "RA 9679"
       ],
       "reference_answer": "Ang mga benepisyo sa Pag-IBIG naglakip sa: regular savings fund, MP2 savings, multi-purpose loan, calamity loan, ug housing loan nga hangtod sa ₱6 million.",
-      "notes": "Cebuano query on Pag-IBIG benefits."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'RA 9679,' triggering symbolic lookup. Added personal employment history for realistic framing while retaining the statutory citation. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q073",
       "query_text": "Ang akong trabahante nasamdan samtang nagtrabaho. Nag-operate siya of commersyal laundry nga gamit og aksidenteng na-ipit iyahang tudlo hinungdan nga naputol kini.",
       "language": "ceb",
-      "query_type": "single_turn",
+      "query_type": "multi_turn",
       "is_ambiguous": true,
       "topic": "employees_compensation",
       "retrieval_target": "dense",
@@ -1847,16 +1884,26 @@
         "Labor Code Art. 166-167"
       ],
       "reference_answer": "Ang ECP ubos sa PD 626 naghatag og kompensasyon sa mga trabahante nga nag-antos sa work-related sakit, injury, disability, o kamatayon.",
-      "notes": "Dense retrieval. Work injury scenario in Cebuano requires clarification on injury type and SSS coverage before ECP claim guidance."
+      "notes": "Retrieval target: dense — The clarified query describes a workplace injury scenario in Cebuano without using legal terms like 'ECP,' 'PD 626,' or 'compensable injury'; requires semantic understanding to map the described accident to Employees' Compensation provisions.",
+      "turn5_query": "Kung adunay permanent disability ang akong trabahante tungod sa aksidente sa trabaho, pwede ba siyang mag-claim sa SSS disability benefit aparte sa ECP? Managlahi ba ang duha ka benepisyo?",
+      "turn6_reference_answer": "Oo — ang ECP (Employees' Compensation Program) ug ang SSS disability benefit managlahi nga mga programa ug pwedeng i-claim pareho alang sa samang work-related injury o disability. Ubos sa RA 11199 Sec. 13-B, ang SSS naghatag og disability benefit base sa credited years of service sa miyembro: kung permanent total disability (PTD), magdawat ang trabahante og monthly pension; kung permanent partial disability (PPD), lump sum o pension depende sa degree sa kapansanan. Dugang niini, ang ECP ubos sa PD 626 nagbayad og EC income benefit — usa ka dugang kita-benepisyo nga idugang sa SSS disability pension para sa mga nag-antos og work-related disability. Ang duha i-file pinaagi sa SSS, ug kinahanglan adunay documentation gikan sa employer ug medikal nga certipikasyon sa disability. Dili sila mag-overlap o mag-cancel sa usag-usa — sila supplementary sa usag-usa.",
+      "gold_chunks_turn6": [
+        "ra-11199-07-sec12-13b-pension-benefits",
+        "dole_handbook_2023_chunk_14"
+      ],
+      "gold_article_refs_turn6": [
+        "RA 11199 Sec. 13-B",
+        "PD 626"
+      ]
     },
     {
       "query_id": "Q074",
-      "query_text": "Ano ang mga sakit na covered sa Employees' Compensation?",
+      "query_text": "Nagkasakit po ang katrabaho ko at sinasabing dahil daw ito sa trabaho namin sa pabrika. Ayon sa Articles 168 hanggang 175 ng Labor Code, ano po ang mga sakit na sakop ng Employees' Compensation Program at paano malalaman kung ang sakit ay compensable?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "employees_compensation",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "dole_handbook_2023_chunk_14",
         "book4-title2-ch2-articles168-175-coverage-liability"
@@ -1865,13 +1912,13 @@
         "Labor Code Art. 168-175"
       ],
       "reference_answer": "Ang mga covered na sakit sa ECP ay ang mga occupational diseases na nakalista sa Annex 'A' ng PD 626 at mga sakit na direktang dulot ng trabaho. Kasama na rin ang COVID-19 sa ilalim ng ECC Resolution bilang compensable occupational disease para sa healthcare workers at iba pang frontline workers.",
-      "notes": "Filipino query on covered diseases."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'Articles 168-175 ng Labor Code,' triggering symbolic lookup via article_number GIN search. Added coworker's factory illness scenario for realistic framing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q075",
       "query_text": "Naaksidente po ako. Ano ang tulong na matatanggap ko?",
       "language": "fil",
-      "query_type": "single_turn",
+      "query_type": "multi_turn",
       "is_ambiguous": true,
       "topic": "employees_compensation",
       "retrieval_target": "dense",
@@ -1900,7 +1947,17 @@
         "PD 626"
       ],
       "reference_answer": "Maaari kang maging eligible sa medical services, income benefit for disability, at rehabilitation services sa ilalim ng ECP.",
-      "notes": "Dense retrieval. Situational query mapping to disability benefits provisions."
+      "notes": "Retrieval target: dense — The clarified query describes a workplace accident (fell from stairs delivering materials) without legal terms; requires semantic understanding to map the scenario to ECP disability benefits and claim process under PD 626.",
+      "turn5_query": "Kung hindi na ako makabalik sa trabaho dahil sa aksidente at hindi na ako makagawa ng aking dating tungkulin, maaari ba akong tanggalin ng aking employer? At kung oo, may karapatan ba ako sa separation pay?",
+      "turn6_reference_answer": "Oo — maaaring wakasan ng employer ang trabaho ng isang empleyado dahil sa sakit o kapansanan na sertipikado ng isang kompetenteng pampublikong awtoridad na hindi magagamot sa loob ng anim (6) na buwan at ang pagpapatuloy ng trabaho ay mapanganib sa kalusugan ng empleyado o ng kanyang mga katrabaho (Authorized Cause — Labor Code Art. 299). Upang maging wasto ang pagtatanggal: (1) Kinakailangang may sertipiko mula sa competent public health authority na nagsasabing ang sakit o kapansanan ay hindi magagamot sa loob ng 6 na buwan; (2) Ang employer ay dapat magpadala ng written notice sa empleyado at sa DOLE nang hindi bababa sa tatlumpung (30) araw bago ang petsa ng pagtatanggal; (3) Ang empleyado ay may karapatan sa separation pay na katumbas ng kahit isang (1) buwang sweldo o kalahating (1/2) buwang sweldo bawat taon ng serbisyo, alinman ang mas mataas. Ang aksidenteng nangyari habang nagtatrabaho ay hindi nag-aalis ng karapatang ito — ang empleyado ay protektado ng Labor Code at ang may-ari ay may responsibilidad sa ilalim ng ECP at ng probisyon ng authorized cause termination.",
+      "gold_chunks_turn6": [
+        "do147_15_authorized_causes_separation",
+        "dole_handbook_2023_chunk_12"
+      ],
+      "gold_article_refs_turn6": [
+        "Labor Code Art. 299",
+        "DO 147-15 Sec. 5.4"
+      ]
     },
     {
       "query_id": "Q076",
@@ -1934,7 +1991,7 @@
         "PD 626"
       ],
       "reference_answer": "Isip SSS member nga nasamdan sa trabaho, mahimo kang mag-claim og: (1) medical reimbursement, (2) income benefit para sa temporary total disability (TTD) — 90% sa average daily salary credit, hangtod ma-recover ka, ug (3) kung permanente ang disability, permanent partial o total disability benefit.",
-      "notes": "Cebuano + multi-turn + ambiguous. Tests translation, clarification, and ECP retrieval.",
+      "notes": "Retrieval target: hybrid — After clarification, 'SSS member' and 'injury' provide keyword matches, while asking about 'all possible options' requires cross-source semantic retrieval from ECP (PD 626), SSS (RA 11199), and PhilHealth to identify all applicable benefit programs.",
       "turn5_query": "Pero kang asa nako gikan ma claim ang mga benepisyo? Og sa akong ospitalisasyon, gusto nako gamiton ang PhilHealth. Magkano ang sakop sa PhilHealth alang sa akong nabuak nga bukton?",
       "turn6_reference_answer": "Ang mga benepisyo sama sa SSS sickness benefit ug Employees’ Compensation claims i-file pinaagi sa SSS uban sa partisipasyon sa employer ug kinahanglan sundon ang mga documentary requirements nga gitakda sa balaod ug ahensya, samtang ang PhilHealth benefits ma-avail direkta sa ospital pinaagi sa pag-present sa membership records ug awtomatikong i-deduct sa billing. Ang coverage sa PhilHealth gigamit pinaagi sa case rate system alang sa inpatient care, nga nagpasabot og fixed benefit amount depende sa medical condition ug procedure sumala sa regulasyon sa ahensya.",
       "gold_chunks_turn6": [
@@ -1949,8 +2006,8 @@
     },
     {
       "query_id": "Q077",
-      "query_text": "What are the duties of employers under the OSH law?",
-      "language": "en",
+      "query_text": "Unsa ang mga katungdanan sa mga employer ubos sa OSH law?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "osh_safety",
@@ -1961,8 +2018,8 @@
       "gold_article_refs": [
         "RA 11058 Sec. 4"
       ],
-      "reference_answer": "Under RA 11058 Section 4, employers must: furnish a workplace free from hazardous conditions, give complete job safety instructions, inform workers of all hazards, use only approved devices and equipment, comply with OSH standards, and provide mandatory safety training.",
-      "notes": "Lexical match on 'duties employers OSH law'."
+      "reference_answer": "Base sa RA 11058 Section 4, ang mga employer kinahanglan nga: maghatag og trabahoan nga libre gikan sa mga delikadong kahimtang, magbigay og kumpletong instruksyon sa kaligtasan sa trabaho, magpahibalo sa mga trabahante sa tanang mga panganib, mogamit ra og mga aprubadong kagamitan ug ekipamento, mosunod sa mga OSH standards, ug maghatag og mandatory safety training.",
+      "notes": "Lexical match on 'katungdanan', 'employer', 'OSH law'. Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q078",
@@ -2049,7 +2106,7 @@
         "RA 11058 Sec. 4-6, 22-24"
       ],
       "reference_answer": "Under RA 11058: (1) Your employer is required to provide PPE at no cost and install safety signs; (2) You have the right to refuse unsafe work; (3) You can report the violations to DOLE, which has visitorial power to inspect workplaces; (4) DOLE may issue a work stoppage order for imminent danger situations. The employer may face administrative fines.",
-      "notes": "Multi-turn + ambiguous. Tests clarification then multi-section OSH law retrieval.",
+      "notes": "Retrieval target: hybrid — After clarification, 'no safety signs,' 'no PPE,' 'machine guards' provide keyword matches to RA 11058 provisions, while retrieving the full range of worker rights and employer obligations across multiple OSH sections (Sec. 4-6, 22-24) requires semantic aggregation.",
       "turn5_query": "If my employer refuses to fix the safety violations, how can I formally report this to DOLE enforcement authorities?",
       "turn6_reference_answer": "Under Sections 22–24 of RA 11058, DOLE is empowered to conduct OSH inspections and enforce compliance. You may: (1) File a complaint at the DOLE Regional Office (RO) or Occupational Safety and Health Center (OSHC) having jurisdiction over your workplace. DOLE labor inspectors have authority to conduct unannounced inspections. (2) Submit your complaint in writing, describing the specific violations (no PPE, no safety signs, unguarded machines), your workplace address, and your contact details. You may request confidentiality to avoid retaliation. (3) Employers found in violation of RA 11058 are subject to fines up to ₱100,000 per violation per day of non-compliance. Repeated or willful violations may result in work stoppage orders. (4) You also have the right under Sec. 9 of RA 11058 to refuse unsafe work without fear of disciplinary action.",
       "gold_chunks_turn6": [
@@ -2062,8 +2119,8 @@
     },
     {
       "query_id": "Q082",
-      "query_text": "What is an unfair labor practice under Philippine law?",
-      "language": "en",
+      "query_text": "Unsa ang unfair labor practice ubos sa balaod sa Pilipinas?",
+      "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "labor_relations_unions",
@@ -2074,17 +2131,17 @@
       "gold_article_refs": [
         "Labor Code Art. 248-249"
       ],
-      "reference_answer": "Under Articles 248-249 of the Labor Code, unfair labor practices include: employer interference with self-organization, discrimination against union members, contracting out to undermine unions, company unionism, violation of the duty to bargain, and union coercion of employees.",
-      "notes": "Lexical match on 'unfair labor practice'."
+      "reference_answer": "Base sa Articles 248-249 sa Labor Code, ang unfair labor practices naglakip sa: pagpanghilabot sa employer sa self-organization, diskriminasyon batok sa mga miyembro sa unyon, pag-kontrata sa gawas aron mapahina ang mga unyon, company unionism, paglabag sa katungdanan sa pakigsabot, ug pamimilit sa unyon sa mga empleyado.",
+      "notes": "Lexical match on 'unfair labor practice'. Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q083",
-      "query_text": "Paano mag-organize ng labor union sa Pilipinas?",
+      "query_text": "Hindi kami masaya sa kondisyon ng trabaho sa aming kumpanya at gusto naming mag-organize ng union para protektahan ang aming mga karapatan. Base sa Articles 234 hanggang 240 ng Labor Code, ano ang mga hakbang at requirements para makapag-register ng labor union?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "labor_relations_unions",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "book5-title4-chapter1-articles234-240-union-registration"
       ],
@@ -2092,7 +2149,7 @@
         "Labor Code Art. 234-240"
       ],
       "reference_answer": "Para mag-organize ng labor union, kailangan: (1) hindi bababa sa 20% ng mga empleyado sa bargaining unit ang mag-sign ng union registration application, (2) isumite ang constitution, by-laws, at listahan ng officers sa DOLE Bureau of Labor Relations, at (3) maghintay ng approval ng registration.",
-      "notes": "Filipino query on union formation. Tests translation pivot."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'Articles 234-240 ng Labor Code,' triggering symbolic lookup via article_number GIN search. Added workplace dissatisfaction context for realistic framing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q084",
@@ -2124,7 +2181,7 @@
         "Labor Code Art. 248"
       ],
       "reference_answer": "No. Under Article 248 of the Labor Code, it is an unfair labor practice for an employer to interfere with, restrain, or coerce employees in the exercise of their right to self-organization. This includes surveillance of union activities, threats, and discrimination against union members.",
-      "notes": "Dense retrieval. Vague employer targeting scenario requires clarification to reveal union context before mapping to ULP provisions.",
+      "notes": "Retrieval target: dense — The clarified scenario (manager threatening union members with transfer) uses no legal terms like 'unfair labor practice' or 'Art. 248'; requires semantic understanding to map employer coercion against union organizing to ULP provisions.",
       "turn5_query": "What formal legal remedies does our union have against the employer for these unfair labor practice acts?",
       "turn6_reference_answer": "The union has the following formal remedies: (1) File an Unfair Labor Practice (ULP) complaint with the NLRC. Under Article 258 of the Labor Code, ULP by employers is a criminal offense punishable by fine and/or imprisonment; additionally, the labor arbiter may award civil remedies including reinstatement and back wages for workers who were dismissed as a result of the ULP. (2) If the ULP is ongoing and part of a broader pattern of union-busting, the union may file a Notice of Strike with the National Conciliation and Mediation Board (NCMB) citing ULP as a ground, as permitted under Article 278 (formerly 263) of the Labor Code. (3) The union may simultaneously file for injunctive relief or petition the NLRC to issue a cease-and-desist order against further interference. Documenting all instances of the employer's interference (including dates, names of workers called, and witness accounts) is critical for building the ULP case.",
       "gold_chunks_turn6": [
@@ -2168,7 +2225,7 @@
         "Labor Code Art. 246"
       ],
       "reference_answer": "Your employer's threat to fire workers for joining a union is a clear unfair labor practice under Article 248 of the Labor Code. Under Article 246, all rank-and-file employees have the right to self-organization. You may file a ULP complaint with the NLRC.",
-      "notes": "Multi-turn + ambiguous. Vague collective action intent (union vs. complaint vs. strike) requires clarification before mapping to ULP and right to self-organization provisions. Distinct from Q084 which frames employer targeting behavior; this frames worker collective intent and fear.",
+      "notes": "Retrieval target: hybrid — After clarification, 'union,' 'rank-and-file,' 'terminated' provide keyword matches, while understanding that manager threats constitute ULP and mapping to both Art. 248 (ULP) and Art. 246 (right to self-organization) requires semantic reasoning across chunks. Distinct from Q084 (employer targeting) — this frames worker collective intent and fear.",
       "turn5_query": "Thanks for the information. Despite the threats, we still want to form a union. How do we formally register our union with DOLE?",
       "turn6_reference_answer": "To formally register an independent labor union with DOLE, under Articles 234–240 of the Labor Code and DOLE Department Order No. 40-03: (1) Prepare and file an Application for Registration with the DOLE Bureau of Labor Relations (BLR) or the DOLE Regional Office where the company is located. (2) The application must include: a list of officers and their addresses; principal office of the union; number of employees in the bargaining unit; names of at least twenty percent (20%) of the employees in the bargaining unit as members (signed authorization forms); and the union's constitution and by-laws, minutes of the organizational meeting, and list of members. (3) DOLE shall process the application within thirty (30) days; if complete, a Certificate of Registration is issued. (4) Note: Even pending registration, the employer's threats against union organizing already constitute ULP under Article 248 and should be documented for a parallel ULP complaint.",
       "gold_chunks_turn6": [
@@ -2217,12 +2274,12 @@
     },
     {
       "query_id": "Q088",
-      "query_text": "Gaano katagal ang proseso ng kaso sa NLRC mula sa pagfile hanggang sa desisyon?",
+      "query_text": "Nag-file na po ako ng kaso laban sa dati kong employer dahil sa hindi pagbabayad ng sahod. Ayon sa Rule V ng 2011 NLRC Rules of Procedure, gaano po katagal ang proseso ng kaso mula sa pagfile hanggang sa desisyon ng Labor Arbiter?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "nlrc_procedure",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "nlrc_rules_rule5_decisions_finality",
         "nlrc_rules_rule5_conciliation_mediation"
@@ -2231,16 +2288,16 @@
         "NLRC Rules Rule V"
       ],
       "reference_answer": "Ayon sa NLRC Rules, ang Labor Arbiter ay may 30 araw mula sa pagpasa ng mga position papers upang magdesisyon. Gayunpaman, sa praktika, ang buong proseso (mula sa pagfile hanggang sa desisyon) ay maaaring tumagal ng ilang buwan dahil sa mandatory conciliation, submission ng position papers, at iba pang proceedings.",
-      "notes": "Filipino query on NLRC timeline."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'Rule V ng 2011 NLRC Rules of Procedure,' triggering symbolic lookup. Added personal dispute context (unpaid wages case filed) for realistic framing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q089",
-      "query_text": "What happens after I file a labor complaint? What is the process?",
+      "query_text": "I recently filed a complaint for illegal dismissal at the NLRC Regional Arbitration Branch but I'm not sure what comes next. Under Rule V of the 2011 NLRC Rules of Procedure, what is the step-by-step process after a labor complaint is filed — from summons to the Labor Arbiter's decision?",
       "language": "en",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "nlrc_procedure",
-      "retrieval_target": "dense",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "nlrc_rules_rule5_summons_prohibited",
         "nlrc_rules_rule5_conciliation_mediation",
@@ -2250,7 +2307,7 @@
         "NLRC Rules Rule V"
       ],
       "reference_answer": "After filing: (1) Summons is served on the respondent; (2) Mandatory conciliation-mediation conference; (3) If no settlement, parties submit position papers with supporting evidence; (4) The Labor Arbiter may conduct a clarificatory conference; (5) The case is decided based on the position papers and evidence submitted.",
-      "notes": "Dense retrieval. Broad procedural question needing semantic understanding across multiple NLRC rules chunks."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'Rule V of the 2011 NLRC Rules of Procedure,' triggering symbolic lookup via rule_reference matching. Added personal illegal dismissal context for realistic framing."
     },
     {
       "query_id": "Q090",
@@ -2302,7 +2359,7 @@
         "SEnA Rules"
       ],
       "reference_answer": "For unpaid wages, you should first file a Request for Assistance (RFA) under SEnA at the nearest DOLE Regional/Field Office for mandatory conciliation-mediation. If unresolved within 30 days, you can file a complaint with the NLRC Regional Arbitration Branch. Documents needed: employment contract, payslips, company ID, and proof of non-payment.",
-      "notes": "Multi-turn + ambiguous. Tests clarification, then cross-source retrieval (SEnA + NLRC procedure).",
+      "notes": "Retrieval target: hybrid — After clarification, 'unpaid wages,' 'file,' 'complaint' provide keyword matches to NLRC and SEnA, while routing the dispute to the correct forum (SEnA first, then NLRC) and identifying required documents requires semantic cross-domain retrieval.",
       "turn5_query": "If SEnA conciliation fails, what are the steps I need to take to recover my unpaid wages through the NLRC?",
       "turn6_reference_answer": "If SEnA conciliation fails and a Certificate of Non-Settlement is issued, here are the steps to proceed at the NLRC: (1) File a verified Complaint for payment of wages with the NLRC Regional Arbitration Branch (RAB) having jurisdiction over your employer's workplace. Attach the SEnA Certificate of Non-Settlement, payslips (or records showing unpaid months), employment contract, and your identification. (2) The RAB Clerk will summon the employer. The parties will file position papers within a period set by the Labor Arbiter. (3) After evaluation of position papers (and reply papers if needed), the Labor Arbiter issues a Decision. (4) Either party may appeal to the NLRC Commission within ten (10) calendar days from receipt of the Decision. (5) Important: Money claims for unpaid wages must be filed within three (3) years from when each cause of action accrued (Article 306, Labor Code). With 3 months unpaid, ensure you file within 3 years of the first missed payroll.",
       "gold_chunks_turn6": [
@@ -2335,12 +2392,12 @@
     },
     {
       "query_id": "Q093",
-      "query_text": "Paano mag-file ng Request for Assistance sa SEnA?",
+      "query_text": "May problema po ako sa employer ko tungkol sa hindi pagbibigay ng tamang overtime pay at gusto ko nang mag-file ng reklamo. Nabasa ko na kailangan munang dumaan sa SEnA bago mag-file ng kaso. Base sa Rule II ng SEnA Rules, paano po mag-file ng Request for Assistance at ano ang mga requirements?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "sena_conciliation",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "sena_rule2_rfa_procedures"
       ],
@@ -2348,7 +2405,7 @@
         "SEnA Rules Rule II"
       ],
       "reference_answer": "Para mag-file ng RFA sa SEnA: (1) Pumunta sa pinakamalapit na DOLE Regional/Field Office o iba pang authorized office; (2) Punan ang RFA form na may detalye ng reklamo; (3) Isumite kasama ang supporting documents. Ang SEAD officer ay mag-evaluate at mag-schedule ng conference sa loob ng 5 working days.",
-      "notes": "Filipino query on SEnA filing process."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'Rule II ng SEnA Rules,' triggering symbolic lookup. Added personal overtime dispute context for realistic framing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q094",
@@ -2384,7 +2441,7 @@
         "Labor Code Art. 87"
       ],
       "reference_answer": "For unpaid overtime, file an RFA under SEnA first. Under Article 87, overtime beyond 8 hours must be paid at regular wage plus 25%. If SEnA fails, file with NLRC.",
-      "notes": "Dense retrieval. Procedural question about SEnA as prerequisite to NLRC.",
+      "notes": "Retrieval target: dense — Although 'overtime pay' appears after clarification, the query's core challenge is understanding that SEnA is a mandatory prerequisite to NLRC, requiring cross-domain semantic retrieval across procedural (SEnA/NLRC) and substantive (Art. 87 overtime) provisions.",
       "turn5_query": "How long do I have to file a claim for the unpaid overtime before my right to claim it prescribes?",
       "turn6_reference_answer": "Under Article 306 of the Labor Code (formerly Article 291 prior to renumbering), money claims arising from employer-employee relations — including unpaid overtime pay — must be filed within three (3) years from the time the cause of action accrued. The cause of action for each unpaid overtime claim accrues on the date it should have been paid (i.e., every payroll period). This means the 3-year clock runs separately for each payroll period in which overtime was unpaid. Practical implication: if you have been underpaid on overtime for the past 2 years, you may still recover all 2 years of underpayment as long as you file within the 3-year window. Claims beyond 3 years from the payroll period are time-barred. File your RFA at SEnA now to stop the clock and preserve your right to recovery.",
       "gold_chunks_turn6": [
@@ -2398,12 +2455,12 @@
     },
     {
       "query_id": "Q095",
-      "query_text": "Unsa ang proseso sa SEnA conciliation-mediation ug pila ka adlaw kini?",
+      "query_text": "Nag-file na ko og Request for Assistance sa DOLE tungod sa dili pagbayad sa akong suweldo ug gusto nako mahibal-an ang sunod nga proseso. Base sa Rule IV sa SEnA Revised Rules, unsa ang proseso sa conciliation-mediation ug pila ka adlaw ang gitakda sa balaod aron makab-ot ang settlement?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "sena_conciliation",
-      "retrieval_target": "dense",
+      "retrieval_target": "symbolic",
       "gold_chunks": [
         "sena_rule4_conciliation_mediation_conduct"
       ],
@@ -2411,7 +2468,7 @@
         "SEnA Rules Rule IV"
       ],
       "reference_answer": "Ang SEnA conciliation-mediation proseso adunay 30 ka adlaw nga period gikan sa pagfile sa RFA. Ang SEADO mag-conduct og mga conference aron makab-ot ang settlement. Kung dili ma-settle sulod sa 30 ka adlaw, ang kaso i-refer sa appropriate dispute resolution body sama sa NLRC.",
-      "notes": "Cebuano query on SEnA process and timeline."
+      "notes": "Retrieval target: symbolic — The query explicitly cites 'Rule IV sa SEnA Revised Rules,' triggering symbolic lookup. Added personal wage dispute context (already filed RFA) for realistic framing. Cebuano query — tests translation pivot alongside symbolic matching."
     },
     {
       "query_id": "Q096",
@@ -2433,12 +2490,12 @@
     },
     {
       "query_id": "Q097",
-      "query_text": "Ano ang mga patakaran sa workplace para sa mga vulnerable groups tulad ng senior citizens kapag may COVID-19?",
+      "query_text": "May kasamahan po kaming senior citizen sa opisina at nag-aalala kami sa kanyang kaligtasan ngayong may mga COVID-19 cases pa rin sa aming lugar. Ano po ang specific na DOLE COVID-19 workplace safety protocols at patakaran para sa mga vulnerable groups tulad ng senior citizens at mga may comorbidity — kailangan ba silang bigyan ng work-from-home arrangement?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "covid_protocols",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "lexical",
       "gold_chunks": [
         "covid_protocols_testing_compliance"
       ],
@@ -2446,7 +2503,7 @@
         "DTI-DOLE Interim Guidelines"
       ],
       "reference_answer": "Ayon sa DTI-DOLE guidelines, ang mga vulnerable groups (edad 60 pataas, may co-morbidities) ay dapat bigyan ng work-from-home arrangement kung possible. Hindi dapat bawasan ang kanilang sahod at mga benepisyo.",
-      "notes": "Filipino query on COVID protocols for vulnerable groups."
+      "notes": "Retrieval target: lexical — The query contains highly specific keywords ('DOLE COVID-19 workplace safety protocols,' 'vulnerable groups,' 'senior citizens,' 'work-from-home') that directly match terms in the DTI-DOLE Interim Guidelines corpus chunks via BM25/full-text search. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q098",
@@ -2478,7 +2535,7 @@
         "Labor Code Art. 106-109"
       ],
       "reference_answer": "This may be labor-only contracting under Article 106. The principal employer is solidarily liable for unpaid wages. File a complaint at DOLE or NLRC.",
-      "notes": "Dense retrieval. Situational query mapping to contractor/subcontractor liability provisions.",
+      "notes": "Retrieval target: dense — The clarified scenario ('hired by agency with no office,' 'factory') uses no legal terms like 'labor-only contracting' or 'solidary liability'; requires semantic understanding to map the employment arrangement to Art. 106 contractor liability provisions.",
       "turn5_query": "In a labor-only contracting arrangement, who is responsible for remitting my SSS and PhilHealth contributions to the government agencies?",
       "turn6_reference_answer": "Under Articles 106–109 of the Labor Code, when an arrangement is classified as labor-only contracting, the principal employer (the company inside whose factory you work) is treated as the direct employer. This has direct implications for statutory contribution obligations: (1) As the direct employer, the principal employer is solidarily liable with the labor-only contractor for all rights, benefits, and obligations due to you, including proper remittance of SSS contributions under RA 11199 and PhilHealth premiums under RA 7875. (2) If the contractor has been pocketing your contributions without remitting them, you may file a complaint directly against the principal employer as the deemed direct employer. (3) You may verify your SSS contributions online via My.SSS portal or request a contribution statement from SSS. Any unremitted contributions are a serious violation and carry criminal penalties for the employer.",
       "gold_chunks_turn6": [
@@ -2492,12 +2549,12 @@
     },
     {
       "query_id": "Q099",
-      "query_text": "Ano ang labor-only contracting at bakit ito ipinagbabawal?",
+      "query_text": "May kakilala po akong nagtatrabaho sa loob ng isang malaking pabrika pero ang nag-hire sa kanya ay isang maliit na agency na walang sariling opisina o kagamitan. Ano po ang labor-only contracting sa ilalim ng Labor Code at bakit ito ipinagbabawal — ano ang solidary liability ng principal employer sa ganitong sitwasyon?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "contractor_liability",
-      "retrieval_target": "hybrid",
+      "retrieval_target": "lexical",
       "gold_chunks": [
         "book3-title2-articles106-111-contractor-liability"
       ],
@@ -2505,7 +2562,7 @@
         "Labor Code Art. 106"
       ],
       "reference_answer": "Ang labor-only contracting ay kapag ang contractor ay walang substantial capital o investment at ang mga empleyado nito ay gumagawa ng trabaho na direktang kaugnay ng pangunahing negosyo ng principal. Ito ay ipinagbabawal dahil nilalabag nito ang security of tenure ng mga manggagawa at ang principal ang itinuturing na tunay na employer.",
-      "notes": "Filipino query on labor-only contracting."
+      "notes": "Retrieval target: lexical — The query contains the exact legal term 'labor-only contracting' and 'solidary liability' which are highly specific keywords yielding strong BM25/full-text matches against the Labor Code contractor liability provisions (Art. 106-111). Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q100",
