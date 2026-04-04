@@ -644,10 +644,10 @@ class SupabaseVectorStore(BaseVectorStore):
 
         The DB keywords column is LLM-curated and stores canonical forms such as
         "Article 297", "Republic Act No. 10361", "Presidential Decree No. 442",
-        "Department Order 147-15".
+        "Department Order 147-15", "NLRC Rules Rule I", "SEnA Rules Section 1".
         query_analysis.py may produce abbreviated or prefixed forms ("RA 10361",
-        "PD 442", "Art. 297", "DO 147-15", "DOLE Department Order 147-15") that
-        must be expanded/normalised before GIN lookup.
+        "PD 442", "Art. 297", "DO 147-15", "DOLE Department Order 147-15",
+        "NLRC Rule I", "SEnA Rule 1") that must be expanded/normalised before GIN lookup.
         """
         ref = article_ref.strip()
         candidates = [ref]
@@ -687,13 +687,72 @@ class SupabaseVectorStore(BaseVectorStore):
                 num = m.group(1)
                 candidates.append(f"Department Order {num}")
 
+        # NLRC Rules variants — normalize "NLRC Rule X" to "NLRC Rules Rule X".
+        # Handles both Roman numerals (I, II, III) and Arabic numbers (1, 2, 3).
+        # Also handles section references like "Section 1, Rule I".
+        #
+        #   "NLRC Rule I"           → "NLRC Rules Rule I"
+        #   "NLRC Rule 1"           → "NLRC Rules Rule 1"
+        #   "Section 1, Rule I"     → "NLRC Rules Section 1, Rule I" (if canonical)
+        m = re.match(r'^NLRC\s+Rule\s+([IVXivx\d]+)', ref, re.IGNORECASE)
+        if m:
+            rule_num = m.group(1)
+            candidates.append(f"NLRC Rules Rule {rule_num}")
+        # Match section references: "Section N, Rule X"
+        m = re.match(r'^(?:NLRC\s+)?Section\s+(\d+),?\s+Rule\s+([IVXivx\d]+)', ref, re.IGNORECASE)
+        if m:
+            section = m.group(1)
+            rule_num = m.group(2)
+            candidates += [
+                f"NLRC Rules Section {section}, Rule {rule_num}",
+                f"Section {section}, Rule {rule_num}"
+            ]
+
+        # SEnA Rules variants — normalize "SEnA Rule N" to "SEnA Rules Rule N" or
+        # "SEnA Rules Section N" depending on the reference pattern.
+        #
+        #   "SEnA Rule 1"       → "SEnA Rules Rule 1"
+        #   "SEnA Section 1"    → "SEnA Rules Section 1"
+        m = re.match(r'^SEnA\s+Rule\s+(\d+)', ref, re.IGNORECASE)
+        if m:
+            rule_num = m.group(1)
+            candidates.append(f"SEnA Rules Rule {rule_num}")
+        m = re.match(r'^SEnA\s+Section\s+(\d+)', ref, re.IGNORECASE)
+        if m:
+            section = m.group(1)
+            candidates.append(f"SEnA Rules Section {section}")
+
+        # DOLE COVID-19 Guidelines — normalize various forms to canonical.
+        #
+        #   "COVID-19 Guidelines"          → "DOLE Guidelines"
+        #   "COVID-19 Workplace Guidelines" → "DOLE Guidelines"
+        #   "DTI DOLE Guidelines"          → "DOLE Guidelines"
+        if re.search(r'covid[-\s]*19', ref, re.IGNORECASE):
+            candidates.append("DOLE Guidelines")
+        if re.match(r'^(?:DTI\s+(?:and\s+)?)?DOLE\s+Guidelines', ref, re.IGNORECASE):
+            candidates.append("DOLE Guidelines")
+
+        # DOLE Handbook — normalize to "DOLE Handbook 2023".
+        #
+        #   "DOLE Handbook"              → "DOLE Handbook 2023"
+        #   "Workers' Benefits Handbook" → "DOLE Handbook 2023"
+        #   "Handbook 2023"              → "DOLE Handbook 2023"
+        if re.match(r'^DOLE\s+Handbook', ref, re.IGNORECASE):
+            candidates.append("DOLE Handbook 2023")
+        if re.search(r"Workers[\s']*Benefits\s+Handbook", ref, re.IGNORECASE):
+            candidates.append("DOLE Handbook 2023")
+        if re.match(r'^Handbook\s+2023', ref, re.IGNORECASE):
+            candidates.append("DOLE Handbook 2023")
+
         # Deduplicate while preserving order
         return list(dict.fromkeys(candidates))
 
     # Compiled once at class level — matches known source-law identifier patterns
     _SOURCE_LAW_RE = re.compile(
         r'\b(labor code|presidential decree|republic act|batas kasambahay|'
-        r'omnibus rules|department order|pd\s*\d+|ra\s*\d+|do\s*\d+)\b',
+        r'omnibus rules|department order|nlrc rules?|sena rules?|'
+        r'dole guidelines?|dole handbook|covid[-\s]*19|workers[\s\']*benefits|'
+        r'pd\s*\d+|ra\s*\d+|do\s*\d+|nlrc\s+rule|sena\s+rule)\b',
         re.IGNORECASE,
     )
 

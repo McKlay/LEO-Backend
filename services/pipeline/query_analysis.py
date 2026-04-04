@@ -306,7 +306,7 @@ Clarification format: ONE topic-guiding question in user's language. {clarificat
 Keyword rules:
 - Extract 2-4 SPECIFIC, DISTINCTIVE terms only
 - NEVER extract: "Philippines", "Philippine", "labor law", "Labor Code", "worker", "employee", "employer"
-- Extract: specific benefits ("13th month", "SIL"), procedures ("retrenchment"), regions ("NCR"), article numbers
+- Extract: specific benefits ("13th month", "SIL"), procedures ("retrenchment"), regions ("NCR"), article numbers, article sections, Republic Acts, Republic Act sections, presidential decrees, DOLE Department Orders, NLRC Rule No., NLRC Section No., SEnA Rule No, SEnA Rule Section No., DOLE Guidelines, DOLE Handbook
 
 Return JSON (no markdown):
 {{
