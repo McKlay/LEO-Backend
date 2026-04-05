@@ -186,7 +186,7 @@ class CSVExporter:
                 # if the runner injected it into the trace's query_text context.
                 conv_hist_str = trace.get("conversation_history_json", "")
 
-            rows.append({
+            row = {
                 "eval_id": f"E{eval_counter:04d}",
                 "query_id": trace.get("query_id", ""),
                 "query_text": trace.get("query_text", ""),
@@ -196,16 +196,21 @@ class CSVExporter:
                 "topic": trace.get("topic", ""),
                 "conversation_history": conv_hist_str,
                 "config_label": config_label,
+                # Turn 4 answer — used for Tables 6, 7, 9, 10
                 "system_answer": trace.get("generated_content", ""),
                 "reference_answer": trace.get("reference_answer", ""),
                 "gold_article_refs": _safe_json(trace.get("gold_article_refs", [])),
+                # Phase 2 columns for multi-turn rows (Table 8)
+                "system_answer_turn6": trace.get("turn6_generated_answer", "") if trace.get("is_multiturn") else "",
+                "turn6_reference_answer": trace.get("turn6_reference_answer", "") if trace.get("is_multiturn") else "",
                 # Expert-fill columns (empty)
                 "legal_accuracy_score": "",
                 "hallucination_present": "",
                 "citation_fidelity_notes": "",
                 "clarification_quality": "" if not trace.get("is_ambiguous") else "",
                 "notes": "",
-            })
+            }
+            rows.append(row)
             eval_counter += 1
 
         rng.shuffle(rows)
@@ -350,7 +355,7 @@ class CSVExporter:
                     "is_ambiguous": str(trace.get("is_ambiguous", False)).lower(),
                     "topic": trace.get("topic", ""),
                     "retrieval_target": trace.get("retrieval_target", ""),
-                    "retrieved_chunks": _safe_json(trace.get("retrieved_chunk_ids", [])),
+                    "retrieved_chunks": _safe_json(trace.get("retrieved_chunk_ids_per_k", {})),
                     "recall_at_3": scores.get("recall@3", ""),
                     "recall_at_5": scores.get("recall@5", ""),
                     "recall_at_10": scores.get("recall@10", ""),

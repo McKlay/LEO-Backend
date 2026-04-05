@@ -31,6 +31,10 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from tests.benchmark.collector import QueryTrace
 
+# Clarification detection P/R is a pre-flight diagnostic only (Decision 1).
+# It must NOT appear in thesis-table output or the raw-results CSV.
+IS_THESIS_TABLE = False
+
 
 # ── Per-trace scoring ──────────────────────────────────────────────────────────
 

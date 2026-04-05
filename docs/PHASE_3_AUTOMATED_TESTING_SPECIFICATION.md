@@ -69,11 +69,11 @@ Each variant maps directly to the 4 runtime switches already in `core/config.py`
 | 3 | **Dense-only** | `dense` | `true` | `true` | `true` | All | 100 |
 | 4 | **Lexical-only** | `lexical` | `true` | `true` | `true` | All | 100 |
 | 5 | **Symbolic-only** | `symbolic` | `true` | `true` | `true` | All | 100 |
-| 6 | **Hybrid – no translation** | `hybrid` | `true` | `false` | `true` | Non-English only | 50 |
+| 6 | **Hybrid – no translation** | `hybrid` | `true` | `false` | `true` | Non-English only | 65 |
 | 7 | **Hybrid – no clarification** | `hybrid` | `true` | `true` | `false` | Ambiguous only | 30 |
 | 8 | **LLM-only (no RAG)** | `none` | `false` | `false` | `false` | All | 100 |
 
-**Total runs**: 100 + 100 + 100 + 100 + 100 + 50 + 30 + 100 = **680**
+**Total runs**: 100 + 100 + 100 + 100 + 100 + 65 + 30 + 100 = **695**
 
 ### Variant Config Data Structure
 
@@ -188,17 +188,39 @@ class QueryTrace:
     gold_article_refs: List[str]
     reference_answer: str
     expected_clarification: Optional[str]
+    
+    # Phase 2 fields — multi-turn only (Table 8: Turn 6 evaluation)
+    turn5_query: Optional[str]                      # Phase 2 user query (non-ambiguous follow-up)
+    turn6_generated_answer: Optional[str]           # Pipeline answer to turn5_query
+    turn6_extracted_citations: Optional[List[str]]  # Citations parsed from turn6 answer
+    gold_chunks_turn6: Optional[List[str]]          # Gold chunks for turn5_query
+    gold_article_refs_turn6: Optional[List[str]]    # Gold article refs for turn5_query
+    turn6_reference_answer: Optional[str]           # Canonical expected answer for turn5_query
 ```
 
 ### 3.3 Multi-Turn Query Handling
 
-For multi-turn queries (24 queries with `conversation_history`), the runner must simulate the conversation context:
+Multi-turn queries follow a **two-phase structure** (Decisions 3 & 6): 30 queries total (24 original + 6 promoted from single-turn ambiguous). Each query has a Phase 1 clarification exchange (Turns 1–3 stored in `conversation_history`) and a Phase 2 follow-up (Turn 5 stored in `turn5_query`). Turn 4 is the rated answer for Tables 2, 3, 6, and 7; Turn 6 is the rated answer for Table 8.
+
+#### Phase 1 Execution (Turn 4 — evaluated in Tables 2, 3, 6, 7)
 
 1. Create a fresh `conversation_id` per query–variant pair.
-2. For each entry in `conversation_history` (except the final user turn), inject messages via `conversation.add_user_message()` / `conversation.add_assistant_message()`.
-3. Send the final user turn through `process_message_stream`.
+2. Inject all turns in `conversation_history` except the final user turn via `conversation.add_user_message()` / `conversation.add_assistant_message()`.
+3. Send the final user turn (Turn 3) through `process_message_stream` → captures the Turn 4 answer.
 
-This ensures Stage 1 receives realistic conversation context for multi-turn summarization.
+#### Phase 2 Execution (Turn 6 — evaluated in Table 8, `full` mode only)
+
+After Phase 1 completes, the runner continues in the same conversation:
+
+4. Inject the Turn 4 assistant response into the conversation via `conversation.add_assistant_message()`.
+5. Send `turn5_query` (a specific, non-ambiguous follow-up grounded in Phase 1 context) through `process_message_stream` → captures the Turn 6 answer.
+6. Store Turn 6 outputs in the Phase 2 fields of `QueryTrace` (`turn6_generated_answer`, `turn6_extracted_citations`).
+
+**Phase 2 is skipped in `retrieval_only` mode** — Table 8 reports answer quality metrics only (no retrieval metrics; see Decision 2), so no Phase 2 retrieval pass is needed.
+
+**All three Table 8 configurations (Config A/B/C) receive full conversation history (Turns 1–5) before generating Turn 6.** Conversation history is a general input available to all dialogue systems — withholding it from Config A or B would create an unfair comparison. What distinguishes the three configs is the retrieval query: Config A uses none, Config B uses raw Turn 5 text, Config C uses Stage 1's consolidated query across all prior turns.
+
+This ensures Stage 1 receives realistic multi-turn context for summarization evaluation and that all configurations are compared fairly on the same inputs.
 
 ### 3.4 Settings Override Mechanism
 
@@ -282,19 +304,19 @@ Three execution modes minimize API cost by running only the pipeline stages need
 
 | Mode | Stages Run | Use For | Token Cost |
 |---|---|---|---|
-| `analysis_only` | Stage 1 only | Table 5 (clarification detection), pre-flight validation | GPT-4o-mini only |
+| `analysis_only` | Stage 1 only | Pre-flight validation | GPT-4o-mini only |
 | `retrieval_only` | Stage 1 + Stage 2 | Tables 2, 3, 4 (retrieval metrics at flexible K) | GPT-4o-mini + embeddings |
 | `full` | Stage 1 + Stage 2 + Stage 3 | Tables 6–10 (answer quality, hallucination, citations, RAG Triad) | GPT-4o-mini + embeddings + GPT-4.1 |
 
 **Table-to-Mode-to-Variant mapping:**
 
-| Thesis Table | Mode | top_k | Variants Run | Queries |
+| Thesis Table | Mode | top_k | Variants Run | Queries / Runs |
 |---|---|---|---|---|
-| Table 2 (Retrieval comparison) | `retrieval_only` | 3, 5, 10 | dense_only, lexical_only, symbolic_only, full_pipeline | 4 × 100 = 400 |
-| Table 3 (By target subset) | `retrieval_only` | 5 | same as Table 2 | same 400, sliced by `retrieval_target` |
-| Table 4 (Translation pivot) | `retrieval_only` | 5 | full_pipeline + hybrid_no_translation | 100 + 50 = 150 |
-| Table 5 (Clarification detection) | `analysis_only` | N/A | full_pipeline | 100 |
-| Tables 6–10 (Answer quality) | `full` | 5 | llm_only, stage2_only, full_pipeline | 3 × 100 = 300 |
+| Table 2 (Retrieval comparison) | `retrieval_only` | 3, 5, 10 | dense_only, lexical_only, symbolic_only, full_pipeline | 4 variants × 100 queries × 3 K-values = **1,200** |
+| Table 3 (By target subset) | `retrieval_only` | 5 | same as Table 2 | K=5 slice of Table 2 runs, each $n=25$ per strategy subset |
+| Table 4 (Translation pivot) | `retrieval_only` | 5 | full_pipeline + hybrid_no_translation | 100 + 65 = 165 |
+| Tables 6, 7, 9, 10 (Answer quality — **Turn 4**) | `full` | 5 | llm_only, stage2_only, full_pipeline | 3 × 100 = 300 |
+| Table 8 (Multi-turn summarization — **Turn 6**) | `full` | 5 | llm_only, stage2_only, full_pipeline | 3 × 30 = 90 (Turn 6 answers; subset of the 300 runs above) |
 
 **`retrieval_only` mode behavior:**
 
@@ -302,16 +324,16 @@ Three execution modes minimize API cost by running only the pipeline stages need
 2. Runs Stage 2 retrieval at each requested K value (e.g., `--top-k 3 5 10`)
 3. **Skips Stage 3** (LLM generation) entirely — zero GPT-4.1 tokens spent
 4. Stores retrieved chunk IDs + scores for offline metric computation
-5. Computes Recall@K, Hit Rate@K, MRR at each K from a single retrieval pass at max(K)
+5. Each K value is a **separate retrieval run** — with RRF, scores are computed over exactly the top-K candidates so sub-selecting from a larger K result does not reproduce the smaller-K rankings
 
 **`analysis_only` mode behavior:**
 
 1. Runs Stage 1 only to get the `QueryAnalysis` result
 2. Records `needs_clarification`, `out_of_scope`, `is_meta_conversational`, `normalized_query_en`
 3. Skips both retrieval and generation
-4. Used for pre-flight validation and Table 5 clarification accuracy
+4. Used for pre-flight validation only (clarification and multi-turn checks)
 
-**Note on Table 3:** Table 3 slices the same retrieval results from Table 2 by `retrieval_target` (symbolic $n=15$, lexical $n=25$, dense $n=25$, hybrid $n=35$). No additional API calls required — it reuses the Table 2 retrieval traces and reports MRR and Recall@5 per subset.
+**Note on Table 3:** Table 3 slices the K=5 retrieval results from Table 2 by `retrieval_target` (each $n=25$, balanced across all four strategies). No additional API calls required — it reuses the K=5 pass from the Table 2 runs and reports MRR and Recall@5 per subset.
 
 **CLI mode selection:**
 
@@ -319,9 +341,6 @@ Three execution modes minimize API cost by running only the pipeline stages need
 # Retrieval-only at multiple K values (Tables 2–4)
 python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
   --variant full_pipeline dense_only lexical_only symbolic_only
-
-# Analysis-only for clarification accuracy (Table 5)
-python -m tests.benchmark.runner --mode analysis_only --variant full_pipeline
 
 # Full pipeline for answer quality (Tables 6–10)
 python -m tests.benchmark.runner --mode full --variant llm_only stage2_only full_pipeline
@@ -361,11 +380,13 @@ Clarification Validation Report
 ```
 
 **Multi-turn validation** (`--validate multiturn`):
-Runs all 24 multi-turn queries through `analysis_only` mode with conversation history injection. Verifies:
+Runs all 30 multi-turn queries through `analysis_only` mode with conversation history injection. Verifies:
 - Conversation history was injected correctly (non-empty context)
 - Stage 1 produced a consolidated `normalized_query_en` (not just the raw last turn)
 - Clarification was NOT re-triggered on the final turn (prior clarification is already in history)
 - `is_meta_conversational` was not incorrectly flagged
+
+This validates Phase 1 execution only (Turn 4 generation path). Phase 2 (Turn 5/6) is exercised by the `--smoke` test.
 
 ```bash
 python -m tests.benchmark.runner --validate multiturn
@@ -384,7 +405,7 @@ Multi-Turn Validation Report
   Q015 (...):
     ...
 
-  Pass: 22/24  |  Fail: 2/24
+  Pass: 30/30  |  Fail: 0/30
   Failures require investigation before full benchmark.
 ```
 
@@ -465,9 +486,9 @@ Computed by comparing `retrieved_chunk_ids` against `gold_chunks` for each query
 
 K values: **3, 5** for standard evaluation; **K = 10** added in `retrieval_only` mode for Table 2 diagnostic depth.
 
-When `retrieval_only` mode runs with `--top-k 3 5 10`, the runner issues a single retrieval call at $K = 10$ and computes Recall@3 and Recall@5 from the top-3 and top-5 subsets of the returned results. This avoids redundant API calls while producing all three K-level evaluations.
+Each K value requires a **separate retrieval call**. With RRF (Reciprocal Rank Fusion), the fusion scores are computed over precisely the top-K candidates — sub-selecting the top-3 or top-5 results from a K=10 retrieval does not reproduce the K=3 or K=5 RRF rankings. When running `--top-k 3 5 10`, the runner issues three independent Stage 2 calls per query–variant pair.
 
-**Chunk ID matching**: Retrieved chunk IDs from Supabase contain `source_file` metadata that maps to the relative paths in `gold_chunks` (e.g., `DOLE-Handbook/02-minimum-wage-coverage-rates.md`). The scorer normalizes both to a common format (strip `kb/chunks/` prefix, compare folder + basename).
+**Chunk ID matching**: Gold chunks in `benchmark-queries.json` are stored as the actual Supabase `chunk_id` UUIDs. The scorer performs direct UUID equality matching between `gold_chunks` and `retrieved_chunk_ids` — no path normalization required.
 
 ### 4.2 Answer Quality Metrics
 
@@ -490,18 +511,7 @@ Computed by comparing `extracted_citations` against `gold_article_refs`.
 
 Citation extraction uses regex patterns to parse references like "Article 297", "Art. 99", "RA 6727", "PD 442" from the generated text. Matching is normalized (e.g., "Art. 297" == "Article 297").
 
-### 4.4 Clarification Detection Metrics
-
-Evaluated on the 30 ambiguous queries only, comparing `was_clarification` against `is_ambiguous`.
-
-| Metric | Formula |
-|---|---|
-| **Detection Precision** | $\frac{TP}{TP + FP}$ |
-| **Detection Recall** | $\frac{TP}{TP + FN}$ |
-
-Where TP = system flagged clarification AND query is ambiguous, FP = system flagged but query is not ambiguous, FN = query is ambiguous but system did not flag.
-
-### 4.5 RAG Triad Metrics (LLM-as-Judge)
+### 4.4 RAG Triad Metrics (LLM-as-Judge)
 
 An LLM evaluator (GPT-4.1 via a rubric prompt) scores each query–variant answer on three dimensions (0.0–1.0):
 
@@ -534,9 +544,11 @@ The CSV exporter produces a **blinded, randomized** spreadsheet for each expert:
 | `topic` | Topic category |
 | `conversation_history` | JSON string of prior turns (multi-turn only) |
 | `config_label` | Blinded label: randomized "X", "Y", "Z" (mapping hidden from expert) |
-| `system_answer` | Generated answer text |
-| `reference_answer` | Gold standard answer |
-| `gold_article_refs` | Expected citations |
+| `system_answer` | Generated answer text (Turn 4 for all queries) |
+| `system_answer_turn6` | Turn 6 generated answer (multi-turn queries only; evaluated in Table 8) |
+| `reference_answer` | Gold standard answer (Turn 4) |
+| `turn6_reference_answer` | Gold standard answer for Turn 6 (multi-turn queries only) |
+| `gold_article_refs` | Expected citations (Turn 4) |
 | **legal_accuracy_score** | Expert fills: 1–4 scale |
 | **hallucination_present** | Expert fills: yes / no |
 | **citation_fidelity_notes** | Expert fills: free text |
@@ -610,7 +622,7 @@ chart_retrieval_comparison(results) → figures/retrieval_comparison.pdf
 ### 6.2 Retrieval by Target Subset (Table 3 → Figure)
 
 **Type**: Grouped bar chart or heatmap  
-**Rows**: Retrieval target subsets (Symbolic n=15, Lexical n=25, Dense n=25, Hybrid n=35)  
+**Rows**: Retrieval target subsets (each $n=25$: Symbolic, Lexical, Dense, Hybrid)  
 **Columns**: Retrieval strategies  
 **Values**: MRR per subset  
 
@@ -725,10 +737,6 @@ python -m tests.benchmark.runner --mode retrieval_only --top-k 5 \
   --variant full_pipeline hybrid_no_translation \
   --output-dir results/run_001
 
-# Phase 1c: Analysis-only for clarification accuracy (Table 5)
-python -m tests.benchmark.runner --mode analysis_only \
-  --variant full_pipeline --output-dir results/run_001
-
 # Phase 2: Full pipeline for answer quality (Tables 6–10, ~$10–15)
 python -m tests.benchmark.runner --mode full \
   --variant llm_only stage2_only full_pipeline \
@@ -777,11 +785,10 @@ python -m tests.benchmark.runner --all --resume --output-dir results/run_001
 | Phase | Mode | API Calls | Estimated Cost |
 |---|---|---|---|
 | **Phase 0: Validation** | `analysis_only` | ~70 GPT-4o-mini + 5 full pipeline | < $0.20 |
-| **Phase 1: Retrieval-only** (Tables 2–4) | `retrieval_only` | ~550 GPT-4o-mini + ~550 embeddings | ~$1–2 |
-| **Phase 1c: Clarification** (Table 5) | `analysis_only` | 100 GPT-4o-mini | < $0.10 |
+| **Phase 1: Retrieval-only** (Tables 2–4) | `retrieval_only` | ~465 Stage 1 (GPT-4o-mini) + ~1,265 Stage 2 retrieval calls | ~$1–2 |
 | **Phase 2: Full pipeline** (Tables 6–10) | `full` | 300 GPT-4o-mini + ~200 embeddings + 300 GPT-4.1 | ~$10–15 |
 | **Phase 3: RAG Triad** | LLM-as-judge | ~200 GPT-4.1 judge calls | ~$3–5 |
-| **Total** | | | **~$15–22** |
+| **Total** | | | **~$14–22** |
 
 Running retrieval-only first (Phases 0–1) costs < $2 and validates all retrieval-layer claims before committing to the expensive Phase 2 generation runs. If retrieval metrics are unsatisfactory, the researcher can tune retrieval parameters and re-run Phase 1 without wasting generation tokens.
 
@@ -803,7 +810,7 @@ Using `process_message_stream` (the same entry point as production) ensures the 
 
 ### 8.4 Chunk ID Matching Strategy
 
-Gold chunks in `benchmark-queries.json` use paths like `DOLE-Handbook/02-minimum-wage-coverage-rates.md`. Retrieved results from Supabase carry `source_file` metadata. The scorer must normalize both to a common format (strip prefixes, compare basenames + parent folder) to compute Recall/Hit Rate.
+Gold chunks in `benchmark-queries.json` are stored as actual Supabase `chunk_id` UUIDs. The scorer performs direct UUID equality matching between `gold_chunks` and `retrieved_chunk_ids` — no path normalization required.
 
 ### 8.5 Why In-Process Instead of HTTP?
 
@@ -811,7 +818,7 @@ Running the benchmark via direct Python imports (not uvicorn + HTTP) provides: (
 
 ### 8.6 Why Retrieval-Only Mode?
 
-Tables 2–4 require only retrieval metrics (Recall@K, MRR). Running full LLM generation for these tables would spend ~2M GPT-4.1 tokens (~$10+) producing answers that are never scored for retrieval evaluation. By separating retrieval evaluation from answer quality evaluation, the researcher can: (a) iterate on retrieval tuning cheaply, (b) run expensive generation only when retrieval performance is satisfactory, and (c) evaluate retrieval at multiple K values (3, 5, 10) without multiplying generation cost.
+Tables 2–4 require only retrieval metrics (Recall@K, MRR). Running full LLM generation for these tables would spend ~2M GPT-4.1 tokens (~$10+) producing answers that are never scored for retrieval evaluation. By separating retrieval evaluation from answer quality evaluation, the researcher can: (a) iterate on retrieval tuning cheaply, (b) run expensive generation only when retrieval performance is satisfactory, and (c) evaluate retrieval at multiple K values (3, 5, 10) as independent runs. Although this multiplies Stage 2 retrieval calls (Table 2 alone requires 1,200 retrieval passes), Stage 2 is cheap — the cost savings from avoiding Stage 3 generation across those runs far outweigh the additional retrieval overhead.
 
 ### 8.7 Why Pre-flight Validation?
 

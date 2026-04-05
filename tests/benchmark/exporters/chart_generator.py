@@ -129,7 +129,7 @@ class ChartGenerator:
         "hybrid_no_translation": "Hybrid (No Trans.)",
         "llm_only": "LLM-only",
         "stage2_only": "Stage 2 Only",
-        "no_clarification": "No Clarif.",
+        "hybrid_no_clarification": "No Clarif.",
     }
 
     def __init__(self, input_dir: Path, output_dir: Path) -> None:

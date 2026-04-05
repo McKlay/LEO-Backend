@@ -1,7 +1,7 @@
 # LEO Benchmark — Automated Evaluation Framework
 
 Standalone benchmark suite for the LEO Philippine Labor Law RAG pipeline.
-Evaluates 8 pipeline variants across 100 queries (680 total runs) and produces
+Evaluates 8 pipeline variants across 100 queries (695 total runs) and produces
 all retrieval metrics, answer-quality scores, and thesis figures documented in
 §4.5 of the methodology chapter.
 
@@ -42,11 +42,11 @@ tests/benchmark/
 | 3 | `dense_only` | dense | ✓ | ✓ | ✓ | all (100) |
 | 4 | `lexical_only` | lexical | ✓ | ✓ | ✓ | all (100) |
 | 5 | `symbolic_only` | symbolic | ✓ | ✓ | ✓ | all (100) |
-| 6 | `hybrid_no_translation` | hybrid | ✓ | ✗ | ✓ | non-English (50) |
-| 7 | `no_clarification` | hybrid | ✓ | ✓ | ✗ | ambiguous (30) |
+| 6 | `hybrid_no_translation` | hybrid | ✓ | ✗ | ✓ | non-English (65) |
+| 7 | `hybrid_no_clarification` | hybrid | ✓ | ✓ | ✗ | ambiguous (30) |
 | 8 | `llm_only` | none | ✗ | ✗ | ✗ | all (100) |
 
-**Total runs: 680**
+**Total runs: 695**
 
 ---
 
@@ -68,10 +68,9 @@ python -m tests.benchmark.runner --smoke
 ```mermaid
 flowchart LR
     A[--validate all\n~$0.10] --> B[--mode retrieval_only\nTables 2–4\n~$1–2]
-    B --> C[--mode analysis_only\nTable 5\n~$0.10]
-    C --> D[--mode full\nTables 6–10\n~$10–15]
-    D --> E[rag_triad scorer\n~$3–5]
-    E --> F[csv_exporter\nchart_generator]
+    B --> C[--mode full\nTables 6–10\n~$10–15]
+    C --> D[rag_triad scorer\n~$3–5]
+    D --> E[csv_exporter\nchart_generator]
 ```
 
 ### Phase 0 — Validation
@@ -93,13 +92,6 @@ python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
 python -m tests.benchmark.runner --mode retrieval_only --top-k 5 \
   --variant full_pipeline hybrid_no_translation \
   --output-dir results/run_001
-```
-
-### Phase 1c — Clarification Detection (Table 5)
-
-```bash
-python -m tests.benchmark.runner --mode analysis_only \
-  --variant full_pipeline --output-dir results/run_001
 ```
 
 ### Phase 2 — Full Pipeline (Tables 6–10)
@@ -203,7 +195,6 @@ python -m tests.benchmark.runner --mode full --variant full_pipeline \
 |-------|------|-----------|
 | Validation | `analysis_only` | < $0.20 |
 | Retrieval (Tables 2–4) | `retrieval_only` | ~$1–2 |
-| Clarification (Table 5) | `analysis_only` | < $0.10 |
 | Full pipeline (Tables 6–10) | `full` | ~$10–15 |
 | RAG Triad | LLM-as-judge | ~$3–5 |
 | **Total** | | **~$15–22** |

@@ -221,7 +221,8 @@ class RAGTriadScorer:
                 "\n---\n".join(context_snippets), _MAX_CONTEXT_CHARS
             )
         else:
-            ids = trace.retrieved_chunk_ids or []
+            per_k = getattr(trace, "retrieved_chunk_ids_per_k", {}) or {}
+            ids = per_k.get(max(per_k), []) if per_k else []
             context_text = "\n".join(f"• {cid}" for cid in ids[:10]) or "(no context)"
 
         result: Dict[str, Any] = {
@@ -363,8 +364,8 @@ async def _main() -> None:
             for k, v in td.items():
                 setattr(t, k, v)
             # Ensure required attributes exist with defaults
-            if not hasattr(t, "retrieved_chunk_ids"):
-                t.retrieved_chunk_ids = []
+            if not hasattr(t, "retrieved_chunk_ids_per_k"):
+                t.retrieved_chunk_ids_per_k = {}
             if not hasattr(t, "generated_content"):
                 t.generated_content = ""
             traces_to_score.append(t)

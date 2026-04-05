@@ -124,28 +124,31 @@ def score_retrieval(
     """
     Compute all retrieval metrics for a single ``QueryTrace``.
 
-    Slices ``trace.retrieved_chunk_ids`` at each K to compute per-K metrics.
-    A single retrieval call at ``max(K)`` therefore yields metrics for all
-    smaller K values without additional pipeline calls.
+    Uses ``trace.retrieved_chunk_ids_per_k`` for per-K metrics, issuing one
+    lookup per K value (RRF-correct: no slicing of a larger pool). MRR is
+    computed from the max-K list for the broadest rank-position coverage.
 
     Args:
-        trace: A finalised ``QueryTrace`` with ``retrieved_chunk_ids`` and
-               ``gold_chunks`` populated.
+        trace: A finalised ``QueryTrace`` with ``retrieved_chunk_ids_per_k``
+               and ``gold_chunks`` populated.
         k_values: List of cut-off positions.  Defaults to [3, 5, 10].
 
     Returns:
         Dict with keys ``recall@K``, ``hit_rate@K`` (for each K) and ``mrr``.
-        If ``gold_chunks`` is empty or ``retrieved_chunk_ids`` is empty,
+        If ``gold_chunks`` is empty or ``retrieved_chunk_ids_per_k`` is empty,
         all values are 0.0 / 0.
     """
     gold = trace.gold_chunks or []
-    retrieved = trace.retrieved_chunk_ids or []
+    per_k = trace.retrieved_chunk_ids_per_k or {}
 
     scores: Dict[str, float] = {}
     for k in k_values:
+        retrieved = per_k.get(k, [])
         scores[f"recall@{k}"] = recall_at_k(gold, retrieved, k)
         scores[f"hit_rate@{k}"] = float(hit_rate_at_k(gold, retrieved, k))
 
-    scores["mrr"] = mrr(gold, retrieved)
+    # MRR uses the max-K list for the broadest rank-position coverage.
+    max_retrieved = per_k.get(max(k_values), []) if per_k else []
+    scores["mrr"] = mrr(gold, max_retrieved)
     return scores
 

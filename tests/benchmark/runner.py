@@ -2,8 +2,8 @@
 Benchmark runner for the LEO pipeline evaluation framework.
 
 Orchestrates query execution across all pipeline variants in three modes:
-  - analysis_only   Stage 1 only — fast, GPT-4o-mini, used for Table 5 &
-                    pre-flight validation
+  - analysis_only   Stage 1 only — fast, GPT-4o-mini, used for
+                    --validate clarification pre-flight diagnostics only
   - retrieval_only  Stage 1 + 2 — embeddings only, used for Tables 2–4
   - full            All stages + LLM generation, used for Tables 6–10
 
@@ -264,7 +264,10 @@ class BenchmarkRunner:
             )
             self.collector.record_analysis(analysis, analysis_time_s=time.monotonic() - t0)
 
-        # Stage 2: retrieval at max(top_k)
+        # Stage 2: separate retrieval call per K value.
+        # RRF merges scores across sources at retrieval time; sub-selecting top-K
+        # from a larger pool does NOT reproduce native top-K rankings. Each K
+        # therefore needs its own independent retrieval call (Decision 8).
         retrieval_pipeline = get_retrieval_pipeline()
         original_lang = analysis.original_language if analysis else language
         translation_active = settings.enable_translation or original_lang in ("en", "mixed", "")
@@ -274,16 +277,22 @@ class BenchmarkRunner:
             else query_text
         )
 
-        t0 = time.monotonic()
-        results = await retrieval_pipeline.retrieve(
-            query=retrieval_query,
-            keywords=analysis.keywords if analysis else None,
-            articles=analysis.articles if analysis else None,
-            top_k=max_k,
+        results_by_k: Dict[int, Any] = {}
+        total_retrieval_time = 0.0
+        for k in self.top_k_values:
+            t0 = time.monotonic()
+            results_by_k[k] = await retrieval_pipeline.retrieve(
+                query=retrieval_query,
+                keywords=analysis.keywords if analysis else None,
+                articles=analysis.articles if analysis else None,
+                top_k=k,
+            )
+            total_retrieval_time += time.monotonic() - t0
+        self.collector.record_retrieval_per_k(
+            results_by_k, retrieval_time_s=total_retrieval_time
         )
-        self.collector.record_retrieval(results, retrieval_time_s=time.monotonic() - t0)
 
-    async def _run_full(self, query_text: str, language: str, conversation_id: str) -> None:
+    async def _run_full(self, query_text: str, language: str, conversation_id: str) -> str:
         """
         Stream all pipeline stages via process_message_stream and collect events.
 
@@ -291,6 +300,10 @@ class BenchmarkRunner:
             query_text:     Effective user message
             language:       Detected/declared language code
             conversation_id: Conversation ID (prior turns already injected)
+
+        Returns:
+            The LangChain session_id created for this call, so that Phase 2
+            (_run_phase2) can reuse it to preserve Turn 4 exchange context.
         """
         from app.containers import get_chat_orchestrator
 
@@ -304,6 +317,50 @@ class BenchmarkRunner:
             language=language,
         ):
             self.collector.process_event(event)
+
+        return session_id
+
+    async def _run_phase2(
+        self,
+        turn5_query: str,
+        language: str,
+        session_id: str,
+        conversation_id: str,
+    ) -> None:
+        """
+        Run Phase 2 (Turn 5 → Turn 6) for multi-turn queries in full mode.
+
+        Sends turn5_query through process_message_stream reusing the same
+        session_id and conversation_id from Phase 1, so LangChain memory
+        (session_id) already holds the Turn 4 exchange and the conversation
+        store (conversation_id) holds Turns 1–3 from history injection.
+
+        All three Table 8 configs (llm_only, stage2_only, full_pipeline)
+        receive full conversation history (Turns 1–5) before generating Turn 6.
+        They are distinguished only by their retrieval query, not by whether
+        history is provided (Decision 4).
+
+        Phase 2 is skipped in retrieval_only mode — Table 8 reports
+        answer-quality metrics only; no Phase 2 retrieval pass is needed
+        for Turn 6 (Decision 2).
+
+        Args:
+            turn5_query:     Turn 5 user message from benchmark-queries.json
+            language:        Language code for the query
+            session_id:      LangChain session ID reused from Phase 1
+            conversation_id: Conversation ID holding Turns 1–3 from injection
+        """
+        from app.containers import get_chat_orchestrator
+
+        orchestrator = get_chat_orchestrator()
+
+        async for event in orchestrator.process_message_stream(
+            session_id=session_id,
+            conversation_id=conversation_id,
+            user_message=turn5_query,
+            language=language,
+        ):
+            self.collector.process_event_phase2(event)
 
     # ── Single query orchestration ─────────────────────────────────────────────
 
@@ -356,7 +413,21 @@ class BenchmarkRunner:
                     effective_query_text, language, conversation_id, has_prior
                 )
             elif self.mode == "full":
-                await self._run_full(effective_query_text, language, conversation_id)
+                session_id = await self._run_full(
+                    effective_query_text, language, conversation_id
+                )
+                # Phase 2: run Turn 5 → Turn 6 for multi-turn queries that have
+                # turn5_query populated. Skipped in retrieval_only mode (Decision 2).
+                if (
+                    query.get("query_type") == "multi_turn"
+                    and query.get("turn5_query")
+                ):
+                    await self._run_phase2(
+                        turn5_query=query["turn5_query"],
+                        language=language,
+                        session_id=session_id,
+                        conversation_id=conversation_id,
+                    )
             else:
                 raise ValueError(f"Unknown execution mode: {self.mode!r}")
 
@@ -432,7 +503,7 @@ class BenchmarkRunner:
                 else:
                     logger.info(
                         f"  OK | clarify={trace.is_clarification_response} | "
-                        f"chunks={len(trace.retrieved_chunk_ids)} | "
+                        f"chunks={trace.retrieval_count or 0} | "
                         f"content_len={len(trace.generated_content or '')}"
                     )
 
@@ -623,7 +694,7 @@ class BenchmarkRunner:
         """
         Validate multi-turn conversation handling before a full run.
 
-        Runs all 24 multi-turn queries through analysis_only with history
+        Runs all 30 multi-turn queries through analysis_only with history
         injection. Verifies:
           - Conversation history was injected (prior_turn_count > 0)
           - Stage 1 produced a consolidated normalized_query_en
@@ -688,8 +759,14 @@ class BenchmarkRunner:
 
         self.mode = saved_mode
 
-        print(f"\n  Result: {passed} passed, {failed} failed")
-        if failed > 0:
+        threshold = 30
+        status_line = (
+            f"PASS (≥ {threshold}/30 required)"
+            if passed >= threshold
+            else f"FAIL (< {threshold}/30 — investigate failures before proceeding)"
+        )
+        print(f"\n  Result: {passed}/30 passed — {status_line}")
+        if passed < threshold:
             print("  Failures require investigation before running the full benchmark.")
 
         print("═" * 60 + "\n")

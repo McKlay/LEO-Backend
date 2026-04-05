@@ -50,7 +50,7 @@ Eight pipeline variants are defined to cover all baselines and ablations:
 - **Recall@K** — proportion of gold chunks retrieved in top-K results[1](https://openreview.net/pdf?id=vUwEzXgQDX#:~:text=4,single%2C%20comprehensive%20score%20for%20ranking)
 - **Hit Rate@K** — binary: at least one gold chunk in top K
 - **MRR** — reciprocal rank of the first relevant document[1](https://openreview.net/pdf?id=vUwEzXgQDX#:~:text=4,single%2C%20comprehensive%20score%20for%20ranking)
-- K values reported: **K = 3, 5** (Recall@10 is excluded because the maximum number of gold chunks per query is 3, making Recall@10 near-trivially high and non-discriminating)
+- K values reported: **K = 3, 5** for standard evaluation; **K = 10** is additionally reported in Table 2 for diagnostic depth. K = 10 is feasible at zero LLM cost because Table 2 uses `retrieval_only` mode, which runs Stage 1 + Stage 2 only and skips Stage 3 generation entirely. Note: with Reciprocal Rank Fusion (RRF), each K value requires an independent Stage 2 retrieval call — sub-selecting top-3 or top-5 results from a K=10 run does not reproduce the K=3 or K=5 RRF rankings.
 
 **Answer quality metrics (automated, Tier 2 supplement):**
 
@@ -96,6 +96,7 @@ We compare four retrieval settings:
 |--------|-----------|-------------|--------------|--------|
 | Recall@3 | — | — | — | — |
 | Recall@5 | — | — | — | — |
+| Recall@10 | — | — | — | — |
 | Hit Rate@5 | — | — | — | — |
 | MRR | — | — | — | — |
 
@@ -291,7 +292,7 @@ This section consolidates all findings from §5.2–§5.4 into a single referenc
 | Dense-only | — | — | — | — | Automated only |
 | Lexical-only | — | — | — | — | Automated only |
 | Symbolic-only | — | — | — | — | Automated only |
-| Hybrid – no translation | — | — | — | — | Automated only (n=50 non-English queries) |
+| Hybrid – no translation | — | — | — | — | Automated only (n=65 non-English queries) |
 | Hybrid – no clarification | — | — | — | — | Automated only (n=30 ambiguous queries) |
 | **B: Stage 2 only** | — | — | — | — | Automated + Manual |
 | **A: LLM-only** | N/A | N/A | — | — | Manual only |
@@ -313,7 +314,6 @@ This section consolidates all findings from §5.2–§5.4 into a single referenc
 
 **Claim 3: Clarification handling reduces errors under ambiguity**
 
-- Clarification detection accuracy: Table 5 (§5.3.2) — automated precision/recall of ambiguity detection against `is_ambiguous` label
 - Answer quality evidence: Table 7 (§5.4) — Config B vs. Config C on the 30 ambiguous queries; the Full Pipeline's clarification handling should substantially outperform the no-clarification condition
 - Clarification relevance: expert judgment on follow-up question quality (§5.4.1)
 
@@ -321,10 +321,9 @@ This section consolidates all findings from §5.2–§5.4 into a single referenc
 
 | Evaluation Component | Automated | Manual (Expert) | Notes |
 |----------------------|-----------|-----------------|-------|
-| Recall@K / Hit Rate@K / MRR | ✅ | | All 8 variants, fully deterministic; Hybrid – no translation scoped to n=50 non-English queries; Hybrid – no clarification scoped to n=30 ambiguous queries |
+| Recall@K / Hit Rate@K / MRR | ✅ | | All 8 variants, fully deterministic; Hybrid – no translation scoped to n=65 non-English queries; Hybrid – no clarification scoped to n=30 ambiguous queries |
 | F1 / ROUGE-L / Exact Match | ✅ | | 3 manual configs only |
 | Citation extraction + matching | ⚠️ Partial | Spot-check | Regex extraction automated; fabrication manual |
-| Clarification detection accuracy | ✅ | | Binary comparison against `is_ambiguous` label |
 | Clarification relevance | | ✅ | Expert judgment on Config C only |
 | Answer legal accuracy (4-pt scale) | | ✅ | 3 configs × 100 queries × 2 experts = 600 ratings |
 | Hallucination audit | | ✅ | 3 configs, expert verifies claims against context |

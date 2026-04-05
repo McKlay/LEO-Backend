@@ -54,9 +54,9 @@ class QueryTrace:
     analysis_time_s: Optional[float] = None
 
     # ── Stage 2: Retrieval ────────────────────────────────────────────────────
-    # Stored at max(top_k); scorers slice this list to compute metrics at smaller K.
-    retrieved_chunk_ids: List[str] = field(default_factory=list)
-    retrieved_scores: List[float] = field(default_factory=list)
+    # Per-K results from separate calls (RRF-correct; populated in retrieval_only mode).
+    retrieved_chunk_ids_per_k: Dict[int, List[str]] = field(default_factory=dict)
+    retrieved_scores_per_k: Dict[int, List[float]] = field(default_factory=dict)
     retrieval_time_s: Optional[float] = None
     retrieval_count: Optional[int] = None
     avg_retrieval_confidence: Optional[float] = None
@@ -73,6 +73,14 @@ class QueryTrace:
     gold_article_refs: List[str] = field(default_factory=list)
     reference_answer: Optional[str] = None
     expected_clarification: Optional[str] = None
+
+    # ── Phase 2: Turn 6 (multi-turn queries only) ─────────────────────────────
+    turn5_query: Optional[str] = None
+    turn6_generated_answer: Optional[str] = None
+    turn6_extracted_citations: Optional[List[str]] = None
+    gold_chunks_turn6: Optional[List[str]] = None
+    gold_article_refs_turn6: Optional[List[str]] = None
+    turn6_reference_answer: Optional[str] = None
 
     # ── Query Flags ───────────────────────────────────────────────────────────
     is_multiturn: bool = False
@@ -116,6 +124,10 @@ class QueryTrace:
             gold_article_refs=query.get("gold_article_refs", []),
             reference_answer=query.get("reference_answer"),
             expected_clarification=query.get("expected_clarification"),
+            turn5_query=query.get("turn5_query"),
+            gold_chunks_turn6=query.get("gold_chunks_turn6"),
+            gold_article_refs_turn6=query.get("gold_article_refs_turn6"),
+            turn6_reference_answer=query.get("turn6_reference_answer"),
             is_multiturn=query.get("query_type", "single_turn") == "multi_turn",
             is_ambiguous=query.get("is_ambiguous", False),
             retrieval_target=query.get("retrieval_target"),
@@ -146,6 +158,7 @@ class ResultCollector:
 
         self.current_trace: Optional[QueryTrace] = None
         self._content_chunks: List[str] = []
+        self._turn6_chunks: List[str] = []
         self.variant_results: Dict[str, List[QueryTrace]] = {}
 
         logger.info(f"ResultCollector initialized: output_dir={output_dir}")
@@ -177,6 +190,7 @@ class ResultCollector:
             prior_turn_count=prior_turn_count,
         )
         self._content_chunks = []
+        self._turn6_chunks = []
         return self.current_trace
 
     def process_event(self, event: Dict[str, Any]) -> None:
@@ -243,6 +257,45 @@ class ResultCollector:
         else:
             logger.debug(f"Unknown SSE event type: {event_type}")
 
+    def process_event_phase2(self, event: Dict[str, Any]) -> None:
+        """
+        Parse an SSE event for Phase 2 (Turn 6) and update Phase 2 trace fields.
+
+        Called during _run_phase2 execution (Turn 5 → Turn 6 exchange).
+        Accumulates content chunks and on 'complete' assembles
+        turn6_generated_answer and extracts turn6_extracted_citations via regex.
+        Metadata and citation-object events are intentionally ignored for Phase 2
+        — Table 8 scores answer quality only (Decision 2).
+
+        Args:
+            event: Dict with 'type' and 'data' keys
+        """
+        if self.current_trace is None:
+            logger.warning("process_event_phase2 called without an active trace")
+            return
+
+        event_type = event.get("type")
+        data = event.get("data", {})
+
+        if event_type == "content_chunk":
+            self._turn6_chunks.append(data.get("chunk", ""))
+
+        elif event_type == "complete":
+            from tests.benchmark.scorers.citation import extract_citations
+            assembled = "".join(self._turn6_chunks)
+            self.current_trace.turn6_generated_answer = assembled or data.get("content")
+            if self.current_trace.turn6_generated_answer:
+                self.current_trace.turn6_extracted_citations = extract_citations(
+                    self.current_trace.turn6_generated_answer
+                )
+
+        elif event_type == "error":
+            logger.warning(
+                f"Phase 2 pipeline error for "
+                f"{self.current_trace.query_id}/{self.current_trace.variant_name}: "
+                f"{data.get('error', 'Unknown error')}"
+            )
+
     def record_analysis(self, analysis: Any, analysis_time_s: float = 0.0) -> None:
         """
         Populate Stage 1 fields from a QueryAnalysis object.
@@ -295,30 +348,42 @@ class ResultCollector:
             return f"{short_name}/{file_stem}.md"
         return result.id
 
-    def record_retrieval(self, results: Any, retrieval_time_s: float = 0.0) -> None:
+    def record_retrieval_per_k(
+        self,
+        results_by_k: Dict[int, Any],
+        retrieval_time_s: float = 0.0,
+    ) -> None:
         """
-        Populate Stage 2 fields from retrieval pipeline results.
+        Populate per-K retrieval fields from separate per-K retrieval calls.
 
-        Results are stored at max(top_k). Scorers compute metrics at smaller K
-        by slicing the ranked list.
+        Stores chunk IDs and scores in retrieved_chunk_ids_per_k /
+        retrieved_scores_per_k for RRF-correct metric computation.
+        Summary stats (retrieval_count, retrieval_time_s, avg_retrieval_confidence)
+        are derived from the max-K results for logging and raw CSV output.
 
         Args:
-            results: List[QueryResult] from RetrievalPipeline.retrieve()
-            retrieval_time_s: Wall-clock time for the retrieval call
+            results_by_k: Dict mapping K → List[QueryResult] from separate calls
+            retrieval_time_s: Total wall-clock time across all K-value calls
         """
         if self.current_trace is None:
             return
 
-        self.current_trace.retrieved_chunk_ids = [
-            self._resolve_chunk_id(r) for r in results
-        ]
-        self.current_trace.retrieved_scores = [r.score for r in results]
-        self.current_trace.retrieval_count = len(results)
-        self.current_trace.retrieval_time_s = retrieval_time_s
-        if results:
-            self.current_trace.avg_retrieval_confidence = (
-                sum(r.score for r in results) / len(results)
-            )
+        for k, results in results_by_k.items():
+            self.current_trace.retrieved_chunk_ids_per_k[k] = [
+                self._resolve_chunk_id(r) for r in results
+            ]
+            self.current_trace.retrieved_scores_per_k[k] = [r.score for r in results]
+
+        # Set summary stats from max-K for logging and raw CSV output.
+        if results_by_k:
+            max_k = max(results_by_k.keys())
+            max_results = results_by_k[max_k]
+            self.current_trace.retrieval_count = len(max_results)
+            self.current_trace.retrieval_time_s = retrieval_time_s
+            if max_results:
+                self.current_trace.avg_retrieval_confidence = (
+                    sum(r.score for r in max_results) / len(max_results)
+                )
 
     def finalize_trace(self, persist: bool = True) -> QueryTrace:
         """

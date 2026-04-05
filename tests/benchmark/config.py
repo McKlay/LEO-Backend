@@ -152,7 +152,7 @@ def get_queries_for_variant(
         
     Query filters:
         - "all": All 100 queries
-        - "non_english": Only Filipino and Cebuano queries (50 queries)
+        - "non_english": Only Filipino and Cebuano queries (65 queries)
         - "ambiguous": Only queries marked as ambiguous (30 queries)
     """
     if variant.query_filter == "all":
