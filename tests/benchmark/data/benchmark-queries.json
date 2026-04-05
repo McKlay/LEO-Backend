@@ -149,7 +149,7 @@
     },
     {
       "query_id": "Q005",
-      "query_text": "Bag-o lang ko nagsugod og trabaho sa usa ka restaurant sa Makati ug gusto nako masiguro nga sakto ang akong nadawat nga sweldo. Pila ang minimum nga suweldo sa Metro Manila karon para sa mga trabahante sa non-agriculture sector?",
+      "query_text": "Bag-o lang ko nagtrabaho sa usa ka restaurant sa Makati City. Ang akong tig-imbentaryo nagbayad kanako og porsyento sa iyang kita, dili usa ka napiho nga kantidad matag adlaw. Aduna ba bay balaod sa Pilipinas nga nagbuot sa usa ka pinakamubo nga kantidad nga kinahanglan ibayad sa usa ka trabahante matag adlaw, bisan pa man gamay ang negosyo?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -162,7 +162,7 @@
         "Wage Order NCR-24"
       ],
       "reference_answer": "Ang minimum nga suweldo sa NCR gi-set sa RTWPB pinaagi sa Wage Orders. Ang pinakabag-o nga daily minimum wage rate makita sa DOLE Handbook.",
-      "notes": "Retrieval target: dense — Cebuano query with no legal keywords; 'minimum nga suweldo' requires semantic understanding after translation pivot. Added personal employment context for realistic framing."
+      "notes": "Retrieval target: dense — Cebuano query describing a below-standard-pay scenario without using the term 'minimum wage' or any legal provision citation; paraphrases the concept by asking 'is there a law that sets a minimum daily amount employers must pay?' Requires semantic understanding to map 'pinakamubo nga kantidad nga kinahanglan ibayad' to the minimum wage concept after translation pivot. Tests dense retrieval and translation pivot."
     },
     {
       "query_id": "Q006",
@@ -334,7 +334,7 @@
     },
     {
       "query_id": "Q013",
-      "query_text": "Magkano ang night shift differential sa Pilipinas?",
+      "query_text": "Ayon sa Article 86 ng Labor Code, magkano ang night shift differential ng isang empleyado na nagtatrabaho mula 10 PM hanggang 6 AM? Sino ang mga empleyadong hindi saklaw ng benepisyong ito?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -347,12 +347,12 @@
       "gold_article_refs": [
         "Labor Code Art. 86"
       ],
-      "reference_answer": "Ayon sa Article 86 ng Labor Code, ang night shift differential ay hindi bababa sa 10% ng regular wage ng empleyado para sa trabaho mula 10:00 PM hanggang 6:00 AM.",
-      "notes": "Filipino query. Tests translation pivot and retrieval of NSD provisions."
+      "reference_answer": "Ayon sa Article 86 ng Labor Code, ang night shift differential ay hindi bababa sa 10% ng regular wage ng empleyado para sa trabaho mula 10:00 PM hanggang 6:00 AM. Ang benepisyo ay hindi naaangkop sa mga empleyado ng gobyerno, kasambahay, mga managerial employees, field personnel, at mga manggagawa sa retail o service establishments na may limang empleyado o mas kaunti.",
+      "notes": "Retrieval target: hybrid — Explicit 'Article 86' citation enables symbolic lookup via article_number GIN search; 'night shift differential' and '10 PM hanggang 6 AM' are BM25-matchable keywords present in both the handbook and the Labor Code chunk; the coverage-exception question (who is excluded from NSD entitlement) requires semantic understanding to match the NSD exemption provisions across both chunks. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q014",
-      "query_text": "Nagtrabaho ko sa usa ka call center sa Cebu ug kanunay ko mag-overtime pero wala ko kasiguro kung sakto ba ang oras sa normal nga trabaho. Pila ka oras ang normal nga trabaho sa Pilipinas base sa balaod sa labor?",
+      "query_text": "Nagtrabaho ko sa usa ka call center sa Cebu. Ang akong schedule kay 7:00 AM hangtod sa 4:00 PM — siyam ka oras matag adlaw. Ang akong kauban nagsiling nga posibleng labis kini, pero ang amid supervisor nagsiling nga normal kini. Aduna bay limitasyon ang balaod kung pila ka oras ang mahimong ipagamit sa usa ka trabahante matag adlaw?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -365,7 +365,7 @@
         "Labor Code Art. 83"
       ],
       "reference_answer": "Base sa Article 83 sa Labor Code, ang normal nga oras sa pagtrabaho dili mosobra sa walo (8) ka oras matag adlaw.",
-      "notes": "Retrieval target: dense — Cebuano query paraphrasing 'normal working hours' without citing Art. 83; requires semantic retrieval after translation pivot. Added call center context for realistic framing."
+      "notes": "Retrieval target: dense — Cebuano query describing a concrete 9-hour daily schedule scenario without using 'normal working hours' or citing Art. 83; asks whether a legal limit on daily work hours exists, requiring semantic retrieval to match the 8-hour standard under Art. 83. Tests translation pivot."
     },
     {
       "query_id": "Q015",
@@ -476,7 +476,7 @@
     },
     {
       "query_id": "Q018",
-      "query_text": "Magkano ang bayad sa trabaho kapag special non-working day?",
+      "query_text": "Ilalim ng Article 93 ng Labor Code at mga patakaran ng DOLE tungkol sa premium pay, magkano ang bayad sa isang empleyado na nagtrabaho sa isang special non-working holiday? Paano kung hindi siya pumasok sa trabaho nang araw na iyon?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -490,7 +490,7 @@
         "Labor Code Art. 93"
       ],
       "reference_answer": "Sa special non-working day, ang bayad sa manggagawang pumasok ay 130% ng kanyang daily wage. Kung hindi pumasok ang empleyado, walang bayad maliban kung may CBA o company policy na nagsasabi ng iba.",
-      "notes": "Filipino query. Tests translation pivot and retrieval on premium pay rules."
+      "notes": "Retrieval target: hybrid — 'Article 93' citation triggers symbolic lookup via article_number GIN search; 'premium pay' and 'special non-working holiday' are strong BM25 keywords present in the handbook premium-pay chunk; the absence scenario ('hindi pumasok') requires semantic understanding of the no-work-no-pay rule applicable to special days, contrasting it with the worked-day rate. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q019",
@@ -511,7 +511,7 @@
     },
     {
       "query_id": "Q020",
-      "query_text": "Usa ko ka factory worker, Kung magtrabaho ko sa adlaw nga regular holiday, pila ang bayad nako?",
+      "query_text": "Usa ko ka factory worker. Ang akong employer gipugos kong magtrabaho niadtong adlaw nga opisyal nga gipahayag sa gobyerno nga walay trabaho. Pareho ra ba ang akong makuhang bayad niadtong adlawa sama sa ordinaryong adlaw sa trabaho, o adunay kalainan?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -524,7 +524,7 @@
         "Labor Code Art. 94"
       ],
       "reference_answer": "Kung magtrabaho ka sa regular holiday, ang bayad nimo kay 200% sa imong daily rate. Kung dili ka magtrabaho, makadawat gihapon ka sa imong regular daily wage.",
-      "notes": "Cebuano query requiring translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query describing a government-proclaimed no-work day without using the term 'regular holiday' or citing Art. 94; paraphrases by asking whether pay differs on such days versus ordinary work days, requiring semantic understanding to match holiday pay provisions. Tests translation pivot."
     },
     {
       "query_id": "Q021",
@@ -621,7 +621,7 @@
         "RA 8187"
       ],
       "reference_answer": "Ayon sa RA 8187 (Paternity Leave Act), ang married male employees ay may karapatang kumuha ng 7 araw na paternity leave na may bayad para sa unang apat na deliveries ng kanilang legitimate spouse.",
-      "notes": "Filipino query. Tests translation pivot."
+      "notes": "Lexical match on 'paternity leave'. Filipino query. Tests translation pivot."
     },
     {
       "query_id": "Q025",
@@ -639,11 +639,11 @@
         "Labor Code Art. 95"
       ],
       "reference_answer": "Base sa Article 95, ang matag empleyado nga nakahatag og usa ka tuig nga serbisyo adunay 5 ka adlaw nga paid SIL.",
-      "notes": "Lexical match on 'service incentive leave'."
+      "notes": "Lexical match on 'service incentive leave'. Cebuano query. Tests translation pivot."
     },
     {
       "query_id": "Q026",
-      "query_text": "Buntis ko karon ug nagplano na ko mag-leave sa akong trabaho sa opisina sa Davao City para makapahuwoy. Pila ka adlaw ang maternity leave sa Pilipinas ug pwede ba ko mag-extend kung kinahanglan?",
+      "query_text": "Buntis ko karon ug nagplano akong mohunong sa trabaho para makapag-amuma sa akong bag-ong panganak. Pila ba ka adlaw ang gitugutan sa balaod nga mahuwasan sa usa ka babaye human manganak sa pribadong kompanya, ug aduna bay bayad sa panahon nga dili magtrabaho?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -656,7 +656,7 @@
         "RA 11210"
       ],
       "reference_answer": "Base sa RA 11210, ang mga babaye nga trabahante sa private sector adunay katungod sa 105 ka adlaw nga paid maternity leave, uban sa opsyon nga i-extend og 30 ka adlaw nga walay bayad.",
-      "notes": "Retrieval target: dense — Cebuano maternity leave query without citing RA 11210; requires semantic understanding to match the 105-day provision. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query describing a pregnant worker's need to stop work after childbirth without using 'maternity leave' or citing RA 11210; paraphrases by asking about the number of legally allowed rest days for a woman after giving birth with pay. Requires semantic understanding to match to maternity leave provisions under RA 11210. Tests translation pivot."
     },
     {
       "query_id": "Q027",
@@ -751,7 +751,7 @@
         "PD 851"
       ],
       "reference_answer": "Ang 13th month pay gitugotan sa PD 851. Katumbas kini sa usa ka ika-dose (1/12) sa kinatibuk-ang basic salary nga nakita sa usa ka empleyado sa sulod sa usa ka calendar year. Kinahanglan kining bayran dili molapas sa Disyembre 24 sa matag tuig.",
-      "notes": "Core factoid query. Multiple chunks contain relevant info (PD 851 + handbook). Cebuano translation — tests translation pivot."
+      "notes": "Lexical match on '13th month pay'. Core factoid query. Multiple chunks contain relevant info (PD 851 + handbook). Cebuano translation — tests translation pivot."
     },
     {
       "query_id": "Q031",
@@ -791,7 +791,7 @@
     },
     {
       "query_id": "Q033",
-      "query_text": "Wala pa gyud ko kadawat sa akong 13th month pay ug hapit na matapos ang Disyembre. Kanus-a ang deadline sa pagbayad sa 13th month pay ug pwede ba ang employer mag-delay niini?",
+      "query_text": "Hapit na matapos ang tuig ug wala pa ko kadawat sa espesyal nga buwanang bayad nga ginahatag sa mga pribadong trabahante sa Disyembre. Kanus-a ba kinahanglan ihatod kini sa employer, ug aduna bay kahimtang nga mahimong i-postpone sa employer ang hatod niini?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -805,7 +805,7 @@
         "PD 851"
       ],
       "reference_answer": "Base sa PD 851, ang deadline sa pagbayad sa 13th month pay kay dili molapas sa December 24 matag tuig.",
-      "notes": "Retrieval target: dense — Cebuano query paraphrasing the deadline question without citing PD 851; requires semantic retrieval to locate the December 24 deadline provision. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query paraphrasing the 13th month pay deadline question without using '13th month pay,' 'deadline,' or citing PD 851; uses 'espesyal nga buwanang bayad sa Disyembre' to describe the concept. Requires semantic retrieval to map the December year-end benefit to PD 851 provisions and locate the December 24 payment deadline. Tests translation pivot."
     },
     {
       "query_id": "Q034",
@@ -854,7 +854,7 @@
     },
     {
       "query_id": "Q035",
-      "query_text": "Kasama ba ang overtime at holiday pay sa computation ng 13th month pay?",
+      "query_text": "Tumatanggap ako ng dagdag na kabayaran kapag nagtatrabaho ako nang lampas sa karaniwang oras at kapag nagpapasok sa mga araw na hindi karaniwan may pasok. Sa pagkuwenta ng espesyal na bonus na ibinibigay tuwing Pasko, kasama ba ang mga dagdag na kabayaran na ito sa basehan ng kalkulasyon?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -868,7 +868,7 @@
         "PD 851"
       ],
       "reference_answer": "Hindi. Ang 13th month pay ay base lamang sa basic salary. Hindi kasama ang overtime pay, holiday pay, premium pay, night shift differential, at iba pang monetary benefits.",
-      "notes": "Filipino semantic query. Tests whether system retrieves the basic salary definition excluding overtime."
+      "notes": "Retrieval target: dense — Filipino query paraphrasing the overtime and holiday pay exclusion question without using 'overtime pay,' 'holiday pay,' '13th month pay,' or 'computation'; describes additional payments by scenario ('nang lampas sa karaniwang oras,' 'mga araw na hindi karaniwan may pasok') and refers to the December bonus as 'espesyal na bonus tuwing Pasko.' Requires semantic retrieval to locate the basic salary exclusion rule under PD 851 and the DOLE Handbook. Tests translation pivot."
     },
     {
       "query_id": "Q036",
@@ -904,7 +904,7 @@
         "Labor Code Art. 298"
       ],
       "reference_answer": "Para sa retrenchment, ang separation pay ay katumbas ng one-half (1/2) month pay para sa bawat taon ng serbisyo, kung saan ang fraction na hindi bababa sa anim na buwan ay ibibilang na isang buong taon.",
-      "notes": "Filipino query. Retrieves retrenchment-specific separation pay rules."
+      "notes": "Retrieval target: lexical — Keywords 'separation pay' and 'retrenchment' yield strong BM25 matches against the DOLE Handbook separation pay chunk and DO 147-15 authorized causes chunk. No article citation present; no semantic paraphrasing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q038",
@@ -954,7 +954,7 @@
     },
     {
       "query_id": "Q039",
-      "query_text": "Ang kompanya kung gitrabahuan nagsira na tungod sa grabe nga pagkalugi ug wala na gyud silay kwarta. May separation pay ba kung gi-close ang kompanya ug nalugi na — o wala na gyud makuha ang mga empleyado?",
+      "query_text": "Ang akong gitrabilyuhan nga kompanya napugos mag-undang sa tanan niyang operasyon tungod kay dugayng panahon na kining nanghirapan sa finansyal. Karon nawala na ang akong trabaho. Aduna ba koy ligal nga karapatan nga makadawat og piho nga kantidad gikan sa akong employer base sa akong gidugayon sa serbisyo — ug magkalain-lain ba kini depende sa rason kung nganong mihunong ang kompanya?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -968,7 +968,7 @@
         "Labor Code Art. 298"
       ],
       "reference_answer": "Oo. Kung gisira ang negosyo o establisyimento, ang mga empleyado adunay katungod sa separation pay nga katumbas sa usa ka bulan nga suweldo o usa ka bulan matag tuig nga serbisyo, bisan asa mas dako. Apan kung ang pagsira tungod sa serious financial losses, mahimong walay separation pay.",
-      "notes": "Retrieval target: dense — Cebuano query about closure + financial losses scenario; requires semantic understanding to distinguish between closure with and without serious financial losses for separation pay entitlement. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query about company closure + financial losses without using 'separation pay' or 'closure'; uses 'piho nga kantidad base sa gidugayon sa serbisyo' to paraphrase separation pay and 'nag-undang ang operasyon tungod sa hirap sa finansyal' to paraphrase closure due to financial losses. The follow-up 'magkalain-lain ba depende sa rason' requires semantic understanding to distinguish between closure with and without serious financial losses for entitlement. Tests translation pivot."
     },
     {
       "query_id": "Q040",
@@ -1094,7 +1094,7 @@
     },
     {
       "query_id": "Q044",
-      "query_text": "Ang akong amahan hapit na mag-retire gikan sa iyang trabaho sa pribadong kompanya human sa 20 ka tuig nga serbisyo. Unsay formula sa retirement pay base sa Labor Code ug unsa ang gilakip sa kalkulasyon?",
+      "query_text": "Ang akong tatay mopahulay na gikan sa iyang trabaho human sa labaw sa 20 ka tuig nga nagserbisyo sa usa ka pribadong kompanya. Aduna ba siyay karapatang makadawat og usa ka piho nga kantidad gikan sa iyang employer tungod sa iyang dugayng pagserbisyo, ug kung oo, giunsa kini pagkwenta?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -1107,7 +1107,7 @@
         "Labor Code Art. 302"
       ],
       "reference_answer": "Base sa Article 302 sa Labor Code, ang retirement pay kay tunga (1/2) ka bulan nga suweldo matag tuig nga serbisyo. Ang 'tunga ka bulan' naglakip sa 15 ka adlaw + 1/12 sa 13th month pay + cash equivalent sa 5 ka adlaw SIL = 22.5 ka adlaw.",
-      "notes": "Retrieval target: dense — Cebuano query asking about retirement pay formula without citing Art. 302; requires semantic understanding to match the 22.5-day computation. Tests translation pivot."
+      "notes": "Retrieval target: dense — Cebuano query about what a long-serving private-sector worker receives when stopping work without using 'retirement pay,' 'formula,' or citing Art. 302; paraphrases by asking about a 'piho nga kantidad' (specific amount) owed for long service. Requires semantic understanding to locate the 22.5-day computation formula under Art. 302. Tests translation pivot."
     },
     {
       "query_id": "Q045",
@@ -1173,7 +1173,7 @@
     },
     {
       "query_id": "Q047",
-      "query_text": "Ano ang proseso ng pagtitiwalag sa isang empleyado ayon sa batas?",
+      "query_text": "Ayon sa DO 147-15 at Article 299 ng Labor Code, ano ang due process requirements bago matiwalag ang isang empleyado sa just cause? Kailangan bang magpadala ng written notice at mag-alok ng hearing bago gawin ang pagtitiwalag?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -1183,10 +1183,11 @@
         "do147_15_due_process_just_causes"
       ],
       "gold_article_refs": [
-        "DO 147-15 Sec. 5.1"
+        "DO 147-15 Sec. 5.1",
+        "Labor Code Art. 297"
       ],
-      "reference_answer": "Ayon sa DO 147-15, ang proseso ng pagtitiwalag ay kinakailangang sumunod sa due process: (1) Unang Notice na nagsasaad ng partikular na dahilan ng termination; (2) Pagbibigay ng pagkakataon sa empleyado na magsalita; at (3) Pangalawang Notice ng desisyon ng employer.",
-      "notes": "Filipino query on termination due process."
+      "reference_answer": "Ayon sa DO 147-15 at Article 299 ng Labor Code, ang pagtitiwalag sa just cause ay kinakailangang sumunod sa dalawang paunawa (twin-notice rule): (1) Unang paunawa na nagsasaad ng partikular na dahilan ng termination at nagbibigay sa empleyado ng hindi bababa sa 5 araw para magsagot; (2) Pagkakataon na marinig ang empleyado (hearing o conference, kung hiniling o kinakailangan); at (3) Pangalawang paunawa ng panghuling desisyon ng employer pagkatapos isaalang-alang ang lahat ng pangyayari.",
+      "notes": "Retrieval target: hybrid — Explicit citations 'DO 147-15' and 'Article 299' enable symbolic lookup via department_order and article_number GIN search; 'due process', 'written notice', and 'hearing' are strong BM25 keywords present in the DO 147-15 due-process chunk; the sequential notice-hearing-notice framework and the '5-calendar-day' standard require semantic understanding to reconstruct the complete procedural chain from Section 5.1. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q048",
@@ -1430,7 +1431,7 @@
         "DO 147-15 Sec. 2-3"
       ],
       "reference_answer": "Ang four-fold test ay ginagamit upang malaman kung mayroong employer-employee relationship: (1) pagpili at pag-hire, (2) pagbayad ng sahod, (3) kapangyarihang magtanggal, at (4) control test — kung kinokontrol ng employer hindi lamang ang resulta ng trabaho kundi pati ang paraan ng paggawa nito.",
-      "notes": "Filipino query on the four-fold test. Found in DO 147-15 foundations."
+      "notes": "Retrieval target: lexical — Keywords 'four-fold test' and 'employer-employee relationship' appear verbatim in DO 147-15 Rule I-A Sec. 3 and in the chunk keywords, yielding strong BM25 matches. No article citation present; no semantic paraphrasing. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q056",
@@ -1514,7 +1515,7 @@
     },
     {
       "query_id": "Q059",
-      "query_text": "Kinahanglan ba ang written contract para sa kasambahay?",
+      "query_text": "Sa ilalim sa RA 10361, kinahanglan ba ang written employment contract sa kasambahay sa wala pa mag-umpisa og serbisyo? Unsa ang mga butang kinahanglan ibutang sa kontrata, ug aduna bay modelo sa kontrata gikan sa DOLE?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -1527,7 +1528,7 @@
         "RA 10361 Sec. 11-12"
       ],
       "reference_answer": "Oo. Base sa RA 10361 Sec. 11, ang employer kinahanglan nga maghimo og written employment contract sa kasambahay, diin nakalista ang mga terms ug conditions sa employment. Ang DOLE naghatag og model contract para sa paggamit.",
-      "notes": "Cebuano query. Tests translation pivot and kasambahay contract requirements."
+      "notes": "Retrieval target: hybrid — Explicit 'RA 10361' citation enables symbolic lookup via law_reference GIN search; 'kasambahay' and 'written employment contract' are strong BM25 keywords present in the RA 10361 contract chunk; the inquiry about required contract contents (duties, compensation, leave, termination, etc.) and the DOLE model contract requires semantic understanding of the Section 11 enumeration. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q060",
@@ -2023,7 +2024,7 @@
     },
     {
       "query_id": "Q078",
-      "query_text": "Ano ang karapatan ng manggagawa kung hindi ligtas ang kanilang trabaho?",
+      "query_text": "Ayon sa RA 11058, ano ang mga karapatan ng manggagawa sa kaligtasan sa trabaho? Maaari bang tumanggi ang isang manggagawa sa trabahong mapanganib, at obligado bang magbigay ang employer ng PPE nang libre?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -2036,7 +2037,7 @@
         "RA 11058 Sec. 6-11"
       ],
       "reference_answer": "Ayon sa RA 11058, ang mga manggagawa ay may karapatang: (1) tumanggi sa hindi ligtas na trabaho nang walang takot sa retaliatory action, (2) mag-report ng aksidente sa employer o DOLE, (3) makatanggap ng PPE nang libre, at (4) malaman ang lahat ng hazards sa trabaho.",
-      "notes": "Filipino query on workers' safety rights."
+      "notes": "Retrieval target: hybrid — 'RA 11058' citation enables symbolic lookup via law_reference GIN search; 'kaligtasan sa trabaho', 'PPE', and 'manggagawa' are direct BM25 keyword matches in the workers'-rights chunk; the multi-right inquiry spanning the right to refuse unsafe work (Sec. 6), free PPE provision (Sec. 8), and OSH information (Sec. 11) requires semantic understanding to consolidate the answer across six sections. Filipino query — tests translation pivot."
     },
     {
       "query_id": "Q079",
@@ -2057,20 +2058,20 @@
     },
     {
       "query_id": "Q080",
-      "query_text": "Kinahanglan ba ang safety officer sa tanang kompanya sa Pilipinas?",
+      "query_text": "Base sa RA 11058 Sec. 14, kinahanglan ba nga adunay safety officer ang matag covered workplace sa Pilipinas? Unsa ang mga katungdanan sa safety officer, ug giunsa pag-determine ang gidaghanon nga kinahanglan base sa gidak-on sa kompanya?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
       "topic": "osh_safety",
       "retrieval_target": "hybrid",
       "gold_chunks": [
-        "RRA-11058-07"
+        "RA-11058-07"
       ],
       "gold_article_refs": [
         "RA 11058 Sec. 14"
       ],
-      "reference_answer": "Oo. Base sa RA 11058 Sec. 14, ang tanang establishments kinahanglan nga mag-appoint og safety officer ug/o iba pang occupational safety and health personnel base sa gidak-on ug matang sa establishment.",
-      "notes": "Cebuano query on safety officer requirement."
+      "reference_answer": "Oo. Base sa RA 11058 Sec. 14, kinahanglan nga adunay safety officer ang matag covered workplace sa Pilipinas. Ang mga katungdanan sa safety officer naglakip sa: (a) pagdumala sa overall safety and health program; (b) pagsusi sa bisan unsang health o safety aspect; (c) pagtabang sa DOLE inspectors; ug (d) pag-isyu og work stoppage orders kung kinahanglan. Ang gidaghanon sa safety officers kinahanglan proporsyonado sa gidaghanon sa mga trabahante, gidak-on sa work area, ug uban pang criteria nga itakda sa DOLE.",
+      "notes": "Retrieval target: hybrid — 'RA 11058 Sec. 14' citation triggers symbolic lookup via law_reference GIN search; 'safety officer' and 'covered workplace' yield direct BM25 keyword matches in the safety-officer chunk; the duties enumeration and DOLE-prescribed proportionality criteria require semantic retrieval across the substantive provisions of Section 14. Also corrects gold_chunk typo (was 'RRA-11058-07'). Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q081",
@@ -2311,7 +2312,7 @@
     },
     {
       "query_id": "Q090",
-      "query_text": "Unsa ang mga rason para mag-appeal sa desisyon sa Labor Arbiter?",
+      "query_text": "Sa ilalim sa Rule VI sa 2011 NLRC Rules of Procedure, unsa ang mga grounds sa pag-appeal sa desisyon sa Labor Arbiter? Pila ka adlaw ang panahon sa pag-file sa appeal, ug adunay ba kinahanglang appeal bond?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -2323,8 +2324,8 @@
       "gold_article_refs": [
         "NLRC Rules Rule VI"
       ],
-      "reference_answer": "Base sa NLRC Rule VI, ang desisyon sa Labor Arbiter mahimong i-appeal sa Commission sa sulod sa 10 ka adlaw gikan sa pagdawat sa desisyon. Ang mga rason naglakip sa: (a) grave abuse of discretion, (b) serious errors in the findings of facts, ug (c) kung ang desisyon nadawat pinaagi og fraud o coercion.",
-      "notes": "Cebuano query on NLRC appeal grounds. Tests translation pivot."
+      "reference_answer": "Base sa Rule VI sa 2011 NLRC Rules of Procedure, ang desisyon sa Labor Arbiter mahimong i-appeal sa Commission sa sulod sa 10 ka adlaw gikan sa pagdawat. Ang upat ka grounds sa pag-appeal mao: (a) prima facie evidence sa abuse of discretion sa Labor Arbiter; (b) desisyon nga nakuha pinaagi sa fraud o coercion; (c) pure questions of law; ug (d) seryoso nga mga sayop sa findings of fact nga magdulot og grabe o dili masulbad nga kadaot sa appellant. Ang appeal kinahanglan i-file kasama ang appeal bond (cash o surety).",
+      "notes": "Retrieval target: hybrid — 'Rule VI sa 2011 NLRC Rules of Procedure' citation triggers symbolic lookup via procedural rule reference matching; 'Labor Arbiter', 'appeal', and 'appeal bond' are strong BM25 keyword matches in the Rule VI chunk; the four substantive grounds and bond perfection requirements require semantic understanding spanning Sections 1-6. Cebuano query — tests translation pivot."
     },
     {
       "query_id": "Q091",
@@ -2566,7 +2567,7 @@
     },
     {
       "query_id": "Q100",
-      "query_text": "What are the legal requirements for hiring a foreign worker in the Philippines?",
+      "query_text": "What are the employment permit requirements for hiring a non-resident alien worker in the Philippines, and what is the process for obtaining one?",
       "language": "en",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -2579,7 +2580,7 @@
         "Labor Code Art. 40-42"
       ],
       "reference_answer": "Under Articles 40-42 of the Labor Code, any alien seeking employment in the Philippines must first obtain an Alien Employment Permit (AEP) from DOLE. The employer must demonstrate that no qualified Filipino is available for the position. The permit is non-transferable and valid only for the position and employer specified.",
-      "notes": "Lexical match on 'hiring foreign worker Philippines'."
+      "notes": "Retrieval target: lexical — Keywords 'employment permit' and 'non-resident alien' appear verbatim in the Labor Code Art. 40-42 chunk title and body text, yielding strong BM25 matches. Previous phrasing 'foreign worker' was colloquial and not present in the document body; updated to use the exact statutory terminology. No article citation present."
     }
   ]
 }
