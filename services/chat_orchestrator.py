@@ -184,7 +184,24 @@ class ChatOrchestrator:
                     f"articles={analysis.articles}, "
                     f"time={analysis_time:.3f}s"
                 )
-                
+
+                # Emit analysis event with Stage 1 fields for benchmark tracing
+                yield {
+                    "type": "analysis",
+                    "data": {
+                        "normalized_query_en": analysis.normalized_query_en,
+                        "original_language": analysis.original_language,
+                        "needs_clarification": analysis.needs_clarification,
+                        "clarification_question": analysis.clarification_question,
+                        "is_meta_conversational": analysis.is_meta_conversational,
+                        "out_of_scope": analysis.out_of_scope,
+                        "legal_concepts": list(analysis.legal_concepts),
+                        "keywords": list(analysis.keywords),
+                        "articles_extracted": list(analysis.articles),
+                        "analysis_time": round(analysis_time, 3),
+                    }
+                }
+
                 # Step 4a: Check if query is out of scope (early exit)
                 if analysis.out_of_scope:
                     logger.info("Query is out of scope for Philippine labor law")
@@ -376,7 +393,11 @@ class ChatOrchestrator:
                 "data": {
                     "retrieval_time": round(retrieval_time, 3),
                     "retrieval_count": len(retrieval_results),
-                    "avg_confidence": round(avg_score, 3)
+                    "avg_confidence": round(avg_score, 3),
+                    "retrieved_chunk_ids": [
+                        (r.metadata or {}).get("chunk_id", r.id)
+                        for r in retrieval_results
+                    ],
                 }
             }
             

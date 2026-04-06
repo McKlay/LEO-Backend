@@ -584,7 +584,8 @@ class SupabaseVectorStore(BaseVectorStore):
                             ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
                         ) as rank,
                         src.url,
-                        src.title AS source_title
+                        src.title AS source_title,
+                        s.metadata->>'chunk_id' AS chunk_id
                     FROM labor_law_sections s
                     LEFT JOIN labor_law_sources src ON s.source_id = src.id
                     WHERE (
@@ -612,6 +613,7 @@ class SupabaseVectorStore(BaseVectorStore):
                         'keywords': row[8] if row[8] else [],
                         'source_url': row[10],
                         'source_title': row[11],
+                        'chunk_id': row[12] or '',
                         '_source_table': 'sections',
                         '_strategy': 'lexical',
                     }
@@ -814,7 +816,8 @@ class SupabaseVectorStore(BaseVectorStore):
                         s.summary,
                         s.keywords,
                         src.url,
-                        src.title AS source_title
+                        src.title AS source_title,
+                        s.metadata->>'chunk_id' AS chunk_id
                     FROM labor_law_sections s
                     LEFT JOIN labor_law_sources src ON s.source_id = src.id
                 """
@@ -879,6 +882,7 @@ class SupabaseVectorStore(BaseVectorStore):
                         'keywords': row[8] if row[8] else [],
                         'source_url': row[9],
                         'source_title': row[10],
+                        'chunk_id': row[11] or '',
                         '_source_table': 'sections',
                         '_strategy': 'symbolic',
                         '_overlap_count': overlap_count,
@@ -1007,7 +1011,8 @@ class SupabaseVectorStore(BaseVectorStore):
                     s.keywords,
                     1 - (s.embedding <=> %s::vector) as similarity,
                     src.url,
-                    src.title AS source_title
+                    src.title AS source_title,
+                    s.metadata->>'chunk_id' AS chunk_id
                 FROM labor_law_sections s
                 LEFT JOIN labor_law_sources src ON s.source_id = src.id
                 WHERE 1 - (s.embedding <=> %s::vector) > %s
@@ -1028,6 +1033,7 @@ class SupabaseVectorStore(BaseVectorStore):
                     'keywords': row[8] if row[8] else [],
                     'source_url': row[10],
                     'source_title': row[11],
+                    'chunk_id': row[12] or '',
                     '_source_table': 'sections'
                 }
                 
@@ -1065,7 +1071,8 @@ class SupabaseVectorStore(BaseVectorStore):
                     s.article_number,
                     s.article_title,
                     c.section_id,
-                    c.summary
+                    c.summary,
+                    s.metadata->>'chunk_id' AS chunk_id
                 FROM labor_law_chunks c
                 LEFT JOIN labor_law_sections s ON c.section_id = s.id
                 WHERE 1 - (c.embedding <=> %s::vector) > %s
@@ -1080,6 +1087,7 @@ class SupabaseVectorStore(BaseVectorStore):
                     'keywords': row[2] if row[2] else [],
                     'section_id': row[6],
                     'summary': row[7],
+                    'chunk_id': row[8] or '',
                     '_source_table': 'chunks',
                     '_parent_article': row[4],
                     '_parent_title': row[5]

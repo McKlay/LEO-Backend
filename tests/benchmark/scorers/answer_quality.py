@@ -1,7 +1,6 @@
-"""
-Answer quality metrics: Token F1, ROUGE-L, and Exact Match.
+"""Answer quality metrics: Token F1, ROUGE-L, and Exact Match.
 
-All metrics compare ``trace.generated_content`` against
+All metrics compare ``trace.generated_response`` against
 ``trace.reference_answer`` from the benchmark query set.
 
 Usage::
@@ -9,7 +8,7 @@ Usage::
     from tests.benchmark.scorers.answer_quality import score_answer
     scores = score_answer(trace)
     # → {"token_f1": 0.72, "rouge_l": 0.68, "exact_match": 0.0}
-    # → None  (if trace has no reference_answer or no generated_content)
+    # → None  (if trace has no reference_answer or no generated_response)
 """
 from __future__ import annotations
 
@@ -131,15 +130,15 @@ def score_answer(trace: "QueryTrace") -> Optional[Dict[str, float]]:
     Compute Token F1, ROUGE-L, and Exact Match for a single ``QueryTrace``.
 
     Args:
-        trace: A finalised ``QueryTrace`` with ``generated_content`` and
+        trace: A finalised ``QueryTrace`` with ``generated_response`` and
                ``reference_answer`` populated.
 
     Returns:
         Dict with keys ``token_f1``, ``rouge_l``, ``exact_match``.
-        Returns ``None`` if either ``generated_content`` or
+        Returns ``None`` if either ``generated_response`` or
         ``reference_answer`` is missing/empty.
     """
-    prediction = (trace.generated_content or "").strip()
+    prediction = (trace.generated_response or "").strip()
     reference = (trace.reference_answer or "").strip()
 
     if not prediction or not reference:

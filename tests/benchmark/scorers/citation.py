@@ -1,7 +1,7 @@
 """
 Citation accuracy metrics: extraction, normalisation, precision, and recall.
 
-Compares machine-extracted citations from ``trace.generated_content``
+Compares machine-extracted citations from ``trace.generated_response``
 against ``trace.gold_article_refs`` from the benchmark dataset.
 
 Supported citation forms (case-insensitive):
@@ -219,7 +219,7 @@ def score_citations(trace: "QueryTrace") -> Dict[str, float]:
     """
     Compute citation precision, recall, and F1 for a single ``QueryTrace``.
 
-    Extracts citations from ``trace.generated_content`` (free text) and
+    Extracts citations from ``trace.generated_response`` (free text) and
     compares against ``trace.gold_article_refs``.
 
     Also considers citations from ``trace.generated_citations`` (structured
@@ -234,7 +234,7 @@ def score_citations(trace: "QueryTrace") -> Dict[str, float]:
         All metric values are 0.0 if there are no gold references.
     """
     gold = trace.gold_article_refs or []
-    content = trace.generated_content or ""
+    content = trace.generated_response or ""
 
     # Extract from plain text
     text_citations = extract_citations(content)

@@ -6,7 +6,7 @@ Treats clarification detection as a binary classification task:
 - **Negative**: the query is clear enough to answer directly.
 
 For ambiguous queries in the benchmark (``is_ambiguous=True``),
-``expected_clarification`` is a non-empty string; for clear queries it
+``turn2_clarification_response`` is a non-empty string; for clear queries it
 is ``None`` or ``""``.  The system's prediction is ``trace.needs_clarification``.
 
 Usage::
@@ -42,12 +42,12 @@ def score_clarification(trace: "QueryTrace") -> Dict[str, Any]:
     """
     Evaluate clarification detection for a single ``QueryTrace``.
 
-    "Expected positive" is determined by whether ``trace.expected_clarification``
+    "Expected positive" is determined by whether ``trace.turn2_clarification_response``
     is a non-empty string (benchmark-labelled ambiguous queries always have one).
 
     Args:
         trace: A ``QueryTrace`` with ``needs_clarification`` and
-               ``expected_clarification`` fields populated.
+               ``turn2_clarification_response`` fields populated.
 
     Returns:
         Dict with keys:
@@ -57,7 +57,7 @@ def score_clarification(trace: "QueryTrace") -> Dict[str, Any]:
           or ``"unknown"`` if prediction is None.
         - ``tp``, ``fp``, ``fn``, ``tn`` (int): single-trace confusion counts.
     """
-    expected_pos: bool = bool(trace.expected_clarification)
+    expected_pos: bool = bool(trace.turn2_clarification_response)
     predicted: Optional[bool] = trace.needs_clarification
 
     if predicted is None:

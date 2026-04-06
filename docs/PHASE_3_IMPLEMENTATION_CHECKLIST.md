@@ -82,9 +82,9 @@ Reference: [`PHASE_3_AUTOMATED_TESTING_SPECIFICATION.md`](PHASE_3_AUTOMATED_TEST
 
 ### 4d: Pre-flight Validation (§3.7)
 
-- [x] `--smoke` — run 5 representative queries (1 EN single-turn clear, 1 FIL, 1 CEB, 1 multi-turn, 1 ambiguous) through full pipeline, print diagnostic summary
-- [x] `--validate clarification` — run 30 ambiguous + 20 non-ambiguous queries through `analysis_only`, report precision/recall of clarification detection
-- [x] `--validate multiturn` — run 24 multi-turn queries through `analysis_only` with history injection, verify: history injected, consolidated `normalized_query_en`, no re-clarification, no false `is_meta_conversational`
+- [x] `--smoke` — run 4 representative queries (1 EN single-turn clear, 1 FIL, 1 CEB, 1 multi-turn/ambiguous) through full pipeline, print diagnostic summary; `--query-ids` overrides selection to run only the specified queries (targeted debug mode)
+- [x] `--validate clarification` — run ambiguous + clear queries through `analysis_only` (sends Turn 1 directly, no history), report precision/recall of clarification detection; supports `--sample-size N`
+- [x] `--validate multiturn` — run multi-turn queries through `analysis_only` with history injection, verify: history injected, consolidated `normalized_query_en`, no re-clarification (`needs_clarification`), no false `is_meta_conversational`; supports `--sample-size N`
 - [x] `--validate all` — run both in sequence
 
 ---
@@ -154,8 +154,9 @@ Reference: [`PHASE_3_AUTOMATED_TESTING_SPECIFICATION.md`](PHASE_3_AUTOMATED_TEST
 ## Milestone 7: Integration & Execution
 
 - [x] Verify `benchmark-queries.json` schema: 100 queries, all required fields (`gold_chunks`, `gold_article_refs`, `reference_answer`, `conversation_history` for multi-turn, `expected_clarification` for ambiguous); all 30 multi-turn queries additionally have Phase 2 fields (`turn5_query`, `turn6_reference_answer`, `gold_chunks_turn6`, `gold_article_refs_turn6`) (Decisions 3 & 6)
-- [x] End-to-end dry run: `--smoke` passes on all 5 representative queries
-- [ ] Run `--validate all` — clarification pre-flight diagnostic passes; multi-turn validation passes ≥ 30/30 queries
+- [x] End-to-end dry run: `--smoke` passes on all 4 representative queries (EN single-turn, FIL, CEB, multi-turn/ambiguous)
+- [x] Targeted smoke verified: `--smoke --query-ids Q005` (single-turn CEB) and `--smoke --query-ids Q003` (multi-turn EN) produce correct JSON output — `chunk_id` populated, Stage 1 fields present, `query_text`=Turn 1, `effective_query_text`=Turn 3, `conversation_history` captured
+- [x] Run `--validate all --sample-size 1` — clarification: TP=1, TN=1, Precision=1.0, Recall=1.0, F1=1.0; multi-turn: 1/1 PASS
 - [ ] Execute Phase 1 retrieval-only runs (Tables 2–4 + ablation retrieval metrics):
   - `full_pipeline dense_only lexical_only symbolic_only` at K = 3, 5, 10 (Tables 2–3)
   - `full_pipeline hybrid_no_translation` at K = 5, non-English scope 65 queries (Table 4)

@@ -189,19 +189,19 @@ class CSVExporter:
             row = {
                 "eval_id": f"E{eval_counter:04d}",
                 "query_id": trace.get("query_id", ""),
-                "query_text": trace.get("query_text", ""),
+                "query_text": trace.get("turn1_query", ""),
                 "language": trace.get("language", ""),
                 "query_type": "multi_turn" if trace.get("is_multiturn") else "single_turn",
                 "is_ambiguous": str(trace.get("is_ambiguous", False)).lower(),
                 "topic": trace.get("topic", ""),
                 "conversation_history": conv_hist_str,
                 "config_label": config_label,
-                # Turn 4 answer — used for Tables 6, 7, 9, 10
-                "system_answer": trace.get("generated_content", ""),
+                # Turn 4 answer (multi-turn) or Turn 2 answer (single-turn)
+                "system_answer": trace.get("turn4_response") or trace.get("turn2_response") or "",
                 "reference_answer": trace.get("reference_answer", ""),
                 "gold_article_refs": _safe_json(trace.get("gold_article_refs", [])),
                 # Phase 2 columns for multi-turn rows (Table 8)
-                "system_answer_turn6": trace.get("turn6_generated_answer", "") if trace.get("is_multiturn") else "",
+                "system_answer_turn6": trace.get("turn6_response", "") if trace.get("is_multiturn") else "",
                 "turn6_reference_answer": trace.get("turn6_reference_answer", "") if trace.get("is_multiturn") else "",
                 # Expert-fill columns (empty)
                 "legal_accuracy_score": "",
@@ -287,7 +287,7 @@ class CSVExporter:
                 "variant": blinded,
                 "turn_number": str(turn_num),
                 "role": "user",
-                "content": trace.get("query_text", ""),
+                "content": trace.get("turn1_query", ""),
             })
             # System response
             rows.append({
@@ -295,7 +295,7 @@ class CSVExporter:
                 "variant": blinded,
                 "turn_number": str(turn_num + 1),
                 "role": "assistant",
-                "content": trace.get("generated_content", ""),
+                "content": trace.get("turn4_response") or trace.get("turn2_response") or "",
             })
 
         with csv_path.open("w", newline="", encoding="utf-8") as fh:
@@ -374,7 +374,7 @@ class CSVExporter:
                     "answer_relevance": scores.get("answer_relevance", ""),
                     "was_clarification": str(trace.get("is_clarification_response", False)).lower(),
                     "total_time_ms": f"{total_ms:.1f}" if total_ms else "",
-                    "generated_answer": trace.get("generated_content", ""),
+                    "generated_answer": trace.get("turn4_response") or trace.get("turn2_response") or "",
                     "reference_answer": trace.get("reference_answer", ""),
                 }
                 writer.writerow(row)

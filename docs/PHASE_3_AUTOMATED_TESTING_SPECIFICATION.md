@@ -264,7 +264,7 @@ def reset_singletons():
 
 | Argument | Description |
 |---|---|
-| `--smoke` | Run 5 representative queries through full pipeline as sanity check |
+| `--smoke` | Run 4 representative queries (EN/FIL/CEB/multi-turn) through full pipeline; combine with `--query-ids` for single-query targeted inspection |
 | `--validate` | Run pre-flight checks: `clarification`, `multiturn`, or `all` |
 | `--log-level` | Logging verbosity: `DEBUG`, `INFO`, `WARNING` |
 | `--log-file` | Path to write log output alongside console |
@@ -351,10 +351,19 @@ python -m tests.benchmark.runner --mode full --variant llm_only stage2_only full
 Before committing to the full benchmark (~$15–22 in API fees), run cheap validation checks to catch configuration issues early.
 
 **Smoke test** (`--smoke`):
-Runs 5 representative queries (1 English single-turn clear, 1 Filipino, 1 Cebuano, 1 multi-turn, 1 ambiguous) through the full pipeline on the `full_pipeline` variant. Prints a diagnostic summary confirming all stages execute correctly.
+Runs 4 representative queries (1 English single-turn clear, 1 Filipino, 1 Cebuano, 1 multi-turn/ambiguous) through the full pipeline on the `full_pipeline` variant. Prints a diagnostic summary confirming all stages execute correctly.
+
+When `--query-ids` is provided, the 4-criteria selection is skipped and only the specified queries are run. This is the recommended approach for targeted JSON output inspection before a full smoke run.
 
 ```bash
+# Standard 4-query smoke test
 python -m tests.benchmark.runner --smoke
+
+# Targeted: inspect one single-turn query
+python -m tests.benchmark.runner --smoke --query-ids Q005
+
+# Targeted: inspect one multi-turn query
+python -m tests.benchmark.runner --smoke --query-ids Q003
 ```
 
 **Clarification validation** (`--validate clarification`):

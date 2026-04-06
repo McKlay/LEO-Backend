@@ -38,8 +38,18 @@ class QueryTrace:
     # ── Identity ──────────────────────────────────────────────────────────────
     query_id: str
     variant_name: str
-    query_text: str          # effective message sent to pipeline (last user turn for multi-turn)
+    turn1_query: str         # original query text from benchmark JSON (always Turn 1)
     language: str
+
+    # ── Query Metadata ────────────────────────────────────────────────────────
+    query_type: str = "single_turn"          # "single_turn" | "multi_turn"
+    is_multiturn: bool = False
+    is_ambiguous: bool = False
+    topic: Optional[str] = None
+    retrieval_target: Optional[str] = None   # symbolic | lexical | dense | hybrid
+    prior_turn_count: int = 0                # number of turns injected into memory
+    turn3_query: Optional[str] = None        # final user turn sent to pipeline (multi-turn only; null for single-turn)
+    conversation_history: List[Dict[str, str]] = field(default_factory=list)  # full conversation turns for tracing
 
     # ── Stage 1: Query Analysis ───────────────────────────────────────────────
     normalized_query_en: Optional[str] = None
@@ -62,47 +72,48 @@ class QueryTrace:
     avg_retrieval_confidence: Optional[float] = None
 
     # ── Stage 3: Generation ───────────────────────────────────────────────────
-    generated_content: Optional[str] = None
+    generated_response: Optional[str] = None  # turn2_response (single-turn) / turn4_response (multi-turn) in JSON
     generated_citations: List[Dict[str, Any]] = field(default_factory=list)
     generation_time_s: Optional[float] = None
     processing_time_s: Optional[float] = None
     is_clarification_response: bool = False
 
-    # ── Gold Standard ─────────────────────────────────────────────────────────
+    # ── Gold Standard ────────────────────────────────────────────────────────
+    turn2_clarification_response: Optional[str] = None  # gold clarification question (ambiguous multi-turn only)
     gold_chunks: List[str] = field(default_factory=list)
     gold_article_refs: List[str] = field(default_factory=list)
     reference_answer: Optional[str] = None
-    expected_clarification: Optional[str] = None
 
-    # ── Phase 2: Turn 6 (multi-turn queries only) ─────────────────────────────
+    # ── Phase 2: Turn 5–6 (multi-turn queries only) ───────────────────────────
     turn5_query: Optional[str] = None
-    turn6_generated_answer: Optional[str] = None
+    turn6_response: Optional[str] = None
     turn6_extracted_citations: Optional[List[str]] = None
     gold_chunks_turn6: Optional[List[str]] = None
     gold_article_refs_turn6: Optional[List[str]] = None
     turn6_reference_answer: Optional[str] = None
-
-    # ── Query Flags ───────────────────────────────────────────────────────────
-    is_multiturn: bool = False
-    is_ambiguous: bool = False
-    retrieval_target: Optional[str] = None   # symbolic | lexical | dense | hybrid
-    topic: Optional[str] = None
-    prior_turn_count: int = 0                # number of turns injected into memory
 
     # ── Errors / Timestamps ───────────────────────────────────────────────────
     error: Optional[str] = None
     timestamp: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize trace to a JSON-serializable dict."""
-        return asdict(self)
+        """Serialize trace to a JSON-serializable dict.
+
+        ``generated_response`` is emitted as ``turn2_response`` for single-turn
+        queries and ``turn4_response`` for multi-turn queries so the JSON output
+        reflects the logical turn structure of the conversation.
+        """
+        d = asdict(self)
+        resp_key = "turn2_response" if self.query_type == "single_turn" else "turn4_response"
+        d[resp_key] = d.pop("generated_response", None)
+        return d
 
     @classmethod
     def from_query(
         cls,
         query: Dict[str, Any],
         variant_name: str,
-        effective_query_text: Optional[str] = None,
+        turn3_query: Optional[str] = None,
         prior_turn_count: int = 0,
     ) -> "QueryTrace":
         """
@@ -111,28 +122,32 @@ class QueryTrace:
         Args:
             query: Dict from benchmark-queries.json
             variant_name: Pipeline variant being evaluated
-            effective_query_text: Actual message sent to pipeline; for multi-turn
-                queries this is the final user turn, not query['query_text'].
+            turn3_query: Final user turn sent to pipeline; populated for multi-turn
+                queries only (the resolved clarification response). None for single-turn.
             prior_turn_count: Number of prior conversation turns injected into memory.
         """
+        query_type = query.get("query_type", "single_turn")
         return cls(
             query_id=query["query_id"],
             variant_name=variant_name,
-            query_text=effective_query_text or query["query_text"],
+            turn1_query=query["query_text"],  # Always store Turn 1 (original query)
             language=query.get("language", "en"),
+            query_type=query_type,
+            is_multiturn=query_type == "multi_turn",
+            is_ambiguous=query.get("is_ambiguous", False),
+            topic=query.get("topic"),
+            retrieval_target=query.get("retrieval_target"),
+            prior_turn_count=prior_turn_count,
+            turn3_query=turn3_query if query_type == "multi_turn" else None,
+            conversation_history=query.get("conversation_history", []),
+            turn2_clarification_response=query.get("expected_clarification"),
             gold_chunks=query.get("gold_chunks", []),
             gold_article_refs=query.get("gold_article_refs", []),
             reference_answer=query.get("reference_answer"),
-            expected_clarification=query.get("expected_clarification"),
             turn5_query=query.get("turn5_query"),
             gold_chunks_turn6=query.get("gold_chunks_turn6"),
             gold_article_refs_turn6=query.get("gold_article_refs_turn6"),
             turn6_reference_answer=query.get("turn6_reference_answer"),
-            is_multiturn=query.get("query_type", "single_turn") == "multi_turn",
-            is_ambiguous=query.get("is_ambiguous", False),
-            retrieval_target=query.get("retrieval_target"),
-            topic=query.get("topic"),
-            prior_turn_count=prior_turn_count,
             timestamp=datetime.utcnow().isoformat(),
         )
 
@@ -169,7 +184,7 @@ class ResultCollector:
         self,
         query: Dict[str, Any],
         variant_name: str,
-        effective_query_text: Optional[str] = None,
+        turn3_query: Optional[str] = None,
         prior_turn_count: int = 0,
     ) -> QueryTrace:
         """
@@ -178,7 +193,7 @@ class ResultCollector:
         Args:
             query: Benchmark query dict
             variant_name: Variant being evaluated
-            effective_query_text: Actual message sent to pipeline (multi-turn support)
+            turn3_query: Final user turn sent to pipeline (multi-turn only)
             prior_turn_count: Number of prior turns injected into memory
 
         Returns:
@@ -186,7 +201,7 @@ class ResultCollector:
         """
         self.current_trace = QueryTrace.from_query(
             query, variant_name,
-            effective_query_text=effective_query_text,
+            turn3_query=turn3_query,
             prior_turn_count=prior_turn_count,
         )
         self._content_chunks = []
@@ -218,10 +233,27 @@ class ResultCollector:
         if event_type == "status":
             pass  # Step progress only; not recorded as a metric
 
+        elif event_type == "analysis":
+            self.current_trace.normalized_query_en = data.get("normalized_query_en")
+            self.current_trace.original_language = data.get("original_language")
+            self.current_trace.needs_clarification = data.get("needs_clarification")
+            self.current_trace.clarification_question = data.get("clarification_question")
+            self.current_trace.is_meta_conversational = data.get("is_meta_conversational")
+            self.current_trace.out_of_scope = data.get("out_of_scope")
+            self.current_trace.legal_concepts = data.get("legal_concepts", [])
+            self.current_trace.keywords = data.get("keywords", [])
+            self.current_trace.articles_extracted = data.get("articles_extracted", [])
+            self.current_trace.analysis_time_s = data.get("analysis_time")
+
         elif event_type == "metadata":
             self.current_trace.retrieval_time_s = data.get("retrieval_time")
             self.current_trace.retrieval_count = data.get("retrieval_count")
             self.current_trace.avg_retrieval_confidence = data.get("avg_confidence")
+            # Populate retrieved chunk IDs from the metadata event (full mode)
+            chunk_ids = data.get("retrieved_chunk_ids", [])
+            if chunk_ids:
+                k = len(chunk_ids)
+                self.current_trace.retrieved_chunk_ids_per_k[k] = chunk_ids
 
         elif event_type == "content_chunk":
             self._content_chunks.append(data.get("chunk", ""))
@@ -233,7 +265,7 @@ class ResultCollector:
             meta = data.get("metadata", {})
             # Prefer assembled full content from chunks; fall back to event content field
             assembled = "".join(self._content_chunks)
-            self.current_trace.generated_content = assembled or data.get("content")
+            self.current_trace.generated_response = assembled or data.get("content")
             # Citations may have been populated by the prior 'citations' event;
             # the 'complete' event carries the authoritative copy.
             self.current_trace.generated_citations = data.get(
@@ -263,7 +295,7 @@ class ResultCollector:
 
         Called during _run_phase2 execution (Turn 5 → Turn 6 exchange).
         Accumulates content chunks and on 'complete' assembles
-        turn6_generated_answer and extracts turn6_extracted_citations via regex.
+        turn6_response and extracts turn6_extracted_citations via regex.
         Metadata and citation-object events are intentionally ignored for Phase 2
         — Table 8 scores answer quality only (Decision 2).
 
@@ -283,10 +315,10 @@ class ResultCollector:
         elif event_type == "complete":
             from tests.benchmark.scorers.citation import extract_citations
             assembled = "".join(self._turn6_chunks)
-            self.current_trace.turn6_generated_answer = assembled or data.get("content")
-            if self.current_trace.turn6_generated_answer:
+            self.current_trace.turn6_response = assembled or data.get("content")
+            if self.current_trace.turn6_response:
                 self.current_trace.turn6_extracted_citations = extract_citations(
-                    self.current_trace.turn6_generated_answer
+                    self.current_trace.turn6_response
                 )
 
         elif event_type == "error":

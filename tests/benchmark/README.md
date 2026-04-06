@@ -57,8 +57,11 @@ tests/benchmark/
 pip install rouge-score matplotlib seaborn pandas
 
 # Validate before spending API budget (~$0.10, GPT-4o-mini only)
-python -m tests.benchmark.runner --validate all
+python -m tests.benchmark.runner --validate all --sample-size 1
 python -m tests.benchmark.runner --smoke
+
+# Targeted smoke: inspect a single query's JSON output (cheapest debug path)
+python -m tests.benchmark.runner --smoke --query-ids Q005
 ```
 
 ---
@@ -76,8 +79,14 @@ flowchart LR
 ### Phase 0 — Validation
 
 ```bash
-python -m tests.benchmark.runner --validate all
+# Step 1: cheap logic check (GPT-4o-mini only, ~$0.10)
+python -m tests.benchmark.runner --validate all --sample-size 1
+
+# Step 2: full-pipeline sanity check (4 representative queries)
 python -m tests.benchmark.runner --smoke
+
+# Step 2 (targeted): inspect a specific query before committing to a full smoke run
+python -m tests.benchmark.runner --smoke --query-ids Q005
 ```
 
 ### Phase 1 — Retrieval Evaluation (Tables 2–4)
@@ -132,10 +141,10 @@ python -m tests.benchmark.exporters.chart_generator \
 | `--mode` | `full` | `analysis_only` · `retrieval_only` · `full` |
 | `--variant` | *(required)* | One or more variant names |
 | `--top-k` | `5` | K values for retrieval metrics (e.g. `3 5 10`) |
-| `--query-ids` | all | Run specific queries only (e.g. `Q007 Q015`) |
+| `--query-ids` | all | Restrict to specific query IDs (e.g. `Q007 Q015`); applies to all modes including `--smoke` |
 | `--output-dir` | `results/run_<ts>` | Output directory |
 | `--resume` | off | Skip already-completed query–variant pairs |
-| `--smoke` | — | Run 5 representative queries as a sanity check |
+| `--smoke` | — | Run 4 representative queries (EN/FIL/CEB/multi-turn) as a full-pipeline sanity check; combine with `--query-ids` to run a single query instead |
 | `--validate` | — | `clarification` · `multiturn` · `all` |
 | `--log-level` | `INFO` | `DEBUG` · `INFO` · `WARNING` |
 | `--log-file` | — | Tee logs to file |

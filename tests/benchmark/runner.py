@@ -383,12 +383,12 @@ class BenchmarkRunner:
             Finalized QueryTrace
         """
         conversation_id = str(uuid.uuid4())
-        effective_query_text, prior_turns = _get_effective_query(query)
+        effective_query, prior_turns = _get_effective_query(query)
 
         trace = self.collector.start_trace(
             query,
             variant.name,
-            effective_query_text=effective_query_text,
+            turn3_query=effective_query,
             prior_turn_count=len(prior_turns),
         )
 
@@ -406,15 +406,15 @@ class BenchmarkRunner:
 
             if self.mode == "analysis_only":
                 await self._run_analysis_only(
-                    effective_query_text, language, conversation_id, has_prior
+                    effective_query, language, conversation_id, has_prior
                 )
             elif self.mode == "retrieval_only":
                 await self._run_retrieval_only(
-                    effective_query_text, language, conversation_id, has_prior
+                    effective_query, language, conversation_id, has_prior
                 )
             elif self.mode == "full":
                 session_id = await self._run_full(
-                    effective_query_text, language, conversation_id
+                    effective_query, language, conversation_id
                 )
                 # Phase 2: run Turn 5 → Turn 6 for multi-turn queries that have
                 # turn5_query populated. Skipped in retrieval_only mode (Decision 2).
@@ -504,7 +504,7 @@ class BenchmarkRunner:
                     logger.info(
                         f"  OK | clarify={trace.is_clarification_response} | "
                         f"chunks={trace.retrieval_count or 0} | "
-                        f"content_len={len(trace.generated_content or '')}"
+                        f"content_len={len(trace.generated_response or '')}"
                     )
 
                 if self.api_delay_ms > 0:
@@ -525,11 +525,14 @@ class BenchmarkRunner:
 
     async def run_smoke_test(self) -> None:
         """
-        Run 5 representative queries through the full pipeline as a sanity check.
+        Run queries through the full pipeline as a sanity check.
 
-        Selects: 1 EN single-turn clear, 1 Filipino, 1 Cebuano,
-                 1 multi-turn, 1 ambiguous.
-        Prints a diagnostic summary; does not persist results.
+        When --query-ids is specified, runs only those queries (targeted
+        debugging with minimal token usage).  Otherwise selects 4
+        representative queries: 1 EN single-turn clear, 1 Filipino,
+        1 Cebuano, 1 multi-turn (ambiguous).
+
+        Prints a diagnostic summary; does not call finalize_variant().
         """
         print("\n" + "═" * 60)
         print("SMOKE TEST")
@@ -538,9 +541,17 @@ class BenchmarkRunner:
         apply_variant(get_variant_by_name("full_pipeline"))
         reset_singletons()
 
-        smoke_queries = self._select_smoke_queries()
-        if len(smoke_queries) < 5:
-            print(f"WARNING: Found only {len(smoke_queries)}/5 representative queries")
+        if self.query_ids:
+            # Targeted mode: run only the user-specified queries
+            smoke_queries = [
+                (f"{q.get('query_type', '?')}_{q.get('language', '?')}", q)
+                for q in self.all_queries
+            ]
+            print(f"\nTargeted mode: {len(smoke_queries)} query(ies) via --query-ids")
+        else:
+            smoke_queries = self._select_smoke_queries()
+            if len(smoke_queries) < 4:
+                print(f"WARNING: Found only {len(smoke_queries)}/4 representative queries")
 
         saved_mode = self.mode
         self.mode = "full"
@@ -559,8 +570,8 @@ class BenchmarkRunner:
                     parts.append(f"clarification={trace.needs_clarification}")
                 if trace.retrieval_count is not None:
                     parts.append(f"chunks={trace.retrieval_count}")
-                if trace.generated_content:
-                    parts.append(f"content_len={len(trace.generated_content)}")
+                if trace.generated_response:
+                    parts.append(f"content_len={len(trace.generated_response)}")
                 print(f"  Status: OK — {' | '.join(parts)}")
 
             if self.api_delay_ms > 0:
@@ -574,17 +585,29 @@ class BenchmarkRunner:
         print("═" * 60 + "\n")
 
     def _select_smoke_queries(self) -> List[Tuple[str, Dict[str, Any]]]:
-        """Select one query for each of the 5 smoke test criteria."""
+        """Select one query for each of the 4 smoke test criteria.
+
+        All ambiguous queries are now multi-turn, so those categories are
+        merged into a single 'multi_turn_ambiguous' criterion.
+        """
         criteria: List[Tuple[str, Any]] = [
             ("EN_clear", lambda q: (
                 q["language"] == "en"
                 and not q.get("is_ambiguous")
                 and q.get("query_type") == "single_turn"
             )),
-            ("FIL", lambda q: q["language"] == "fil"),
-            ("CEB", lambda q: q["language"] == "ceb"),
-            ("multi_turn", lambda q: q.get("query_type") == "multi_turn"),
-            ("ambiguous", lambda q: q.get("is_ambiguous")),
+            ("FIL", lambda q: (
+                q["language"] == "fil"
+                and q.get("query_type") == "single_turn"
+            )),
+            ("CEB", lambda q: (
+                q["language"] == "ceb"
+                and q.get("query_type") == "single_turn"
+            )),
+            ("multi_turn_ambiguous", lambda q: (
+                q.get("query_type") == "multi_turn"
+                and q.get("is_ambiguous")
+            )),
         ]
         selected: List[Tuple[str, Dict]] = []
         used_ids: set = set()
@@ -600,16 +623,27 @@ class BenchmarkRunner:
 
     # ── Pre-flight validation: clarification ───────────────────────────────────
 
-    async def run_validate_clarification(self) -> Dict[str, Any]:
+    async def run_validate_clarification(
+        self, sample_size: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Validate clarification detection accuracy before committing to a full run.
 
-        Runs all 30 ambiguous + up to 20 non-ambiguous queries through
-        analysis_only mode. Reports TP/FP/FN/TN and precision/recall.
+        For ambiguous queries (all multi-turn), sends the *original vague Turn 1*
+        query directly with NO conversation history. This tests whether Stage 1
+        correctly identifies the need for clarification.
+
+        For clear queries, sends the query as-is through normal analysis.
+
+        Args:
+            sample_size: Limit each category (ambiguous/clear) to N queries.
+                         None = use all available.
 
         Returns:
             Dict with precision, recall, f1, counts, and failure list
         """
+        from app.containers import get_query_analysis_pipeline
+
         print("\n" + "═" * 60)
         print("CLARIFICATION VALIDATION")
         print("═" * 60)
@@ -617,8 +651,14 @@ class BenchmarkRunner:
         apply_variant(get_variant_by_name("full_pipeline"))
         reset_singletons()
 
-        ambiguous = [q for q in self.all_queries if q.get("is_ambiguous")][:30]
-        clear = [q for q in self.all_queries if not q.get("is_ambiguous")][:20]
+        ambiguous = [q for q in self.all_queries if q.get("is_ambiguous")]
+        clear = [q for q in self.all_queries if not q.get("is_ambiguous")]
+        if sample_size is not None:
+            ambiguous = ambiguous[:sample_size]
+            clear = clear[:sample_size]
+        else:
+            ambiguous = ambiguous[:30]
+            clear = clear[:20]
         test_set = ambiguous + clear
 
         print(
@@ -628,14 +668,36 @@ class BenchmarkRunner:
 
         tp = fp = fn = tn = 0
         failures: List[Dict[str, Any]] = []
-        saved_mode = self.mode
-        self.mode = "analysis_only"
-        full_pipeline_variant = get_variant_by_name("full_pipeline")
+        analysis_pipeline = get_query_analysis_pipeline()
 
         for query in test_set:
-            trace = await self._run_one_query(query, full_pipeline_variant)
             is_ambiguous = query.get("is_ambiguous", False)
-            predicted = trace.needs_clarification or False
+
+            # For ambiguous queries: send Turn 1 (the vague original query)
+            # directly WITHOUT history. This tests clarification detection.
+            # For clear queries: send query_text as-is.
+            query_text = query["query_text"]
+            language = query.get("language", "en")
+
+            try:
+                t0 = time.monotonic()
+                analysis = await analysis_pipeline.analyze(
+                    query=query_text,
+                    conversation_history=None,
+                    preferred_language=language,
+                )
+                elapsed = time.monotonic() - t0
+                predicted = analysis.needs_clarification or False
+            except Exception as exc:
+                logger.error(
+                    f"Error analyzing {query['query_id']}: {exc}", exc_info=True
+                )
+                predicted = False
+
+            print(
+                f"  {query['query_id']} ({language}) | "
+                f"ambiguous={is_ambiguous} | predicted_clarify={predicted}"
+            )
 
             if is_ambiguous and predicted:
                 tp += 1
@@ -644,22 +706,20 @@ class BenchmarkRunner:
                 failures.append({
                     "query_id": query["query_id"],
                     "type": "FP",
-                    "text": query["query_text"][:80],
+                    "text": query_text[:80],
                 })
             elif is_ambiguous and not predicted:
                 fn += 1
                 failures.append({
                     "query_id": query["query_id"],
                     "type": "FN",
-                    "text": query["query_text"][:80],
+                    "text": query_text[:80],
                 })
             else:
                 tn += 1
 
             if self.api_delay_ms > 0:
                 await asyncio.sleep(self.api_delay_ms / 1000)
-
-        self.mode = saved_mode
 
         precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
@@ -690,16 +750,22 @@ class BenchmarkRunner:
 
     # ── Pre-flight validation: multi-turn ─────────────────────────────────────
 
-    async def run_validate_multiturn(self) -> Dict[str, Any]:
+    async def run_validate_multiturn(
+        self, sample_size: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Validate multi-turn conversation handling before a full run.
 
-        Runs all 30 multi-turn queries through analysis_only with history
+        Runs multi-turn queries through analysis_only with history
         injection. Verifies:
           - Conversation history was injected (prior_turn_count > 0)
           - Stage 1 produced a consolidated normalized_query_en
           - Clarification was not re-triggered on the final turn
+            (checks needs_clarification from Stage 1 analysis)
           - is_meta_conversational was not incorrectly flagged
+
+        Args:
+            sample_size: Limit to N multi-turn queries. None = use all.
 
         Returns:
             Dict with passed/failed counts and per-query diagnostics
@@ -712,7 +778,10 @@ class BenchmarkRunner:
         reset_singletons()
 
         multiturn = [q for q in self.all_queries if q.get("query_type") == "multi_turn"]
-        print(f"\nRunning {len(multiturn)} multi-turn queries through analysis_only...")
+        if sample_size is not None:
+            multiturn = multiturn[:sample_size]
+        total = len(multiturn)
+        print(f"\nRunning {total} multi-turn queries through analysis_only...")
 
         passed = failed = 0
         diagnostics: List[Dict[str, Any]] = []
@@ -725,7 +794,9 @@ class BenchmarkRunner:
 
             history_injected = trace.prior_turn_count > 0
             has_normalized = bool(trace.normalized_query_en)
-            no_reclarify = not trace.is_clarification_response
+            # Use needs_clarification (Stage 1 output) — is_clarification_response
+            # is only populated in full mode via the 'complete' SSE event.
+            no_reclarify = not (trace.needs_clarification or False)
             no_false_meta = not trace.is_meta_conversational
 
             ok = history_injected and has_normalized and no_reclarify and no_false_meta
@@ -759,14 +830,13 @@ class BenchmarkRunner:
 
         self.mode = saved_mode
 
-        threshold = 30
         status_line = (
-            f"PASS (≥ {threshold}/30 required)"
-            if passed >= threshold
-            else f"FAIL (< {threshold}/30 — investigate failures before proceeding)"
+            f"PASS (all {total} passed)"
+            if passed >= total
+            else f"FAIL ({passed}/{total} — investigate failures before proceeding)"
         )
-        print(f"\n  Result: {passed}/30 passed — {status_line}")
-        if passed < threshold:
+        print(f"\n  Result: {passed}/{total} passed — {status_line}")
+        if passed < total:
             print("  Failures require investigation before running the full benchmark.")
 
         print("═" * 60 + "\n")
@@ -852,7 +922,7 @@ Examples:
     parser.add_argument(
         "--smoke",
         action="store_true",
-        help="Run 5 representative queries as a full-pipeline smoke test",
+        help="Run 4 representative queries as a full-pipeline smoke test",
     )
     parser.add_argument(
         "--validate",
@@ -888,6 +958,17 @@ Examples:
         default=200,
         dest="api_delay_ms",
         help="Delay between OpenAI API calls in milliseconds (default: 200)",
+    )
+    parser.add_argument(
+        "--sample-size",
+        type=int,
+        default=None,
+        dest="sample_size",
+        metavar="N",
+        help=(
+            "Limit each validation category to N queries "
+            "(e.g. --sample-size 1 for minimal logic validation)"
+        ),
     )
 
     return parser.parse_args()
@@ -946,9 +1027,9 @@ async def _main() -> None:
     # Pre-flight validation
     if args.validate:
         if args.validate in ("clarification", "all"):
-            await runner.run_validate_clarification()
+            await runner.run_validate_clarification(sample_size=args.sample_size)
         if args.validate in ("multiturn", "all"):
-            await runner.run_validate_multiturn()
+            await runner.run_validate_multiturn(sample_size=args.sample_size)
         return
 
     # Full benchmark run — requires --variant

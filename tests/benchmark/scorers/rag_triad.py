@@ -211,8 +211,8 @@ class RAGTriadScorer:
             - ``variant_name`` (str)
             - ``query_id`` (str)
         """
-        query_text = trace.query_text or ""
-        answer = _truncate(trace.generated_content or "", _MAX_ANSWER_CHARS)
+        query_text = trace.turn1_query or ""
+        answer = _truncate(trace.generated_response or "", _MAX_ANSWER_CHARS)
         is_llm_only = trace.variant_name == "llm_only"
 
         # Build context string from snippets or ID list
@@ -366,8 +366,11 @@ async def _main() -> None:
             # Ensure required attributes exist with defaults
             if not hasattr(t, "retrieved_chunk_ids_per_k"):
                 t.retrieved_chunk_ids_per_k = {}
-            if not hasattr(t, "generated_content"):
-                t.generated_content = ""
+            if not hasattr(t, "generated_response"):
+                t.generated_response = ""
+            if not hasattr(t, "turn1_query"):
+                # backwards-compat: raw JSON may use old key name
+                t.turn1_query = getattr(t, "query_text", "")
             traces_to_score.append(t)
 
         scores = await scorer.score_batch(traces_to_score)
