@@ -157,10 +157,13 @@ Reference: [`PHASE_3_AUTOMATED_TESTING_SPECIFICATION.md`](PHASE_3_AUTOMATED_TEST
 - [x] End-to-end dry run: `--smoke` passes on all 4 representative queries (EN single-turn, FIL, CEB, multi-turn/ambiguous)
 - [x] Targeted smoke verified: `--smoke --query-ids Q005` (single-turn CEB) and `--smoke --query-ids Q003` (multi-turn EN) produce correct JSON output — `chunk_id` populated, Stage 1 fields present, `query_text`=Turn 1, `effective_query_text`=Turn 3, `conversation_history` captured
 - [x] Run `--validate all --sample-size 1` — clarification: TP=1, TN=1, Precision=1.0, Recall=1.0, F1=1.0; multi-turn: 1/1 PASS
-- [ ] Execute Phase 1 retrieval-only runs (Tables 2–4 + ablation retrieval metrics):
-  - `full_pipeline dense_only lexical_only symbolic_only` at K = 3, 5, 10 (Tables 2–3)
-  - `full_pipeline hybrid_no_translation` at K = 5, non-English scope 65 queries (Table 4)
-  - `hybrid_no_clarification` at K = 3, 5, 10, ambiguous scope 30 queries (Table 11 retrieval slice)
+- [ ] Execute Phase 1 retrieval-only runs (Tables 2–4) — use `results/phase1_full`, `--top-k 3 5 10`, `--resume` from variant 2 onward; inspect scores after each variant before continuing:
+  - [ ] `dense_only` at K = 3, 5, 10 — evaluate
+  - [ ] `symbolic_only` at K = 3, 5, 10 — evaluate
+  - [ ] `lexical_only` at K = 3, 5, 10 — evaluate
+  - [ ] `full_pipeline` at K = 3, 5, 10 (Tables 2–3) — evaluate
+  - [ ] `hybrid_no_translation` at K = 5, non-English scope 65 queries (Table 4)
+  - *(Note: `hybrid_no_clarification` is excluded — clarification is evaluated in Phase 2 full mode on `turn4_response` at K=5 only; no retrieval metrics.)*
 - [ ] Review retrieval metrics before proceeding to Phase 2
 - [ ] Execute Phase 2 full pipeline runs (Tables 6–11):
   - Expert variants `llm_only stage2_only full_pipeline` — all 100 queries; multi-turn queries automatically trigger Phase 2 (Turns 5–6) for Table 8 (Decision 3)

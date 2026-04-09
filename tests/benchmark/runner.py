@@ -41,6 +41,9 @@ from tests.benchmark.config import (
     reset_singletons,
 )
 from tests.benchmark.collector import QueryTrace, ResultCollector
+from tests.benchmark.scorers.retrieval import score_retrieval
+from tests.benchmark.scorers.answer_quality import score_answer
+from tests.benchmark.scorers.citation import score_citations
 
 logger = get_logger(__name__)
 
@@ -439,7 +442,46 @@ class BenchmarkRunner:
             if self.collector.current_trace is not None:
                 self.collector.current_trace.error = str(exc)
 
+        # Apply automated scorers before persisting — scores are included in
+        # both partial JSON and the consolidated variant results file.
+        self._apply_scores(self.collector.current_trace)
+
         return self.collector.finalize_trace(persist=True)
+
+    def _apply_scores(self, trace: Optional[QueryTrace]) -> None:
+        """
+        Compute and store automated metric scores on the active trace.
+
+        - retrieval_only / full with retrieval data: Recall@K, Hit Rate@K, MRR
+        - full: Token F1, ROUGE-L, Exact Match, Citation P/R
+        """
+        if trace is None or trace.error:
+            return
+
+        scores: Dict[str, Any] = {}
+
+        # Retrieval metrics — whenever per-K results are present
+        if trace.retrieved_chunk_ids_per_k:
+            k_values = sorted(trace.retrieved_chunk_ids_per_k.keys())
+            scores.update(score_retrieval(trace, k_values=k_values))
+
+        # Answer-quality + citation metrics — whenever a generated response exists
+        if trace.generated_response:
+            aq = score_answer(trace)
+            if aq:
+                scores.update(aq)
+            cit = score_citations(trace)
+            if cit:
+                scores.update(cit)
+
+        trace.scores = scores
+
+        if scores:
+            score_summary = "  ".join(
+                f"{k}={v:.3f}" if isinstance(v, float) else f"{k}={v}"
+                for k, v in sorted(scores.items())
+            )
+            logger.info(f"  SCORES | {score_summary}")
 
     # ── Main execution loop ────────────────────────────────────────────────────
 
@@ -456,14 +498,42 @@ class BenchmarkRunner:
         Returns:
             Dict mapping variant_name → list of QueryTrace results
         """
-        manifest: Dict[str, Any] = {
-            "started_at": datetime.utcnow().isoformat(),
-            "mode": self.mode,
-            "top_k_values": self.top_k_values,
-            "variants": [v.name for v in variants],
-            "total_queries_in_set": len(self.all_queries),
-        }
         manifest_path = self.output_dir / "run_manifest.json"
+        new_variant_names = [v.name for v in variants]
+
+        if self.resume and manifest_path.exists():
+            # Merge with existing manifest — preserve cumulative history across sessions
+            existing = json.loads(manifest_path.read_text(encoding="utf-8"))
+            existing_variants = existing.get("variants", [])
+            merged_variants = existing_variants + [
+                n for n in new_variant_names if n not in existing_variants
+            ]
+            merged_k = sorted(set(existing.get("top_k_values", [])) | set(self.top_k_values))
+            manifest: Dict[str, Any] = {
+                "started_at": existing.get("started_at", datetime.utcnow().isoformat()),
+                "mode": self.mode,
+                "top_k_values": merged_k,
+                "variants": merged_variants,
+                "total_queries_in_set": max(
+                    existing.get("total_queries_in_set", 0), len(self.all_queries)
+                ),
+                "results_summary": existing.get("results_summary", {}),
+                "resumed_at": datetime.utcnow().isoformat(),
+            }
+        else:
+            if manifest_path.exists():
+                logger.warning(
+                    "Existing run_manifest.json found in output_dir but --resume was "
+                    "not set — previous manifest will be overwritten. "
+                    "Pass --resume to continue a prior run."
+                )
+            manifest = {
+                "started_at": datetime.utcnow().isoformat(),
+                "mode": self.mode,
+                "top_k_values": self.top_k_values,
+                "variants": new_variant_names,
+                "total_queries_in_set": len(self.all_queries),
+            }
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
         all_results: Dict[str, List[QueryTrace]] = {}
@@ -512,11 +582,11 @@ class BenchmarkRunner:
 
             all_results[variant.name] = self.collector.finalize_variant(variant.name)
 
-        # Write completed manifest
+        # Write completed manifest — merge results_summary with any prior sessions
         manifest["completed_at"] = datetime.utcnow().isoformat()
-        manifest["results_summary"] = {
-            name: len(traces) for name, traces in all_results.items()
-        }
+        existing_summary = manifest.get("results_summary", {})
+        new_summary = {name: len(traces) for name, traces in all_results.items()}
+        manifest["results_summary"] = {**existing_summary, **new_summary}
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
         return all_results

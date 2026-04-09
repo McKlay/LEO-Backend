@@ -23,6 +23,9 @@ def mock_settings():
     settings.vectorstore_table_name = "labor_law_embeddings"
     settings.embedding_dimension = 1536
     settings.supabase_db_url = "postgresql://test"
+    settings.rrf_dense_weight = 2.0
+    settings.rrf_lexical_weight = 1.0
+    settings.rrf_symbolic_weight = 0.5
     return settings
 
 

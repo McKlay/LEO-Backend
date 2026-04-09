@@ -153,10 +153,12 @@ class ChartGenerator:
         """
         Grouped bar chart: Dense / Lexical / Symbolic / Hybrid × retrieval metrics.
 
-        Metrics: Recall@3, Recall@5, Recall@10, Hit Rate@5, MRR.
+        Metrics: Recall@3, Recall@5, Recall@10, Hit Rate@5, MRR@3, MRR@5, MRR@10.
+        MRR is reported at each K cut-off (not pooled from max-K) so values are
+        directly comparable to the Recall/Hit Rate columns in Table 2.
         """
-        metrics = ["recall_at_3", "recall_at_5", "recall_at_10", "hit_rate_at_5", "mrr"]
-        labels = ["Recall@3", "Recall@5", "Recall@10", "Hit Rate@5", "MRR"]
+        metrics = ["recall_at_3", "recall_at_5", "recall_at_10", "hit_rate_at_5", "mrr_at_3", "mrr_at_5", "mrr_at_10"]
+        labels = ["Recall@3", "Recall@5", "Recall@10", "Hit Rate@5", "MRR@3", "MRR@5", "MRR@10"]
         variants = ["full_pipeline", "dense_only", "lexical_only", "symbolic_only"]
 
         if not _require_columns(self.df, metrics + ["variant_name"], "chart_retrieval_comparison"):
@@ -167,7 +169,7 @@ class ChartGenerator:
 
         x = np.arange(len(metrics))
         width = 0.18
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(13, 5))
 
         for i, variant in enumerate(variants):
             row = agg[agg["variant_name"] == variant]
@@ -190,11 +192,14 @@ class ChartGenerator:
 
     def chart_retrieval_by_target(self) -> None:
         """
-        Grouped bar chart: MRR per retrieval target subset × retrieval strategy.
+        Grouped bar chart: MRR@5 per retrieval target subset × retrieval strategy.
+
+        MRR@5 is used as the standard evaluation cut-off (per §5.1.4). MRR@3
+        values are also available in the raw results for reference.
         """
-        metrics = ["mrr"]
+        metrics = ["mrr_at_5"]
         variants = ["full_pipeline", "dense_only", "lexical_only", "symbolic_only"]
-        required = ["variant_name", "retrieval_target", "mrr"]
+        required = ["variant_name", "retrieval_target", "mrr_at_5"]
 
         if not _require_columns(self.df, required, "chart_retrieval_by_target"):
             return
@@ -205,7 +210,7 @@ class ChartGenerator:
             print("[chart_retrieval_by_target] No retrieval_target data found — skipping.")
             return
 
-        agg = df.groupby(["retrieval_target", "variant_name"])["mrr"].mean().unstack(fill_value=0)
+        agg = df.groupby(["retrieval_target", "variant_name"])["mrr_at_5"].mean().unstack(fill_value=0)
         # Reorder columns to canonical variant order
         ordered_cols = [v for v in variants if v in agg.columns]
         agg = agg[ordered_cols]
@@ -219,8 +224,8 @@ class ChartGenerator:
 
         ax.set_xticks(x + width * (len(agg.columns) - 1) / 2)
         ax.set_xticklabels(agg.index, rotation=15, ha="right")
-        ax.set_ylabel("MRR")
-        ax.set_title("MRR by Retrieval Target Subset (Table 3)")
+        ax.set_ylabel("MRR@5")
+        ax.set_title("MRR@5 by Retrieval Target Subset (Table 3)")
         ax.set_ylim(0, 1.05)
         ax.legend(loc="upper right")
         fig.tight_layout()

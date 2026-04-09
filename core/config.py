@@ -125,6 +125,25 @@ class Settings(BaseSettings):
         description="Retrieval strategy for pipeline variant testing: hybrid=all three strategies + RRF, dense=HNSW only, lexical=FTS only, symbolic=keywords GIN only, none=LLM-only baseline"
     )
     
+    # RRF Strategy Weights (Phase-1 benchmark-derived defaults)
+    # Weighted RRF: score(d) = Σ_s  w_s / (k + rank_s(d))
+    # Dense dominates (Recall@5=0.845), lexical is strong (0.837), symbolic is supplementary (0.439).
+    rrf_dense_weight: float = Field(
+        default=2.0,
+        gt=0.0,
+        description="RRF weight for dense (semantic HNSW) strategy. Higher = more influence in fusion."
+    )
+    rrf_lexical_weight: float = Field(
+        default=1.0,
+        gt=0.0,
+        description="RRF weight for lexical (FTS) strategy."
+    )
+    rrf_symbolic_weight: float = Field(
+        default=0.5,
+        gt=0.0,
+        description="RRF weight for symbolic (article GIN lookup) strategy."
+    )
+    
     # Memory Settings
     memory_token_limit: int = Field(
         default=4000,

@@ -91,24 +91,90 @@ python -m tests.benchmark.runner --smoke --query-ids Q005
 
 ### Phase 1 — Retrieval Evaluation (Tables 2–4)
 
+`retrieval_only` mode skips generation entirely — cost is GPT-4o-mini for query analysis only (~$0.001 per query). Always dry-run one query per scenario first.
+
+#### Step 1: Dry Run (2 commands, ~$0.03 total)
+
+Each variant only accepts queries within its scope. Using an out-of-scope query ID silently produces 0 results for that variant.
+
+> **Note:** `hybrid_no_clarification` is **not** part of Phase 1 — clarification is evaluated in Phase 2 full mode on `turn4_response` at K=5 only; it produces no retrieval metrics.
+
+| Scenario | Variants | Scope constraint | Dry-run query ID |
+|----------|----------|-----------------|------------------|
+| Tables 2–3 (strategy) | `full_pipeline dense_only lexical_only symbolic_only` | any | `Q002` — EN, single-turn, clear |
+| Table 4 (translation) | `full_pipeline hybrid_no_translation` | **FIL or CEB only** | `Q001` — FIL, single-turn |
+
 ```bash
-# Retrieval strategy comparison at K = 3, 5, 10
+# Scenario A — strategy comparison (4 variants × 1 query × K = 3, 5, 10)
 python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
   --variant full_pipeline dense_only lexical_only symbolic_only \
-  --output-dir results/run_001
+  --query-ids Q002 --output-dir tests/benchmark/results/dry_run_phase1
 
-# Translation ablation
+# Scenario B — translation ablation (2 variants × 1 non-English query × K = 5)
+# ⚠ Must be FIL/CEB — an EN query ID yields 0 results for hybrid_no_translation
 python -m tests.benchmark.runner --mode retrieval_only --top-k 5 \
   --variant full_pipeline hybrid_no_translation \
-  --output-dir results/run_001
+  --query-ids Q001 --output-dir tests/benchmark/results/dry_run_phase1
 ```
+
+After each command, check `tests/benchmark/results/dry_run_phase1/partial/` for the output JSON. Verify before proceeding:
+- `retrieved_chunk_ids` is a non-empty list
+- `scores` contains `recall_at_5` or similar retrieval metrics
+- No `error` field present
+
+#### Step 2: Probe Run (incremental, one variant at a time)
+
+Run variants sequentially into **one shared folder**, always with `--top-k 3 5 10` so K-values are complete from the start. Inspect scores after each variant before continuing. Use `--resume` from the second command onward — the manifest now accumulates across sessions.
+
+```bash
+# 1. dense_only — evaluate first (100 queries × K = 3, 5, 10)
+python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
+  --variant dense_only --output-dir tests/benchmark/results/phase1_full
+
+# Inspect results/phase1_full/dense_only_results.json → scores look OK? Continue:
+
+# 2. symbolic_only
+python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
+  --variant symbolic_only --output-dir tests/benchmark/results/phase1_full --resume
+
+# 3. lexical_only
+python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
+  --variant lexical_only --output-dir tests/benchmark/results/phase1_full --resume
+
+# 4. full_pipeline
+python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
+  --variant full_pipeline --output-dir tests/benchmark/results/phase1_full --resume
+
+# 5. hybrid_no_translation — K = 5 only, non-English scope (65 queries)
+python -m tests.benchmark.runner --mode retrieval_only --top-k 5 \
+  --variant hybrid_no_translation --output-dir tests/benchmark/results/phase1_full --resume
+```
+
+> Each session resumes into the same folder. The manifest accumulates all variants and preserves `started_at` across sessions. If a session is interrupted mid-variant, re-run the same command with `--resume` — completed queries are skipped automatically.
+
+#### Step 3: Full Run
+
+Alternative to Step 2 if you prefer running all variants in one shot without pausing to evaluate:
+
+```bash
+# Tables 2–3: strategy comparison (4 variants × 100 queries × K = 3, 5, 10)
+python -m tests.benchmark.runner --mode retrieval_only --top-k 3 5 10 \
+  --variant full_pipeline dense_only lexical_only symbolic_only \
+  --output-dir tests/benchmark/results/phase1_full
+
+# Table 4: translation ablation (2 variants × 65 non-English queries × K = 5)
+python -m tests.benchmark.runner --mode retrieval_only --top-k 5 \
+  --variant hybrid_no_translation --output-dir tests/benchmark/results/phase1_full --resume
+```
+
+> `full_pipeline` is already present from the first command; `--resume` skips its completed queries when the second command runs.
 
 ### Phase 2 — Full Pipeline (Tables 6–10)
 
 ```bash
 python -m tests.benchmark.runner --mode full \
   --variant llm_only stage2_only full_pipeline \
-  --output-dir results/run_001
+  --output-dir tests/benchmark/results/phase2_full
 ```
 
 ### Phase 3 — RAG Triad Scoring

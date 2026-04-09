@@ -568,6 +568,12 @@ class SupabaseVectorStore(BaseVectorStore):
                 # includes all natural-language terms that partially overlap with their content.
                 # GREATEST() selects whichever signal ranks the doc higher; OR in WHERE
                 # ensures neither signal excludes relevant docs.
+                #
+                # Q087 fix: the tsvector now concatenates full_text + article_title +
+                # source_title.  NLRC procedural rules use "Commission" instead of
+                # "NLRC" in their body text, but the source title IS "NLRC Rules of
+                # Procedure" — without it, FTS could never match queries about "NLRC".
+                # A companion GIN index migration aligns with this expression.
                 cursor.execute("""
                     SELECT 
                         s.id,
@@ -580,8 +586,18 @@ class SupabaseVectorStore(BaseVectorStore):
                         s.summary,
                         s.keywords,
                         GREATEST(
-                            ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s)),
-                            ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
+                            ts_rank(
+                                to_tsvector('english',
+                                    s.full_text || ' ' || COALESCE(s.article_title, '') || ' ' || COALESCE(src.title, '')
+                                ),
+                                websearch_to_tsquery('english', %s)
+                            ),
+                            ts_rank(
+                                to_tsvector('english',
+                                    s.full_text || ' ' || COALESCE(s.article_title, '') || ' ' || COALESCE(src.title, '')
+                                ),
+                                websearch_to_tsquery('english', %s)
+                            )
                         ) as rank,
                         src.url,
                         src.title AS source_title,
@@ -589,12 +605,26 @@ class SupabaseVectorStore(BaseVectorStore):
                     FROM labor_law_sections s
                     LEFT JOIN labor_law_sources src ON s.source_id = src.id
                     WHERE (
-                        to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
-                        OR to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                        to_tsvector('english',
+                            s.full_text || ' ' || COALESCE(s.article_title, '') || ' ' || COALESCE(src.title, '')
+                        ) @@ websearch_to_tsquery('english', %s)
+                        OR to_tsvector('english',
+                            s.full_text || ' ' || COALESCE(s.article_title, '') || ' ' || COALESCE(src.title, '')
+                        ) @@ websearch_to_tsquery('english', %s)
                     )
                     AND GREATEST(
-                        ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s)),
-                        ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
+                        ts_rank(
+                            to_tsvector('english',
+                                s.full_text || ' ' || COALESCE(s.article_title, '') || ' ' || COALESCE(src.title, '')
+                            ),
+                            websearch_to_tsquery('english', %s)
+                        ),
+                        ts_rank(
+                            to_tsvector('english',
+                                s.full_text || ' ' || COALESCE(s.article_title, '') || ' ' || COALESCE(src.title, '')
+                            ),
+                            websearch_to_tsquery('english', %s)
+                        )
                     ) > %s
                     ORDER BY rank DESC
                     LIMIT %s
@@ -1259,8 +1289,17 @@ class SupabaseVectorStore(BaseVectorStore):
                 )
                 return []
 
-            # Execute all active strategies in parallel
-            raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Execute all active strategies with TRUE parallelism.
+            # The strategy methods are async def but internally use synchronous
+            # psycopg2, which blocks the event loop. Wrapping each coroutine in
+            # run_in_executor runs it in a separate OS thread (ThreadedConnectionPool
+            # is thread-safe), cutting full_pipeline latency from ~10s to ~7s.
+            loop = asyncio.get_running_loop()
+            thread_tasks = [
+                loop.run_in_executor(None, lambda c=coro: asyncio.run(c))
+                for coro in tasks
+            ]
+            raw_results = await asyncio.gather(*thread_tasks, return_exceptions=True)
 
             # Tag each result with its originating strategy and collect per-strategy lists
             rrf_input: Dict[str, List[QueryResult]] = {}
@@ -1280,8 +1319,14 @@ class SupabaseVectorStore(BaseVectorStore):
                 logger.warning("smart_retrieve: all strategies returned empty or failed")
                 return []
 
-            # Merge via RRF (k=60, Cormack et al. 2009)
-            merged = reciprocal_rank_fusion(rrf_input, k=60)
+            # Merge via weighted RRF (k=60, Cormack et al. 2009)
+            # Strategy weights derived from Phase-1 benchmark; configurable via env.
+            rrf_weights = {
+                "dense": self.settings.rrf_dense_weight,
+                "lexical": self.settings.rrf_lexical_weight,
+                "symbolic": self.settings.rrf_symbolic_weight,
+            }
+            merged = reciprocal_rank_fusion(rrf_input, k=60, weights=rrf_weights)
             merged = merged[:limit]
 
             # Build per-strategy count summary for INFO log

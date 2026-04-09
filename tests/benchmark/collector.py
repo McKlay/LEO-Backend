@@ -96,6 +96,12 @@ class QueryTrace:
     error: Optional[str] = None
     timestamp: Optional[str] = None
 
+    # ── Computed Scores ───────────────────────────────────────────────────────
+    # Populated by runner._apply_scores() after each query completes.
+    # retrieval_only: recall@K, hit_rate@K, mrr
+    # full: token_f1, rouge_l, exact_match, citation_precision, citation_recall
+    scores: Dict[str, Any] = field(default_factory=dict)
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize trace to a JSON-serializable dict.
 
