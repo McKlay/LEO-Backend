@@ -66,7 +66,8 @@ class RetrievalPipeline:
         filters: Optional[Dict[str, Any]] = None,
         intent_category: Optional[str] = None,
         keywords: Optional[List[str]] = None,
-        articles: Optional[List[str]] = None
+        articles: Optional[List[str]] = None,
+        original_query: Optional[str] = None
     ) -> List[QueryResult]:
         """
         Retrieve relevant context using smart multi-strategy retrieval.
@@ -77,7 +78,10 @@ class RetrievalPipeline:
         - Semantic search if no specific indicators
         
         Args:
-            query: User query text
+            query: Normalized English query (used for dense embedding)
+            original_query: Raw user query before normalization — forwarded to
+                keyword_search as the FTS natural-language signal so verbatim
+                phrases survive the LLM normalization step
             top_k: Number of results to retrieve (uses default if None)
             filters: Metadata filters for the search
             intent_category: Optional intent category to filter by
@@ -114,6 +118,7 @@ class RetrievalPipeline:
             results = await self.vectorstore.smart_retrieve(
                 query_embedding=query_vector,
                 query_text=query,
+                original_query=original_query,
                 keywords=keywords,
                 articles=articles,
                 limit=k,

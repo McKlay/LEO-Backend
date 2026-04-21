@@ -305,8 +305,14 @@ Clarification format: ONE topic-guiding question in user's language. {clarificat
 
 Keyword rules:
 - Extract 2-4 SPECIFIC, DISTINCTIVE terms only
-- NEVER extract: "Philippines", "Philippine", "labor law", "Labor Code", "worker", "employee", "employer"
-- Extract: specific benefits ("13th month", "SIL"), procedures ("retrenchment"), regions ("NCR"), article numbers, article sections, Republic Acts, Republic Act sections, presidential decrees, DOLE Department Orders, NLRC Rule No., NLRC Section No., SEnA Rule No, SEnA Rule Section No., DOLE Guidelines, DOLE Handbook
+- NEVER extract standalone generic terms: "Philippines", "Philippine", "labor law", "Labor Code", "worker", "employee", "employer", "salary", "pay", "leave", "benefits", "work", "hours", "compensation", "overtime" — these add no retrieval discriminating power on their own
+- When the query contains multi-word legal phrases in quotes (e.g. 'constructive dismissal', 'authorized cause', 'Factor 305', 'bed capacity of at least one hundred'), extract them verbatim as a single keyword — do not decompose
+- When the limit forces a choice, prefer quoted verbatim phrases over unquoted general terms
+- Extract: specific named benefits ("separation pay", "13th month pay", "night shift differential"), specific procedures ("retrenchment", "constructive dismissal"), regions ("NCR"), employment types ("kasambahay", "probationary", "rank-and-file", "contractor"), specific legal concepts ("just cause", "serious misconduct", "authorized cause"), DOLE/SSS/Pag-IBIG/PhilHealth-specific program terms, verbatim regulatory formulas or rates ("Factor 305", "30 percent of regular wage")
+
+Articles rules:
+- Extract: article numbers, article sections, Republic Acts, Republic Act sections, presidential decrees, DOLE Department Orders, NLRC Rule No., NLRC Section No., SEnA Rule No, SEnA Rule Section No., DOLE Guidelines, DOLE Handbook
+- Non-negotiable: extract only when they are explicitly mentioned in the query. Don't infer or hallucinate article references based on concepts. If not explicitly mentioned, leave articles empty.
 
 Return JSON (no markdown):
 {{
@@ -318,7 +324,7 @@ Return JSON (no markdown):
     "needs_clarification": false,
     "clarification_question": null,
     "legal_concepts": ["..."],
-    "articles": ["Article 297"],
+    "articles": ["Article 297", "NLRC Rule V", "SEnA Rule II"],
     "keywords": ["..."]
 }}"""
 

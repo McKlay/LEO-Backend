@@ -82,7 +82,18 @@ def reciprocal_rank_fusion(
 
     effective_weights = weights if weights is not None else DEFAULT_STRATEGY_WEIGHTS
 
-    # Accumulate RRF scores and per-strategy rank info keyed by document ID
+    # Accumulate RRF scores and per-strategy rank info keyed by document ID.
+    #
+    # Section-aware deduplication: chunks from labor_law_chunks carry their parent
+    # section's UUID in metadata['section_id'].  Lexical search returns sections
+    # directly (no section_id in metadata).  By normalising chunk doc_ids to the
+    # parent section UUID, a dense chunk result and a lexical section result for the
+    # same document now share the same key and contribute a *combined* RRF score.
+    # Without this, large handbook sections that have chunks never benefit from
+    # cross-strategy fusion because the chunk UUID ≠ the section UUID.
+    #
+    # Within each strategy we take only the BEST (lowest) rank per section to avoid
+    # triple-counting sections that have multiple high-ranking chunks.
     rrf_scores: Dict[str, float] = defaultdict(float)
     doc_strategy_ranks: Dict[str, Dict[str, int]] = defaultdict(dict)
     doc_strategy_weights: Dict[str, Dict[str, float]] = defaultdict(dict)
@@ -90,8 +101,15 @@ def reciprocal_rank_fusion(
 
     for strategy, lst in active.items():
         w = effective_weights.get(strategy, 1.0)
+        # Track the best (lowest) rank seen per section within this strategy.
+        best_rank_per_section: Dict[str, int] = {}
         for rank, result in enumerate(lst, start=1):
-            doc_id = result.id
+            # Normalise: chunk results expose their parent section UUID via
+            # metadata['section_id']; section results have no such key.
+            doc_id: str = result.metadata.get('section_id') or result.id
+            if doc_id in best_rank_per_section:
+                continue  # only count best (first) occurrence per section
+            best_rank_per_section[doc_id] = rank
             rrf_scores[doc_id] += w / (k + rank)
             doc_strategy_ranks[doc_id][strategy] = rank
             doc_strategy_weights[doc_id][strategy] = w

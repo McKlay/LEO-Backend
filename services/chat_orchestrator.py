@@ -371,7 +371,8 @@ class ChatOrchestrator:
                     query=retrieval_query,
                     keywords=analysis.keywords if analysis else None,
                     articles=analysis.articles if analysis else None,
-                    top_k=settings.retrieval_top_k
+                    top_k=settings.retrieval_top_k,
+                    original_query=user_message
                 )
 
                 retrieval_time = time.time() - retrieval_start

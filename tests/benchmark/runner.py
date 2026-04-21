@@ -289,6 +289,7 @@ class BenchmarkRunner:
                 keywords=analysis.keywords if analysis else None,
                 articles=analysis.articles if analysis else None,
                 top_k=k,
+                original_query=query_text,
             )
             total_retrieval_time += time.monotonic() - t0
         self.collector.record_retrieval_per_k(

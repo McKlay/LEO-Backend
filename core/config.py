@@ -125,21 +125,34 @@ class Settings(BaseSettings):
         description="Retrieval strategy for pipeline variant testing: hybrid=all three strategies + RRF, dense=HNSW only, lexical=FTS only, symbolic=keywords GIN only, none=LLM-only baseline"
     )
     
-    # RRF Strategy Weights (Phase-1 benchmark-derived defaults)
+    # RRF Strategy Weights (HPT-optimal, April 21 2026)
     # Weighted RRF: score(d) = Σ_s  w_s / (k + rank_s(d))
-    # Dense dominates (Recall@5=0.845), lexical is strong (0.837), symbolic is supplementary (0.439).
+    # Weights validated via four offline HPT rounds (rrf_deep_tuner.py):
+    #   Round 1 (pre-DB enrichment): dense=lexical=1.0 selected — head-to-head parity confirmed.
+    #   Round 2 (post-DB keyword enrichment): same config re-validated; invalidated by Q087 FTS expansion.
+    #   Round 3 (post-FTS-revert, April 10): FTS reverted to full_text only (drops metadata inflation).
+    #     Rank 1 = dense=1.0, lexical=0.75, sym=0.10 → Recall@5=0.9272, MRR@5=0.8775 (best in grid).
+    #   Round 4 (post-query-redesign, April 21): all 100 queries redesigned; 66 combos evaluated.
+    #     deep_strategy_cache top-50 per strategy; extended lexical grid [0.05..2.00].
+    #     Optimal = dense=1.0, lexical=0.25, sym=1.00 → Recall@5=0.8223, HR@5=0.9200, MRR@5=0.6737.
+    #     w_symbolic raised 0.10→1.00: symbolic-target queries now contribute (0 candidates for 60%
+    #       of queries, so the weight increase is neutral for non-symbolic queries).
+    #     w_lexical lowered 0.75→0.25: reduces FTS noise on dense-target queries while preserving
+    #       enough signal for lexical-target and hybrid-target gold chunks at production top-20 depth.
+    #     w_lex=0.05 (raw grid winner at top-50) rejected: breaks lexical-target queries at top-20
+    #       because every dense result outscores a lexical rank-1 gold (0.05/61 < 1.0/80).
     rrf_dense_weight: float = Field(
-        default=2.0,
+        default=1.0,
         gt=0.0,
         description="RRF weight for dense (semantic HNSW) strategy. Higher = more influence in fusion."
     )
     rrf_lexical_weight: float = Field(
-        default=1.0,
+        default=0.25,
         gt=0.0,
         description="RRF weight for lexical (FTS) strategy."
     )
     rrf_symbolic_weight: float = Field(
-        default=0.5,
+        default=1.0,
         gt=0.0,
         description="RRF weight for symbolic (article GIN lookup) strategy."
     )

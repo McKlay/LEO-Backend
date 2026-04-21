@@ -472,7 +472,10 @@ class ResultCollector:
         Returns:
             All QueryTrace objects for this variant
         """
-        traces = self.variant_results.get(variant_name, [])
+        traces = sorted(
+            self.variant_results.get(variant_name, []),
+            key=lambda t: t.query_id,
+        )
 
         results_path = self.output_dir / f"{variant_name}_results.json"
         payload = {
