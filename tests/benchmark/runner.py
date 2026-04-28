@@ -42,25 +42,43 @@ from tests.benchmark.config import (
 )
 from tests.benchmark.collector import QueryTrace, ResultCollector
 from tests.benchmark.scorers.retrieval import score_retrieval
-from tests.benchmark.scorers.answer_quality import score_answer
+from tests.benchmark.scorers.answer_quality import score_answer, score_answer_turn6
 from tests.benchmark.scorers.citation import score_citations
 
 logger = get_logger(__name__)
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-def _get_effective_query(query: Dict[str, Any]) -> Tuple[str, List[Dict[str, Any]]]:
+def _get_effective_query(
+    query: Dict[str, Any],
+    use_clarification_context: bool = True,
+) -> Tuple[str, List[Dict[str, Any]]]:
     """
     Determine the effective user message and prior turns for a query.
 
     For single-turn queries: effective message = query['query_text'], no prior turns.
-    For multi-turn queries: effective message = last user turn in conversation_history;
-        prior turns = all entries before that final user turn.
 
-    The benchmark JSON uses 'text' as the message key in conversation_history entries.
+    For multi-turn queries the returned query depends on ``use_clarification_context``:
+
+    * ``True``  (full_pipeline): effective message = last user turn in
+      conversation_history (Turn 3 — the detailed clarification response);
+      prior turns = all preceding entries [Turn 1, Turn 2] injected into
+      memory so Stage 1 has the full clarification exchange context.
+
+    * ``False`` (llm_only / stage2_only / hybrid_no_clarification): effective
+      message = ``query['query_text']`` (Turn 1 — the original vague query);
+      prior turns = [] (no history injection).  These variants never performed
+      a clarification exchange, so receiving Turn 3 or the exchange history
+      would give them an unfair advantage and invalidate Table 6–7 comparisons.
+
+    The benchmark JSON uses 'text' as the message key in conversation_history
+    entries.
 
     Args:
-        query: A benchmark query dict
+        query:                    A benchmark query dict.
+        use_clarification_context: Whether to unpack the post-clarification turn
+                                   (Turn 3) and inject prior turns into memory.
+                                   Pass ``variant.enable_smart_clarification``.
 
     Returns:
         Tuple of (effective_query_text, prior_turns)
@@ -68,11 +86,15 @@ def _get_effective_query(query: Dict[str, Any]) -> Tuple[str, List[Dict[str, Any
     if query.get("query_type") != "multi_turn":
         return query["query_text"], []
 
+    # Variants without smart clarification must start cold from Turn 1.
+    if not use_clarification_context:
+        return query["query_text"], []
+
     history = query.get("conversation_history", [])
     if not history:
         return query["query_text"], []
 
-    # Scan backwards for the last user turn
+    # Scan backwards for the last user turn (Turn 3)
     for i in range(len(history) - 1, -1, -1):
         if history[i].get("role") == "user":
             # Support both 'text' and 'content' keys in history entries
@@ -387,7 +409,10 @@ class BenchmarkRunner:
             Finalized QueryTrace
         """
         conversation_id = str(uuid.uuid4())
-        effective_query, prior_turns = _get_effective_query(query)
+        effective_query, prior_turns = _get_effective_query(
+            query,
+            use_clarification_context=variant.enable_smart_clarification,
+        )
 
         trace = self.collector.start_trace(
             query,
@@ -474,6 +499,12 @@ class BenchmarkRunner:
             cit = score_citations(trace)
             if cit:
                 scores.update(cit)
+
+        # Turn 6 answer quality (multi-turn Phase 2, Table 8)
+        if trace.turn6_response:
+            t6aq = score_answer_turn6(trace)
+            if t6aq:
+                scores.update(t6aq)
 
         trace.scores = scores
 
@@ -692,7 +723,110 @@ class BenchmarkRunner:
 
         return selected
 
-    # ── Pre-flight validation: clarification ───────────────────────────────────
+    # ── Phase 2 smoke test ─────────────────────────────────────────────────────
+
+    async def run_smoke_phase2(self) -> None:
+        """
+        Probe all three Phase 2 variants on one multi-turn query.
+
+        Verifies for each variant (llm_only, stage2_only, full_pipeline):
+          - Correct effective_query used:
+              llm_only / stage2_only → Turn 1 (original vague query, no history)
+              full_pipeline          → Turn 3 (post-clarification response + history)
+          - prior_turn_count matches expectation
+          - turn4_response populated (Table 6–7 metrics)
+          - turn6_response populated (Table 8 metrics)
+          - automated scores present in trace
+
+        Respects --query-ids if provided; otherwise selects the first multi-turn
+        query from the set.
+        """
+        print("\n" + "═" * 60)
+        print("PHASE 2 SMOKE TEST")
+        print("═" * 60)
+
+        multi_queries = [q for q in self.all_queries if q.get("query_type") == "multi_turn"]
+        if not multi_queries:
+            print("ERROR: No multi-turn queries found in filtered set")
+            return
+
+        target_query = multi_queries[0]
+        history = target_query.get("conversation_history", [])
+        turn3_text = ""
+        for t in reversed(history):
+            if t.get("role") == "user":
+                turn3_text = t.get("text") or t.get("content", "")
+                break
+
+        print(f"\nTarget: {target_query['query_id']} | lang={target_query['language']} | ambiguous={target_query.get('is_ambiguous')}")
+        print(f"  Turn1 (vague)  : {target_query['query_text'][:90]}")
+        print(f"  Turn3 (detailed): {turn3_text[:90]}")
+        print(f"  Turn5 (followup): {(target_query.get('turn5_query') or '')[:90]}")
+        print()
+
+        saved_mode = self.mode
+        self.mode = "full"
+        phase2_variants = ["llm_only", "stage2_only", "full_pipeline"]
+        results = []
+
+        for variant_name in phase2_variants:
+            variant = get_variant_by_name(variant_name)
+            apply_variant(variant)
+            reset_singletons()
+
+            print(f"[{variant_name}]")
+            trace = await self._run_one_query(target_query, variant)
+
+            # --- Correctness checks ---
+            expect_turn1 = not variant.enable_smart_clarification
+            actual_effective = (trace.turn3_query or "").strip()
+            used_turn1 = actual_effective == target_query["query_text"].strip()
+            used_turn3 = actual_effective == turn3_text.strip()
+
+            correct_query = (expect_turn1 and used_turn1) or (not expect_turn1 and used_turn3)
+            correct_history = (
+                (expect_turn1 and trace.prior_turn_count == 0)
+                or (not expect_turn1 and trace.prior_turn_count > 0)
+            )
+            has_turn4 = bool(trace.generated_response)
+            has_turn6 = bool(trace.turn6_response)
+
+            ok = correct_query and correct_history and has_turn4 and has_turn6
+            status = "PASS" if ok else "FAIL"
+
+            expected_label = "turn1 (cold)" if expect_turn1 else "turn3 (clarified)"
+            actual_label = "turn1" if used_turn1 else ("turn3" if used_turn3 else "unknown")
+            print(f"  Status : {status}")
+            print(f"  query  : expected={expected_label} | actual={actual_label} → {'OK' if correct_query else '*** WRONG ***'}")
+            print(f"  history: expected prior_count={'0' if expect_turn1 else '>0'} | actual={trace.prior_turn_count} → {'OK' if correct_history else '*** WRONG ***'}")
+            print(f"  turn4  : {'OK' if has_turn4 else '*** MISSING ***'} (len={len(trace.generated_response or '')})")
+            print(f"  turn6  : {'OK' if has_turn6 else '*** MISSING ***'} (len={len(trace.turn6_response or '')})")
+            if trace.scores:
+                score_parts = "  ".join(
+                    f"{k}={v:.3f}" if isinstance(v, float) else f"{k}={v}"
+                    for k, v in sorted(trace.scores.items())
+                )
+                print(f"  scores : {score_parts}")
+            if trace.error:
+                print(f"  ERROR  : {trace.error}")
+            print()
+
+            results.append((variant_name, ok))
+
+            if self.api_delay_ms > 0:
+                await asyncio.sleep(self.api_delay_ms / 1000)
+
+        self.mode = saved_mode
+
+        passed = sum(1 for _, ok in results if ok)
+        print(f"{'─' * 60}")
+        print(f"PHASE 2 SMOKE TEST: {passed}/{len(results)} variants passed")
+        if passed < len(results):
+            failed = [n for n, ok in results if not ok]
+            print(f"  Failed: {', '.join(failed)}")
+        print("═" * 60 + "\n")
+
+    # ── Pre-flight validation: clarification ─────────────────────────────────────
 
     async def run_validate_clarification(
         self, sample_size: Optional[int] = None
@@ -996,6 +1130,16 @@ Examples:
         help="Run 4 representative queries as a full-pipeline smoke test",
     )
     parser.add_argument(
+        "--smoke-phase2",
+        action="store_true",
+        dest="smoke_phase2",
+        help=(
+            "Run all three Phase 2 variants (llm_only, stage2_only, full_pipeline) "
+            "on one multi-turn query. Verifies correct turn1/turn3 routing, "
+            "prior-turn injection, turn4_response, and turn6_response."
+        ),
+    )
+    parser.add_argument(
         "--validate",
         choices=["clarification", "multiturn", "all"],
         metavar="MODE",
@@ -1093,6 +1237,11 @@ async def _main() -> None:
     # Smoke test
     if args.smoke:
         await runner.run_smoke_test()
+        return
+
+    # Phase 2 smoke test
+    if args.smoke_phase2:
+        await runner.run_smoke_phase2()
         return
 
     # Pre-flight validation

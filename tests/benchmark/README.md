@@ -171,9 +171,43 @@ python -m tests.benchmark.runner --mode retrieval_only --top-k 5 \
 
 ### Phase 2 — Full Pipeline (Tables 6–10)
 
+> **Note:** `hybrid_no_clarification` is evaluated here too (Table 9, clarification ablation) on the 30 ambiguous multi-turn queries. Run it after `full_pipeline` is confirmed.
+
+#### Probe Run (recommended — one variant at a time)
+
 ```bash
+# 0. Smoke test — validate all 3 core variants on one multi-turn query (~$0.05)
+python -m tests.benchmark.runner --smoke-phase2 \
+  --query-ids Q006 --output-dir tests/benchmark/results/probe_phase2
+
+# 1. llm_only — cheapest; no retrieval, no analysis (100 queries)
 python -m tests.benchmark.runner --mode full \
-  --variant llm_only stage2_only full_pipeline \
+  --variant llm_only --output-dir tests/benchmark/results/phase2_full --resume --api-delay-ms 5000 2>&1
+
+# Inspect phase2_full/llm_only_results.json → scores look OK? Continue:
+
+# 2. stage2_only — adds hybrid retrieval, no Stage 1 per-query analysis (100 queries)
+python -m tests.benchmark.runner --mode full \
+  --variant stage2_only --output-dir tests/benchmark/results/phase2_full --resume --api-delay-ms 15000
+
+# 3. full_pipeline — most expensive; all stages including GPT-4o-mini analysis (100 queries)
+python -m tests.benchmark.runner --mode full \
+  --variant full_pipeline --output-dir tests/benchmark/results/phase2_full --resume --api-delay-ms 30000
+
+# 4. hybrid_no_clarification — Table 11 clarification ablation; ambiguous-only scope (30 queries)
+python -m tests.benchmark.runner --mode full \
+  --variant hybrid_no_clarification --output-dir tests/benchmark/results/phase2_full --resume --api-delay-ms 15000
+```
+
+> Each command resumes into the same folder. Use `--resume` from command 2 onward.
+> If a session is interrupted mid-variant, re-run the same command with `--resume`.
+
+#### Full Run (one shot, no intermediate inspection)
+
+```bash
+# Tables 6–9: all Phase 2 variants in one shot
+python -m tests.benchmark.runner --mode full \
+  --variant llm_only stage2_only full_pipeline hybrid_no_clarification \
   --output-dir tests/benchmark/results/phase2_full
 ```
 
@@ -181,19 +215,24 @@ python -m tests.benchmark.runner --mode full \
 
 ```bash
 python -m tests.benchmark.scorers.rag_triad \
-  --input results/run_001 --output results/run_001/rag_triad --concurrency 5
+  --input tests/benchmark/results/phase2_full \
+  --output tests/benchmark/results/phase3_full/rag_triad \
+  --concurrency 5
 ```
 
 ### Export Results
 
 ```bash
-# Raw CSV + blinded expert evaluation CSV
+# Raw CSV + blinded expert evaluation CSV + multi-turn conversation history
 python -m tests.benchmark.exporters.csv_exporter \
-  --input results/run_001 --output results/exports --expert-blind --multiturn
+  --input tests/benchmark/results/phase2_full \
+  --output tests/benchmark/results/exports \
+  --expert-blind --multiturn
 
 # All 8 thesis figures
 python -m tests.benchmark.exporters.chart_generator \
-  --input results/run_001 --output results/figures
+  --input tests/benchmark/results/phase2_full \
+  --output tests/benchmark/results/figures
 ```
 
 ---
@@ -211,6 +250,7 @@ python -m tests.benchmark.exporters.chart_generator \
 | `--output-dir` | `results/run_<ts>` | Output directory |
 | `--resume` | off | Skip already-completed query–variant pairs |
 | `--smoke` | — | Run 4 representative queries (EN/FIL/CEB/multi-turn) as a full-pipeline sanity check; combine with `--query-ids` to run a single query instead |
+| `--smoke-phase2` | — | Run all 3 Phase 2 variants (`llm_only`, `stage2_only`, `full_pipeline`) on one multi-turn query and verify turn routing, prior-turn injection, turn4/turn6 population, and scores |
 | `--validate` | — | `clarification` · `multiturn` · `all` |
 | `--log-level` | `INFO` | `DEBUG` · `INFO` · `WARNING` |
 | `--log-file` | — | Tee logs to file |

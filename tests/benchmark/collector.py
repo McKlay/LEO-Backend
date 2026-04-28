@@ -528,6 +528,14 @@ class ResultCollector:
         for result_file in sorted(variant_dir.glob("*.json")):
             try:
                 data = json.loads(result_file.read_text(encoding="utf-8"))
+                # Restore internal field name from its serialized alias.
+                # to_dict() renames generated_response → turn4_response (multi-turn)
+                # or turn2_response (single-turn); reverse that mapping here so the
+                # reconstructed trace has a populated generated_response field.
+                if "turn4_response" in data:
+                    data["generated_response"] = data.pop("turn4_response")
+                elif "turn2_response" in data:
+                    data["generated_response"] = data.pop("turn2_response")
                 trace = QueryTrace(**{k: v for k, v in data.items() if k in fields})
                 traces.append(trace)
             except Exception as e:

@@ -106,7 +106,7 @@
         },
         {
           "role": "user",
-          "text": "I hold a regular position at a large company in the city that manufactures auto parts and employs hundreds of workers. My take-home pay each week seems lower than what colleagues at similar factories earn. I want to find out if there is an official daily amount that an employer in that kind of industry is legally obligated to pay its workers."
+          "text": "I hold a regular position at a large company in Makati City that manufactures auto parts and employs hundreds of workers. My take-home pay each week seems lower than what colleagues at similar factories earn. I want to find out if there is an official daily amount that an employer in that kind of industry is legally obligated to pay its workers."
         }
       ],
       "gold_chunks": [
@@ -517,7 +517,7 @@
     },
     {
       "query_id": "Q020",
-      "query_text": "Usa ko ka factory worker. Ang akong employer gipugos kong magtrabaho niadtong adlaw nga opisyal nga gipahayag sa gobyerno nga walay trabaho. Pareho ra ba ang akong makuhang bayad niadtong adlawa sama sa ordinaryong adlaw sa trabaho, o adunay kalainan?",
+      "query_text": "Usa ko ka factory worker. Ang akong employer gipugos kong magtrabaho niadtong adlaw nga opisyal nga gipahayag sa gobyerno ang espesyal nga adlaw na walay trabaho. Pareho ra ba ang akong makuhang bayad niadtong adlawa sama sa ordinaryong adlaw sa trabaho, o adunay kalainan?",
       "language": "ceb",
       "query_type": "single_turn",
       "is_ambiguous": false,
@@ -724,7 +724,7 @@
     },
     {
       "query_id": "Q029",
-      "query_text": "Ano ang probisyon ng RA 9262?",
+      "query_text": "Ano ang probisyon ng RA 9262 tungkol sa paid leave?",
       "language": "fil",
       "query_type": "single_turn",
       "is_ambiguous": false,

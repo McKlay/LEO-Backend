@@ -54,22 +54,35 @@ def _load_traces(input_dir: Path) -> List[Dict[str, Any]]:
     """
     traces: List[Dict[str, Any]] = []
 
-    # Prefer consolidated file if present
+    # Prefer per-variant consolidated files produced by the runner
+    # (e.g. full_pipeline_results.json, llm_only_results.json).
+    variant_files = sorted(input_dir.glob("*_results.json"))
     consolidated = input_dir / "results.json"
-    if consolidated.exists():
+    if variant_files:
+        for vf in variant_files:
+            with vf.open(encoding="utf-8") as fh:
+                data = json.load(fh)
+            # Runner format: {"variant": ..., "traces": [...]}
+            if isinstance(data, dict) and "traces" in data:
+                traces.extend(data["traces"])
+            elif isinstance(data, list):
+                traces.extend(data)
+    elif consolidated.exists():
         with consolidated.open(encoding="utf-8") as fh:
             data = json.load(fh)
         # Allow both a flat list and a dict keyed by variant
         if isinstance(data, list):
             traces = data
         elif isinstance(data, dict):
-            for variant_traces in data.values():
-                traces.extend(variant_traces)
+            for v in data.values():
+                if isinstance(v, list):
+                    traces.extend(v)
     else:
-        # Fall back to partial/ directory — one JSON per query–variant pair
+        # Fall back to partial/ directory — recursive search for per-query JSONs
+        # (structure: partial/{variant_name}/{query_id}.json)
         partial_dir = input_dir / "partial"
         search_dir = partial_dir if partial_dir.exists() else input_dir
-        for p in sorted(search_dir.glob("*.json")):
+        for p in sorted(search_dir.glob("**/*.json")):
             try:
                 with p.open(encoding="utf-8") as fh:
                     obj = json.load(fh)
@@ -127,17 +140,54 @@ class CSVExporter:
         output_dir: Destination directory for generated CSV files.
     """
 
-    def __init__(self, input_dir: Path, output_dir: Path) -> None:
+    def __init__(
+        self,
+        input_dir: Path,
+        output_dir: Path,
+        rag_triad_dir: Optional[Path] = None,
+    ) -> None:
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
+        self.rag_triad_dir = Path(rag_triad_dir) if rag_triad_dir else None
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._traces: Optional[List[Dict[str, Any]]] = None
+        self._rag_triad_scores: Optional[Dict[Tuple[str, str], Dict[str, Any]]] = None
 
     @property
     def traces(self) -> List[Dict[str, Any]]:
         if self._traces is None:
             self._traces = _load_traces(self.input_dir)
         return self._traces
+
+    def _get_rag_triad_scores(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
+        """
+        Lazily load and index RAG Triad scores from *rag_triad_dir*.
+
+        Returns a dict keyed by (query_id, variant_name) with sub-keys
+        ``context_relevance``, ``groundedness``, and ``answer_relevance``.
+        Returns an empty dict if *rag_triad_dir* was not provided or
+        contains no ``*_rag_triad.json`` files.
+        """
+        if self._rag_triad_scores is not None:
+            return self._rag_triad_scores
+        self._rag_triad_scores = {}
+        if not self.rag_triad_dir or not self.rag_triad_dir.exists():
+            return self._rag_triad_scores
+        for fp in sorted(self.rag_triad_dir.glob("*_rag_triad.json")):
+            try:
+                with fp.open(encoding="utf-8") as fh:
+                    items = json.load(fh)
+                if isinstance(items, list):
+                    for item in items:
+                        key = (item.get("query_id", ""), item.get("variant_name", ""))
+                        self._rag_triad_scores[key] = {
+                            "context_relevance": item.get("context_relevance", ""),
+                            "groundedness": item.get("groundedness", ""),
+                            "answer_relevance": item.get("answer_relevance", ""),
+                        }
+            except (json.JSONDecodeError, OSError):
+                continue
+        return self._rag_triad_scores
 
     # ── 5.1 Expert Evaluation CSV ──────────────────────────────────────────────
 
@@ -177,14 +227,11 @@ class CSVExporter:
             variant = trace.get("variant_name", "")
             config_label = label_map.get(variant, variant)
 
-            conv_history = trace.get("gold_chunks", [])  # placeholder; real field below
-            # Build conversation history string for multi-turn queries
+            # Build conversation history string for multi-turn queries.
             conv_hist_str = ""
             if trace.get("is_multiturn"):
-                # conversation_history is not stored in QueryTrace directly;
-                # we surface prior turn context from the benchmark query metadata
-                # if the runner injected it into the trace's query_text context.
-                conv_hist_str = trace.get("conversation_history_json", "")
+                conv_hist = trace.get("conversation_history", [])
+                conv_hist_str = _safe_json(conv_hist) if conv_hist else ""
 
             row = {
                 "eval_id": f"E{eval_counter:04d}",
@@ -264,39 +311,54 @@ class CSVExporter:
             blinded = label_map.get(variant, variant) if label_map else variant
             query_id = trace.get("query_id", "")
 
-            # Inject prior turns if stored
-            history_json = trace.get("conversation_history_json", "")
-            if history_json:
-                try:
-                    history = json.loads(history_json)
-                except (json.JSONDecodeError, TypeError):
-                    history = []
-                for idx, turn in enumerate(history, start=1):
-                    rows.append({
-                        "query_id": query_id,
-                        "variant": blinded,
-                        "turn_number": str(idx),
-                        "role": turn.get("role", ""),
-                        "content": turn.get("text", turn.get("content", "")),
-                    })
+            # Prior turns (turns 1..n) are stored in conversation_history as
+            # [{role, text}, ...] dicts — this is the seeded history from the
+            # benchmark JSON and already includes the clarification exchange.
+            conversation_history = trace.get("conversation_history", [])
+            for idx, turn in enumerate(conversation_history, start=1):
+                rows.append({
+                    "query_id": query_id,
+                    "variant": blinded,
+                    "turn_number": str(idx),
+                    "role": turn.get("role", ""),
+                    "content": turn.get("text", turn.get("content", "")),
+                })
 
-            # Final user message
-            turn_num = len(json.loads(history_json)) + 1 if history_json else 1
-            rows.append({
-                "query_id": query_id,
-                "variant": blinded,
-                "turn_number": str(turn_num),
-                "role": "user",
-                "content": trace.get("turn1_query", ""),
-            })
-            # System response
-            rows.append({
-                "query_id": query_id,
-                "variant": blinded,
-                "turn_number": str(turn_num + 1),
-                "role": "assistant",
-                "content": trace.get("turn4_response") or trace.get("turn2_response") or "",
-            })
+            next_turn = len(conversation_history) + 1
+
+            # Turn 4: final system answer
+            turn4 = trace.get("turn4_response") or ""
+            if turn4:
+                rows.append({
+                    "query_id": query_id,
+                    "variant": blinded,
+                    "turn_number": str(next_turn),
+                    "role": "assistant",
+                    "content": turn4,
+                })
+                next_turn += 1
+
+            # Turns 5–6: follow-up exchange (optional)
+            turn5 = trace.get("turn5_query") or ""
+            if turn5:
+                rows.append({
+                    "query_id": query_id,
+                    "variant": blinded,
+                    "turn_number": str(next_turn),
+                    "role": "user",
+                    "content": turn5,
+                })
+                next_turn += 1
+
+            turn6 = trace.get("turn6_response") or ""
+            if turn6:
+                rows.append({
+                    "query_id": query_id,
+                    "variant": blinded,
+                    "turn_number": str(next_turn),
+                    "role": "assistant",
+                    "content": turn6,
+                })
 
         with csv_path.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -326,8 +388,10 @@ class CSVExporter:
             "recall_at_3", "recall_at_5", "recall_at_10",
             "hit_rate_at_3", "hit_rate_at_5", "hit_rate_at_10",
             "mrr",
-            # Answer quality
+            # Answer quality — primary turn
             "token_f1", "rouge_l", "exact_match",
+            # Answer quality — follow-up turn (multi-turn only)
+            "turn6_token_f1", "turn6_rouge_l", "turn6_exact_match",
             # Citation
             "citation_precision", "citation_recall", "citation_f1",
             # RAG Triad
@@ -342,11 +406,22 @@ class CSVExporter:
         with csv_path.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
+            rag_triad = self._get_rag_triad_scores()
             for trace in self.traces:
                 scores: Dict[str, Any] = trace.get("scores", {})
                 total_ms = (
                     (trace.get("processing_time_s") or 0.0) * 1000
                 )
+                # MRR: scorer emits mrr@K keys; prefer K=5 then fall back.
+                # Use explicit key presence check so mrr=0.0 is preserved.
+                mrr_value: Any = next(
+                    (scores[k] for k in ("mrr@5", "mrr@3", "mrr@10") if k in scores),
+                    "",
+                )
+                # RAG Triad: merge from external rag_triad_dir if available;
+                # fall back to values already in scores (if pre-merged).
+                rt_key = (trace.get("query_id", ""), trace.get("variant_name", ""))
+                rt = rag_triad.get(rt_key, {})
                 row = {
                     "query_id": trace.get("query_id", ""),
                     "variant": trace.get("variant_name", ""),
@@ -362,16 +437,19 @@ class CSVExporter:
                     "hit_rate_at_3": scores.get("hit_rate@3", ""),
                     "hit_rate_at_5": scores.get("hit_rate@5", ""),
                     "hit_rate_at_10": scores.get("hit_rate@10", ""),
-                    "mrr": scores.get("mrr", ""),
+                    "mrr": mrr_value,
                     "token_f1": scores.get("token_f1", ""),
                     "rouge_l": scores.get("rouge_l", ""),
                     "exact_match": scores.get("exact_match", ""),
+                    "turn6_token_f1": scores.get("turn6_token_f1", ""),
+                    "turn6_rouge_l": scores.get("turn6_rouge_l", ""),
+                    "turn6_exact_match": scores.get("turn6_exact_match", ""),
                     "citation_precision": scores.get("citation_precision", ""),
                     "citation_recall": scores.get("citation_recall", ""),
                     "citation_f1": scores.get("citation_f1", ""),
-                    "context_relevance": scores.get("context_relevance", ""),
-                    "groundedness": scores.get("groundedness", ""),
-                    "answer_relevance": scores.get("answer_relevance", ""),
+                    "context_relevance": rt.get("context_relevance") or scores.get("context_relevance", ""),
+                    "groundedness": rt.get("groundedness") or scores.get("groundedness", ""),
+                    "answer_relevance": rt.get("answer_relevance") or scores.get("answer_relevance", ""),
                     "was_clarification": str(trace.get("is_clarification_response", False)).lower(),
                     "total_time_ms": f"{total_ms:.1f}" if total_ms else "",
                     "generated_answer": trace.get("turn4_response") or trace.get("turn2_response") or "",
@@ -409,6 +487,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "--seed", type=int, default=42,
         help="RNG seed for blinding / row shuffling (default: 42).",
     )
+    parser.add_argument(
+        "--rag-triad-dir", type=Path, default=None,
+        help="Directory containing *_rag_triad.json files produced by the rag_triad "
+             "scorer.  When supplied, context_relevance / groundedness / answer_relevance "
+             "are populated in raw_results.csv.",
+    )
     return parser
 
 
@@ -416,7 +500,11 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
-    exporter = CSVExporter(input_dir=args.input, output_dir=args.output)
+    exporter = CSVExporter(
+        input_dir=args.input,
+        output_dir=args.output,
+        rag_triad_dir=args.rag_triad_dir,
+    )
 
     raw_path = exporter.export_raw()
     print(f"Raw results CSV:       {raw_path}")

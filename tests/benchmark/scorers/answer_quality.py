@@ -150,3 +150,31 @@ def score_answer(trace: "QueryTrace") -> Optional[Dict[str, float]]:
         "exact_match": exact_match(prediction, reference),
     }
 
+
+def score_answer_turn6(trace: "QueryTrace") -> Optional[Dict[str, float]]:
+    """
+    Compute Token F1, ROUGE-L, and Exact Match for Turn 6 of a multi-turn query.
+
+    Mirrors ``score_answer`` but compares ``turn6_response`` against
+    ``turn6_reference_answer`` so that Phase 2 answer quality (Table 8)
+    is captured in the automated scores dict alongside Turn 4 metrics.
+
+    Args:
+        trace: A finalised ``QueryTrace`` with ``turn6_response`` and
+               ``turn6_reference_answer`` populated.
+
+    Returns:
+        Dict with keys ``turn6_token_f1``, ``turn6_rouge_l``, ``turn6_exact_match``.
+        Returns ``None`` if either field is missing/empty.
+    """
+    prediction = (trace.turn6_response or "").strip()
+    reference = (trace.turn6_reference_answer or "").strip()
+
+    if not prediction or not reference:
+        return None
+
+    return {
+        "turn6_token_f1": token_f1(prediction, reference),
+        "turn6_rouge_l": rouge_l(prediction, reference),
+        "turn6_exact_match": exact_match(prediction, reference),
+    }
