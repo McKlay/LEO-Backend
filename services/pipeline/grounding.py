@@ -348,6 +348,7 @@ Language: {language}
             # Required fields: id, text, source, article, url, confidence
             citation = {
                 "id": str(uuid.uuid4()),
+                "chunk_id": metadata.get("chunk_id", ""),
                 "text": excerpt,  # API expects 'text' field
                 "source": source_title,
                 "article": article_id,  # API expects 'article' field (not 'article_id')

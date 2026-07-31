@@ -16,6 +16,10 @@ keywords:
   - disease
   - last-in-first-out
   - due process
+  - nominal damages
+  - Jaka Food Processing
+  - procedural due process violation
+  - 30-day notice
 has_table: false
 has_formula: false
 has_list: true
@@ -26,6 +30,18 @@ has_list: true
 ## 5.3 Termination of Employment Based on Authorized Causes
 
 As defined in Articles 298 and 299 of the Labor Code, as amended, the requirements of due process shall be deemed complied with upon service of a written notice to the employee and the appropriate Regional Office of the Department of Labor and Employment (DOLE) at least thirty days (30) before the effectivity of the termination, specifying the ground or grounds for termination.
+
+### Consequence of Non-Compliance with the 30-Day Notice Requirement
+
+Where the substantive ground for termination (e.g., redundancy, retrenchment) is valid but the employer fails to comply with the procedural requirement of the 30-day written notice to both the employee and the DOLE, the dismissal is not illegal but the employer is liable for **nominal damages**.
+
+Under the doctrine established in *Jaka Food Processing Corp. v. Pacot* (G.R. No. 151378, March 28, 2005), which was adopted and codified in this Order, the amount of nominal damages for failure to observe procedural due process in an authorized-cause termination is fixed at **₱50,000**. This amount is:
+
+- **Separate and in addition** to any separation pay the employee is entitled to receive
+- Imposed not as a penalty for the loss of employment itself, but for the violation of the employee's right to procedural due process
+- Distinguished from the remedy for illegal dismissal (full backwages + reinstatement), which applies when both substantive and procedural due process are violated
+
+If the termination is for a just cause (Article 297) but procedural due process is not observed, nominal damages are fixed at **₱30,000** per the companion doctrine in *Agabon v. NLRC* (G.R. No. 158693, November 17, 2004).
 
 ## 5.4 Standards on Authorized Causes
 

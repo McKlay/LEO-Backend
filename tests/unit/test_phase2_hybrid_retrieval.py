@@ -32,6 +32,9 @@ def vector_store():
     settings.embedding_dimension = 1536
     settings.supabase_db_url = "postgresql://test:test@localhost/test"
     settings.enable_connection_pooling = False
+    settings.rrf_dense_weight = 2.0
+    settings.rrf_lexical_weight = 1.0
+    settings.rrf_symbolic_weight = 0.5
     return SupabaseVectorStore(supabase_client=client, settings=settings)
 
 
@@ -51,17 +54,19 @@ class TestRRF:
         assert ids == ["d1", "d2", "d3"], "Order must be preserved for single-strategy input"
 
     def test_same_doc_two_strategies_accumulates_score(self):
-        """Same doc in two strategies → RRF score = sum of both contributions."""
-        # "shared" appears rank-1 in both → score = 1/(60+1) + 1/(60+1)
-        # "only_dense" appears rank-2 in dense → score = 1/(60+2)
+        """Same doc in two strategies → weighted RRF score = sum of both contributions."""
+        # "shared" appears rank-1 in both (dense w=2.0, lexical w=1.0)
+        # score = 2.0/(60+1) + 1.0/(60+1) = 3.0/61
+        # "only_dense" appears rank-2 in dense → score = 2.0/(60+2) = 2.0/62
         dense = [_make_result("shared"), _make_result("only_dense")]
         lexical = [_make_result("shared"), _make_result("only_lex")]
 
         results = reciprocal_rank_fusion({"dense": dense, "lexical": lexical})
         result_map = {r.id: r for r in results}
 
-        shared_score = 1 / (60 + 1) + 1 / (60 + 1)   # rank-1 in both
-        only_dense_score = 1 / (60 + 2)               # rank-2 in dense only
+        # Default weights: dense=2.0, lexical=1.0
+        shared_score = 2.0 / (60 + 1) + 1.0 / (60 + 1)   # rank-1 in both
+        only_dense_score = 2.0 / (60 + 2)                 # rank-2 in dense only
 
         assert result_map["shared"].score == pytest.approx(shared_score, rel=1e-6)
         assert result_map["only_dense"].score == pytest.approx(only_dense_score, rel=1e-6)
@@ -106,7 +111,7 @@ class TestRRF:
         assert reciprocal_rank_fusion({"dense": [], "lexical": []}) == []
 
     def test_rrf_metadata_attached(self):
-        """_rrf_score, _contributing_strategies, _strategy_ranks must be in metadata."""
+        """_rrf_score, _contributing_strategies, _strategy_ranks, _strategy_weights must be in metadata."""
         dense = [_make_result("d1")]
         lexical = [_make_result("d1")]
         results = reciprocal_rank_fusion({"dense": dense, "lexical": lexical})
@@ -115,7 +120,100 @@ class TestRRF:
         assert "_rrf_score" in meta
         assert "_contributing_strategies" in meta
         assert "_strategy_ranks" in meta
+        assert "_strategy_weights" in meta
         assert set(meta["_contributing_strategies"]) == {"dense", "lexical"}
+
+    # -- Weighted RRF tests (Phase-1 RRF tuning) --
+
+    def test_explicit_uniform_weights_match_unweighted(self):
+        """Passing weights={all: 1.0} must match the classic unweighted formula."""
+        dense = [_make_result("d1"), _make_result("d2")]
+        lexical = [_make_result("d1"), _make_result("l1")]
+        uniform = {"dense": 1.0, "lexical": 1.0}
+
+        results = reciprocal_rank_fusion({"dense": dense, "lexical": lexical}, weights=uniform)
+        result_map = {r.id: r for r in results}
+
+        # d1: rank-1 in both → 1.0/(60+1) + 1.0/(60+1)
+        expected_d1 = 1.0 / 61 + 1.0 / 61
+        assert result_map["d1"].score == pytest.approx(expected_d1, rel=1e-6)
+
+    def test_custom_weights_change_ranking(self):
+        """Heavy lexical weight can promote a lexical-only hit above a dense-only hit."""
+        dense = [_make_result("dense_only")]
+        lexical = [_make_result("lex_only")]
+
+        # With lexical weight 5x → lex_only score = 5.0/61 = 0.0820
+        # dense_only with default weight 1.0 → 1.0/61 = 0.0164
+        heavy_lex = {"dense": 1.0, "lexical": 5.0}
+        results = reciprocal_rank_fusion({"dense": dense, "lexical": lexical}, weights=heavy_lex)
+
+        assert results[0].id == "lex_only", "Heavier lexical weight must promote lexical-only results"
+
+    def test_dilution_regression(self):
+        """Default weights prevent rank dilution: dense rank-1 gold beats lexical+symbolic noise at rank-1."""
+        # Scenario from Phase-1 analysis: dense finds gold at rank 1,
+        # lexical and symbolic agree on noise at rank 1.
+        dense = [_make_result("gold"), _make_result("noise")]
+        lexical = [_make_result("noise"), _make_result("gold")]
+        symbolic = [_make_result("noise")]
+
+        # With default weights (dense=2.0, lexical=1.0, symbolic=0.5):
+        # gold:  2.0/61 + 1.0/62 = 0.0328 + 0.0161 = 0.0489
+        # noise: 2.0/62 + 1.0/61 + 0.5/61 = 0.0323 + 0.0164 + 0.0082 = 0.0569
+        # Actually noise still wins here. The key scenario is:
+        # dense rank-1 gold vs lexical+symbolic rank-1 noise where gold is NOT in lex/sym.
+        dense2 = [_make_result("gold")]
+        lexical2 = [_make_result("noise")]
+        symbolic2 = [_make_result("noise")]
+
+        results = reciprocal_rank_fusion(
+            {"dense": dense2, "lexical": lexical2, "symbolic": symbolic2}
+        )
+        result_map = {r.id: r for r in results}
+
+        # gold: 2.0/61 = 0.0328
+        # noise: 1.0/61 + 0.5/61 = 0.0246
+        assert result_map["gold"].score > result_map["noise"].score, (
+            "Weighted RRF must make dense rank-1 beat lexical+symbolic rank-1 noise"
+        )
+        assert results[0].id == "gold"
+
+    def test_dilution_without_weights_gold_loses(self):
+        """With uniform weights, dense rank-1 loses to 2-strategy agreement — confirms need for weighting."""
+        dense = [_make_result("gold")]
+        lexical = [_make_result("noise")]
+        symbolic = [_make_result("noise")]
+
+        uniform = {"dense": 1.0, "lexical": 1.0, "symbolic": 1.0}
+        results = reciprocal_rank_fusion(
+            {"dense": dense, "lexical": lexical, "symbolic": symbolic},
+            weights=uniform,
+        )
+
+        # gold: 1.0/61 = 0.0164
+        # noise: 1.0/61 + 1.0/61 = 0.0328
+        assert results[0].id == "noise", (
+            "Without weighting, 2-strategy agreement on noise should beat single-strategy gold"
+        )
+
+    def test_strategy_weights_in_metadata(self):
+        """_strategy_weights metadata records the actual weight used per strategy."""
+        dense = [_make_result("d1")]
+        lexical = [_make_result("d1")]
+        results = reciprocal_rank_fusion({"dense": dense, "lexical": lexical})
+
+        weights = results[0].metadata["_strategy_weights"]
+        assert weights["dense"] == 2.0
+        assert weights["lexical"] == 1.0
+
+    def test_unknown_strategy_defaults_to_weight_1(self):
+        """A strategy not in DEFAULT_STRATEGY_WEIGHTS gets weight=1.0."""
+        custom = [_make_result("c1")]
+        results = reciprocal_rank_fusion({"new_strategy": custom})
+
+        assert results[0].metadata["_strategy_weights"]["new_strategy"] == 1.0
+        assert results[0].score == pytest.approx(1.0 / 61, rel=1e-6)
 
 
 # ---------------------------------------------------------------------------
@@ -134,8 +232,9 @@ class TestDirectArticleLookupGIN:
             "Book VI", "Title I", "Chapter III",  # book, title_name, chapter
             "Summary text",             # summary
             kw,                         # keywords
-            "https://lawphil.net",      # source_url
-            "Labor Code",               # source_title
+            "https://lawphil.net",      # source_url (src.url)
+            "Labor Code",               # source_title (src.title)
+            None,                        # chunk_id (s.metadata->>'chunk_id')
         )
 
     @pytest.mark.asyncio

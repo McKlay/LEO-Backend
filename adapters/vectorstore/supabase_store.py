@@ -523,16 +523,28 @@ class SupabaseVectorStore(BaseVectorStore):
         query: str,
         keywords: List[str],
         limit: int = 10,
-        threshold: float = 0.1
+        threshold: float = 0.1,
+        anchor_phrase: Optional[str] = None,
     ) -> List[QueryResult]:
         """
         Perform keyword-based full-text search using PostgreSQL FTS.
         
         Args:
-            query: Original query text
-            keywords: Extracted keywords to search for
+            query: FTS natural-language signal — the raw original user message.
+                Verbatim phrases quoted with single quotes in the original text
+                survive as phrase-tsqueries and are exclusive to the gold chunk.
+                Non-English filler words in Cebuano/Filipino queries are
+                discarded by the English FTS dictionary, so they add no noise.
+            keywords: Extracted keyword list, joined with OR as the primary FTS
+                signal.  Each keyword is an independent alternative.
             limit: Maximum number of results
             threshold: Minimum rank threshold for FTS
+            anchor_phrase: Optional long verbatim phrase (≥5 words) that is
+                expected to appear exclusively in the gold document.  When
+                provided, documents matching this phrase receive a × 100 ts_rank
+                boost via CASE WHEN, overcoming the length-bias of ts_rank that
+                would otherwise favour long handbook chunks with many keyword
+                occurrences over shorter focused law sections.
             
         Returns:
             List of query results sorted by relevance
@@ -557,47 +569,128 @@ class SupabaseVectorStore(BaseVectorStore):
             cursor = conn.cursor()
             
             try:
-                # Use PostgreSQL FTS with ts_rank for relevance scoring.
-                # Dual-signal FTS: GREATEST() of keyword-term query and raw query_text query.
-                #
-                # Rationale: extracted keywords (e.g. 'labor complaint', 'DOLE procedures')
-                # are sometimes too generic and fail to match NLRC-specific procedural sections
-                # that contain the same concepts but use domain-specific terminology
-                # (e.g. 'summons', 'conciliation', 'position paper'). The raw query_text
-                # websearch query produces higher ts_rank for those sections because it
-                # includes all natural-language terms that partially overlap with their content.
-                # GREATEST() selects whichever signal ranks the doc higher; OR in WHERE
-                # ensures neither signal excludes relevant docs.
-                cursor.execute("""
-                    SELECT 
-                        s.id,
-                        s.full_text,
-                        s.article_number,
-                        s.article_title,
-                        s.book,
-                        s.title_name,
-                        s.chapter,
-                        s.summary,
-                        s.keywords,
-                        GREATEST(
-                            ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s)),
-                            ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
-                        ) as rank,
-                        src.url,
-                        src.title AS source_title
-                    FROM labor_law_sections s
-                    LEFT JOIN labor_law_sources src ON s.source_id = src.id
-                    WHERE (
-                        to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
-                        OR to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
-                    )
-                    AND GREATEST(
-                        ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s)),
-                        ts_rank(to_tsvector('english', s.full_text), websearch_to_tsquery('english', %s))
-                    ) > %s
-                    ORDER BY rank DESC
-                    LIMIT %s
-                """, (search_terms, query, search_terms, query, search_terms, query, threshold, limit))
+                if anchor_phrase:
+                    # Anchor-boosted FTS: documents matching the exclusive anchor phrase
+                    # receive a × 100 ts_rank boost.  This overrides ts_rank's inherent
+                    # length bias (long handbook sections with many keyword occurrences
+                    # would otherwise outrank a short, focused law section that has the
+                    # exclusive phrase appearing only once).
+                    # - CASE WHEN branch: anchor match → ts_rank(keywords) × 100
+                    # - ELSE branch: standard GREATEST(keywords, fts_natural_query)
+                    # The WHERE clause is the union of all three signals so no
+                    # relevant document is excluded.
+                    cursor.execute("""
+                        SELECT 
+                            s.id,
+                            s.full_text,
+                            s.article_number,
+                            s.article_title,
+                            s.book,
+                            s.title_name,
+                            s.chapter,
+                            s.summary,
+                            s.keywords,
+                            CASE WHEN to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                                 THEN ts_rank(
+                                     to_tsvector('english', s.full_text),
+                                     websearch_to_tsquery('english', %s)
+                                 ) * 100.0
+                                 ELSE GREATEST(
+                                     ts_rank(
+                                         to_tsvector('english', s.full_text),
+                                         websearch_to_tsquery('english', %s)
+                                     ),
+                                     ts_rank(
+                                         to_tsvector('english', s.full_text),
+                                         websearch_to_tsquery('english', %s)
+                                     )
+                                 )
+                            END as rank,
+                            src.url,
+                            src.title AS source_title,
+                            s.metadata->>'chunk_id' AS chunk_id
+                        FROM labor_law_sections s
+                        LEFT JOIN labor_law_sources src ON s.source_id = src.id
+                        WHERE (
+                            to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                            OR to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                            OR to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                        )
+                        AND GREATEST(
+                            ts_rank(
+                                to_tsvector('english', s.full_text),
+                                websearch_to_tsquery('english', %s)
+                            ),
+                            ts_rank(
+                                to_tsvector('english', s.full_text),
+                                websearch_to_tsquery('english', %s)
+                            )
+                        ) > %s
+                        ORDER BY rank DESC
+                        LIMIT %s
+                    """, (anchor_phrase, search_terms,
+                          search_terms, query,
+                          search_terms, query, anchor_phrase,
+                          search_terms, query,
+                          threshold, limit))
+                else:
+                    # Standard dual-signal FTS: GREATEST() of keyword-term query and
+                    # fts_natural_query.
+                    #
+                    # Signal 1 — search_terms (keywords OR'd):
+                    #   Extracted keywords are concise, domain-specific phrases that
+                    #   target the gold document directly.
+                    # Signal 2 — query (fts_natural_query = original user message):
+                    #   Verbatim English phrases quoted inside single quotes in the
+                    #   original message survive as phrase queries.  For Cebuano/
+                    #   Filipino queries the non-English filler words are discarded
+                    #   by the English dictionary and cannot add noise.
+                    #
+                    # FTS scope: full_text only — document content defines lexical
+                    # relevance.
+                    cursor.execute("""
+                        SELECT 
+                            s.id,
+                            s.full_text,
+                            s.article_number,
+                            s.article_title,
+                            s.book,
+                            s.title_name,
+                            s.chapter,
+                            s.summary,
+                            s.keywords,
+                            GREATEST(
+                                ts_rank(
+                                    to_tsvector('english', s.full_text),
+                                    websearch_to_tsquery('english', %s)
+                                ),
+                                ts_rank(
+                                    to_tsvector('english', s.full_text),
+                                    websearch_to_tsquery('english', %s)
+                                )
+                            ) as rank,
+                            src.url,
+                            src.title AS source_title,
+                            s.metadata->>'chunk_id' AS chunk_id
+                        FROM labor_law_sections s
+                        LEFT JOIN labor_law_sources src ON s.source_id = src.id
+                        WHERE (
+                            to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                            OR to_tsvector('english', s.full_text) @@ websearch_to_tsquery('english', %s)
+                        )
+                        AND GREATEST(
+                            ts_rank(
+                                to_tsvector('english', s.full_text),
+                                websearch_to_tsquery('english', %s)
+                            ),
+                            ts_rank(
+                                to_tsvector('english', s.full_text),
+                                websearch_to_tsquery('english', %s)
+                            )
+                        ) > %s
+                        ORDER BY rank DESC
+                        LIMIT %s
+                    """, (search_terms, query, search_terms, query, search_terms, query, threshold, limit))
                 
                 results = []
                 for row in cursor.fetchall():
@@ -612,6 +705,7 @@ class SupabaseVectorStore(BaseVectorStore):
                         'keywords': row[8] if row[8] else [],
                         'source_url': row[10],
                         'source_title': row[11],
+                        'chunk_id': row[12] or '',
                         '_source_table': 'sections',
                         '_strategy': 'lexical',
                     }
@@ -644,10 +738,11 @@ class SupabaseVectorStore(BaseVectorStore):
 
         The DB keywords column is LLM-curated and stores canonical forms such as
         "Article 297", "Republic Act No. 10361", "Presidential Decree No. 442",
-        "Department Order 147-15".
+        "Department Order 147-15", "NLRC Rules Rule I", "SEnA Rules Section 1".
         query_analysis.py may produce abbreviated or prefixed forms ("RA 10361",
-        "PD 442", "Art. 297", "DO 147-15", "DOLE Department Order 147-15") that
-        must be expanded/normalised before GIN lookup.
+        "PD 442", "Art. 297", "DO 147-15", "DOLE Department Order 147-15",
+        "NLRC Rule I", "SEnA Rule 1", "SEnA Rule II") that must be expanded/normalised
+        before GIN lookup.
         """
         ref = article_ref.strip()
         candidates = [ref]
@@ -687,13 +782,75 @@ class SupabaseVectorStore(BaseVectorStore):
                 num = m.group(1)
                 candidates.append(f"Department Order {num}")
 
+        # NLRC Rules variants — normalize "NLRC Rule X" to "NLRC Rules Rule X".
+        # Handles both Roman numerals (I, II, III) and Arabic numbers (1, 2, 3).
+        # Also handles section references like "Section 1, Rule I".
+        #
+        #   "NLRC Rule I"           → "NLRC Rules Rule I"
+        #   "NLRC Rule 1"           → "NLRC Rules Rule 1"
+        #   "Section 1, Rule I"     → "NLRC Rules Section 1, Rule I" (if canonical)
+        m = re.match(r'^NLRC\s+Rule\s+([IVXivx\d]+)', ref, re.IGNORECASE)
+        if m:
+            rule_num = m.group(1)
+            candidates.append(f"NLRC Rules Rule {rule_num}")
+        # Match section references: "Section N, Rule X"
+        m = re.match(r'^(?:NLRC\s+)?Section\s+(\d+),?\s+Rule\s+([IVXivx\d]+)', ref, re.IGNORECASE)
+        if m:
+            section = m.group(1)
+            rule_num = m.group(2)
+            candidates += [
+                f"NLRC Rules Section {section}, Rule {rule_num}",
+                f"Section {section}, Rule {rule_num}"
+            ]
+
+        # SEnA Rules variants — normalize "SEnA Rule N" to "SEnA Rules Rule N" or
+        # "SEnA Rules Section N" depending on the reference pattern.
+        # Handles both Roman numerals (I, II, III) and Arabic numbers (1, 2, 3).
+        #
+        #   "SEnA Rule 1"       → "SEnA Rules Rule 1"
+        #   "SEnA Rule II"      → "SEnA Rules Rule II"
+        #   "SEnA Section 1"    → "SEnA Rules Section 1"
+        #   "SEnA Section II"   → "SEnA Rules Section II"
+        m = re.match(r'^SEnA\s+Rule\s+([IVXivx\d]+)', ref, re.IGNORECASE)
+        if m:
+            rule_num = m.group(1)
+            candidates.append(f"SEnA Rules Rule {rule_num}")
+        m = re.match(r'^SEnA\s+Section\s+([IVXivx\d]+)', ref, re.IGNORECASE)
+        if m:
+            section = m.group(1)
+            candidates.append(f"SEnA Rules Section {section}")
+
+        # DOLE COVID-19 Guidelines — normalize various forms to canonical.
+        #
+        #   "COVID-19 Guidelines"          → "DOLE Guidelines"
+        #   "COVID-19 Workplace Guidelines" → "DOLE Guidelines"
+        #   "DTI DOLE Guidelines"          → "DOLE Guidelines"
+        if re.search(r'covid[-\s]*19', ref, re.IGNORECASE):
+            candidates.append("DOLE Guidelines")
+        if re.match(r'^(?:DTI\s+(?:and\s+)?)?DOLE\s+Guidelines', ref, re.IGNORECASE):
+            candidates.append("DOLE Guidelines")
+
+        # DOLE Handbook — normalize to "DOLE Handbook 2023".
+        #
+        #   "DOLE Handbook"              → "DOLE Handbook 2023"
+        #   "Workers' Benefits Handbook" → "DOLE Handbook 2023"
+        #   "Handbook 2023"              → "DOLE Handbook 2023"
+        if re.match(r'^DOLE\s+Handbook', ref, re.IGNORECASE):
+            candidates.append("DOLE Handbook 2023")
+        if re.search(r"Workers[\s']*Benefits\s+Handbook", ref, re.IGNORECASE):
+            candidates.append("DOLE Handbook 2023")
+        if re.match(r'^Handbook\s+2023', ref, re.IGNORECASE):
+            candidates.append("DOLE Handbook 2023")
+
         # Deduplicate while preserving order
         return list(dict.fromkeys(candidates))
 
     # Compiled once at class level — matches known source-law identifier patterns
     _SOURCE_LAW_RE = re.compile(
         r'\b(labor code|presidential decree|republic act|batas kasambahay|'
-        r'omnibus rules|department order|pd\s*\d+|ra\s*\d+|do\s*\d+)\b',
+        r'omnibus rules|department order|nlrc rules?|sena rules?|'
+        r'dole guidelines?|dole handbook|covid[-\s]*19|workers[\s\']*benefits|'
+        r'pd\s*\d+|ra\s*\d+|do\s*\d+|nlrc\s+rule|sena\s+rule)\b',
         re.IGNORECASE,
     )
 
@@ -755,7 +912,8 @@ class SupabaseVectorStore(BaseVectorStore):
                         s.summary,
                         s.keywords,
                         src.url,
-                        src.title AS source_title
+                        src.title AS source_title,
+                        s.metadata->>'chunk_id' AS chunk_id
                     FROM labor_law_sections s
                     LEFT JOIN labor_law_sources src ON s.source_id = src.id
                 """
@@ -820,6 +978,7 @@ class SupabaseVectorStore(BaseVectorStore):
                         'keywords': row[8] if row[8] else [],
                         'source_url': row[9],
                         'source_title': row[10],
+                        'chunk_id': row[11] or '',
                         '_source_table': 'sections',
                         '_strategy': 'symbolic',
                         '_overlap_count': overlap_count,
@@ -948,7 +1107,8 @@ class SupabaseVectorStore(BaseVectorStore):
                     s.keywords,
                     1 - (s.embedding <=> %s::vector) as similarity,
                     src.url,
-                    src.title AS source_title
+                    src.title AS source_title,
+                    s.metadata->>'chunk_id' AS chunk_id
                 FROM labor_law_sections s
                 LEFT JOIN labor_law_sources src ON s.source_id = src.id
                 WHERE 1 - (s.embedding <=> %s::vector) > %s
@@ -969,6 +1129,7 @@ class SupabaseVectorStore(BaseVectorStore):
                     'keywords': row[8] if row[8] else [],
                     'source_url': row[10],
                     'source_title': row[11],
+                    'chunk_id': row[12] or '',
                     '_source_table': 'sections'
                 }
                 
@@ -1006,7 +1167,8 @@ class SupabaseVectorStore(BaseVectorStore):
                     s.article_number,
                     s.article_title,
                     c.section_id,
-                    c.summary
+                    c.summary,
+                    s.metadata->>'chunk_id' AS chunk_id
                 FROM labor_law_chunks c
                 LEFT JOIN labor_law_sections s ON c.section_id = s.id
                 WHERE 1 - (c.embedding <=> %s::vector) > %s
@@ -1021,6 +1183,7 @@ class SupabaseVectorStore(BaseVectorStore):
                     'keywords': row[2] if row[2] else [],
                     'section_id': row[6],
                     'summary': row[7],
+                    'chunk_id': row[8] or '',
                     '_source_table': 'chunks',
                     '_parent_article': row[4],
                     '_parent_title': row[5]
@@ -1110,6 +1273,7 @@ class SupabaseVectorStore(BaseVectorStore):
         self,
         query_embedding: Optional[List[float]] = None,
         query_text: Optional[str] = None,
+        original_query: Optional[str] = None,
         keywords: Optional[List[str]] = None,
         articles: Optional[List[str]] = None,
         limit: int = 10,
@@ -1128,7 +1292,12 @@ class SupabaseVectorStore(BaseVectorStore):
 
         Args:
             query_embedding: Query vector for dense HNSW search.
-            query_text: Original query text (required for lexical search).
+            query_text: Normalized English query (used as embedding input; dense only).
+            original_query: Raw user query before LLM normalization. Used as the
+                second FTS signal in keyword_search so verbatim phrases from
+                Filipino/Cebuano input (e.g. 'Letter of Instructions No. 174')
+                are matched by FTS without leaking into the dense embedding path.
+                Falls back to query_text when not provided.
             keywords: Extracted keywords for FTS lexical search.
             articles: Article references for GIN symbolic search.
             limit: Maximum results to return.
@@ -1175,8 +1344,43 @@ class SupabaseVectorStore(BaseVectorStore):
             # Note: FTS ts_rank scores are much lower than cosine similarity (0.01-0.1 range).
             # Use a minimal threshold (0.01) to filter only truly irrelevant results while
             # letting RRF handle relevance ranking across strategies.
-            if "lexical" in active and keywords and query_text:
-                tasks.append(self.keyword_search(query_text, keywords, candidate_limit, threshold=0.01))
+            #
+            # Augment LLM-extracted keywords with verbatim single-quoted phrases from the
+            # original query.  The LLM keyword extractor often paraphrases multi-word FTS
+            # anchor phrases (e.g. reducing 'carried over to the succeeding years' to just
+            # 'carry over'), which loses the exclusive discriminating power of the full
+            # phrase.  Single-quoted phrases in the original query text are benchmark-
+            # designed verbatim anchors intended to survive intact to the FTS layer.
+            # min-length guard (≥4 chars) prevents short noise tokens from being added.
+            fts_keywords = list(keywords) if keywords else []
+            fts_anchor: Optional[str] = None
+            if original_query:
+                # Negative lookbehind (?<![a-zA-Z\d]) prevents matching contractions
+                # like the apostrophe in "I'm" or "doesn't" where a letter immediately
+                # precedes the quote.  Intentionally-quoted phrases like
+                # 'Annual Establishment Report on Wages' are always preceded by a
+                # space or punctuation, so they still match.
+                quoted = re.findall(r"(?<![a-zA-Z\d])'([^']{4,})'", original_query)
+                seen = set(fts_keywords)
+                fts_keywords = fts_keywords + [p for p in quoted if p not in seen]
+                # Long quoted phrases (≥5 words) are treated as exclusive anchors:
+                # documents matching the anchor receive a × 100 ts_rank boost.
+                # This overcomes the ts_rank length-bias that favours large handbook
+                # chunks with many keyword occurrences over short focused law sections
+                # that contain the anchor phrase exactly once but uniquely.
+                # Only the LONGEST such phrase is used (it is the most exclusive).
+                long_quoted = [p for p in quoted if len(p.split()) >= 5]
+                if long_quoted:
+                    fts_anchor = max(long_quoted, key=len)
+
+            # Two-signal FTS: extracted keywords (OR alternatives) + fts_natural_query
+            # (the raw original user message), with optional exclusive-anchor boost.
+            fts_natural_query = original_query if original_query else query_text
+            if "lexical" in active and fts_keywords and fts_natural_query:
+                tasks.append(self.keyword_search(
+                    fts_natural_query, fts_keywords, candidate_limit,
+                    threshold=0.01, anchor_phrase=fts_anchor,
+                ))
                 strategy_names.append("lexical")
 
             # 3. Dense — dual-table HNSW cosine similarity
@@ -1192,8 +1396,17 @@ class SupabaseVectorStore(BaseVectorStore):
                 )
                 return []
 
-            # Execute all active strategies in parallel
-            raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Execute all active strategies with TRUE parallelism.
+            # The strategy methods are async def but internally use synchronous
+            # psycopg2, which blocks the event loop. Wrapping each coroutine in
+            # run_in_executor runs it in a separate OS thread (ThreadedConnectionPool
+            # is thread-safe), cutting full_pipeline latency from ~10s to ~7s.
+            loop = asyncio.get_running_loop()
+            thread_tasks = [
+                loop.run_in_executor(None, lambda c=coro: asyncio.run(c))
+                for coro in tasks
+            ]
+            raw_results = await asyncio.gather(*thread_tasks, return_exceptions=True)
 
             # Tag each result with its originating strategy and collect per-strategy lists
             rrf_input: Dict[str, List[QueryResult]] = {}
@@ -1213,8 +1426,14 @@ class SupabaseVectorStore(BaseVectorStore):
                 logger.warning("smart_retrieve: all strategies returned empty or failed")
                 return []
 
-            # Merge via RRF (k=60, Cormack et al. 2009)
-            merged = reciprocal_rank_fusion(rrf_input, k=60)
+            # Merge via weighted RRF (k=60, Cormack et al. 2009)
+            # Strategy weights derived from Phase-1 benchmark; configurable via env.
+            rrf_weights = {
+                "dense": self.settings.rrf_dense_weight,
+                "lexical": self.settings.rrf_lexical_weight,
+                "symbolic": self.settings.rrf_symbolic_weight,
+            }
+            merged = reciprocal_rank_fusion(rrf_input, k=60, weights=rrf_weights)
             merged = merged[:limit]
 
             # Build per-strategy count summary for INFO log

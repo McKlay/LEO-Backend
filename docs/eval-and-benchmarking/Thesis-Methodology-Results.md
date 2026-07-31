@@ -174,7 +174,7 @@ We adopt a structured, layered approach: automated retrieval metrics assess sub-
 
 ### 4.5.1 Benchmark Dataset
 
-We constructed a benchmark dataset of 100 Philippine labor-law queries spanning English (50), Filipino (30), and Cebuano (20), drawn from common legal inquiries (e.g., wages, termination, benefits) and representative user questions. The test set includes both single-turn questions (76) and multi-turn dialogue scenarios (24) where an initial query is followed by a clarification or follow-up exchange. Thirty queries (30%) are intentionally ambiguous and require clarification before answering. For each query, we prepared reference answers, gold-standard relevant chunks, and canonical legal citations to enable quantitative evaluation.
+We constructed a benchmark dataset of 100 Philippine labor-law queries spanning English (35), Filipino (35), and Cebuano (30), drawn from common legal inquiries (e.g., wages, termination, benefits) and representative user questions. The test set includes both single-turn questions (70) and multi-turn dialogue scenarios (30) where an initial query is followed by a clarification or follow-up exchange. Thirty queries (30%) are intentionally ambiguous and require clarification before answering. For each query, we prepared reference answers, gold-standard relevant chunks, and canonical legal citations to enable quantitative evaluation.
 
 Each query is tagged with a retrieval target label (symbolic, lexical, dense, or hybrid) indicating which retrieval strategy is expected to perform best. This enables diagnostic breakdowns across retrieval strategies, revealing where each approach succeeds or fails.
 
@@ -201,7 +201,7 @@ Eight pipeline variants are defined to cover all baselines and ablations:
 | **Dense-only** | ✅ | Dense only | GPT-4.1 with RAG context | Retriever baseline |
 | **Lexical-only** | ✅ | Lexical (BM25/FTS) only | GPT-4.1 with RAG context | Retriever baseline |
 | **Symbolic-only** | ✅ | Symbolic lookup only | GPT-4.1 with RAG context | Retriever baseline |
-| **Hybrid – no translation** | Clarification only | Symbolic + Lexical + Dense | GPT-4.1 with RAG context | Translation ablation (non-English queries only, $n = 50$) |
+| **Hybrid – no translation** | Clarification only | Symbolic + Lexical + Dense | GPT-4.1 with RAG context | Translation ablation (non-English queries only, $n = 65$) |
 | **Hybrid – no clarification** | Translation only | Symbolic + Lexical + Dense | GPT-4.1 with RAG context | Clarification ablation (ambiguous queries only, $n = 30$) |
 | **LLM-only (no RAG)** | ❌ | ❌ None | GPT-4.1, no context | Hallucination baseline |
 
@@ -241,7 +241,7 @@ Two legal experts independently rate answers. Inter-rater reliability is reporte
 
 The experiment follows a fully reproducible automated pipeline. Each of the 100 benchmark queries is submitted to every applicable pipeline variant defined in the experiment matrix. For each query–variant pair, the system logs the complete trace: Stage 1 outputs (normalized query, clarification decision, translation), Stage 2 outputs (ranked retrieved passages with per-strategy attribution), and Stage 3 outputs (generated answer with extracted citations).
 
-Two ablation variants are scoped to applicable query subsets to avoid redundant computation. The translation ablation (Hybrid – no translation) is run only on non-English queries ($n = 50$), because translating English to English is a no-op that produces identical output. The clarification ablation (Hybrid – no clarification) is run only on ambiguous queries ($n = 30$), because the clarification module is never invoked on unambiguous queries regardless of configuration. This scoping yields a total of approximately 680 pipeline runs across all variants.
+Two ablation variants are scoped to applicable query subsets to avoid redundant computation. The translation ablation (Hybrid – no translation) is run only on non-English queries ($n = 65$), because translating English to English is a no-op that produces identical output. The clarification ablation (Hybrid – no clarification) is run only on ambiguous queries ($n = 30$), because the clarification module is never invoked on unambiguous queries regardless of configuration. This scoping yields a total of approximately 695 pipeline runs across all variants.
 
 The evaluation proceeds in two phases:
 
@@ -291,10 +291,10 @@ This table reveals where each strategy wins or fails, sliced by the expected bes
 
 | Subset ($n$) | Metric | Dense-only | Lexical-only | Symbolic-only | Hybrid |
 |------------|--------|-----------|-------------|--------------|--------|
-| Symbolic (15) | MRR | — | — | — | — |
+| Symbolic (25) | MRR | — | — | — | — |
 | Lexical (25) | MRR | — | — | — | — |
 | Dense (25) | MRR | — | — | — | — |
-| Hybrid (35) | MRR | — | — | — | — |
+| Hybrid (25) | MRR | — | — | — | — |
 
 > *Results to be reported after experiment execution.*
 
@@ -324,26 +324,26 @@ This section isolates the contribution of Stage 1 (query analysis) by measuring 
 
 ### 5.2.1 Translation Pivot Impact (Claim 2)
 
-Philippine labor documents are predominantly in English. Queries in Filipino or Cebuano pose a cross-lingual retrieval challenge. We compare retrieval performance on non-English queries ($n = 50$) under two conditions:
+Philippine labor documents are predominantly in English. Queries in Filipino or Cebuano pose a cross-lingual retrieval challenge. We compare retrieval performance on non-English queries ($n = 65$) under two conditions:
 
 - **With translation** (Full Pipeline): Stage 1 translates the query to English before retrieval
 - **Without translation** (Hybrid – no translation): the original Filipino/Cebuano query is used directly for retrieval
 
-English queries ($n = 50$) serve as a control group and should be unaffected by this ablation.
+English queries ($n = 35$) serve as a control group and should be unaffected by this ablation.
 
 **Table 4.** Translation pivot effect on retrieval (non-English queries).
 
 | Language ($n$) | Metric | With Translation | Without Translation | Δ |
 |-------------|--------|-----------------|--------------------|----|
-| Filipino (30) | Hit Rate@5 | — | — | — |
-| Filipino (30) | Recall@5 | — | — | — |
-| Cebuano (20) | Hit Rate@5 | — | — | — |
-| Cebuano (20) | Recall@5 | — | — | — |
-| English (50, control) | Hit Rate@5 | — | — | — |
+| Filipino (35) | Hit Rate@5 | — | — | — |
+| Filipino (35) | Recall@5 | — | — | — |
+| Cebuano (30) | Hit Rate@5 | — | — | — |
+| Cebuano (30) | Recall@5 | — | — | — |
+| English (35, control) | Hit Rate@5 | — | — | — |
 
 > *Results to be reported after experiment execution.*
 
-The Hybrid – no translation variant is run exclusively on the 50 non-English queries. For English queries, disabling translation produces no behavioral difference, as Stage 1 translating English to English yields an identical query. The English queries remain available as a control group via the Full Pipeline results.
+The Hybrid – no translation variant is run exclusively on the 65 non-English queries. For English queries, disabling translation produces no behavioral difference, as Stage 1 translating English to English yields an identical query. The English queries remain available as a control group via the Full Pipeline results.
 
 **Interpretation placeholder:** *[Report the magnitude of retrieval improvement from translation. Discuss whether the effect is stronger for Cebuano (lower-resource) than for Filipino. Confirm that the English control group shows no meaningful difference, validating the ablation design.]*
 
