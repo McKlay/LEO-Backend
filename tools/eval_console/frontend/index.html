@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEO Expert Evaluation Console — Login</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-h: #1d4ed8;
+      --border: #e2e8f0;
+      --bg: #f1f5f9;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; background: var(--bg); padding: 20px;
+      color: var(--text);
+    }
+    .card {
+      background: #fff; border-radius: 14px; padding: 44px 40px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+    }
+    .logo { text-align: center; margin-bottom: 36px; }
+    .logo h1 { font-size: 30px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+    .logo p { color: var(--muted); margin-top: 6px; font-size: 13px; line-height: 1.5; }
+    .form-group { margin-bottom: 22px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600;
+                  color: #374151; margin-bottom: 8px; }
+    .reviewer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .reviewer-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .reviewer-option label {
+      display: flex; align-items: center; justify-content: center;
+      padding: 12px; border: 2px solid var(--border); border-radius: 10px;
+      cursor: pointer; font-size: 14px; font-weight: 600;
+      color: var(--muted); transition: all 0.15s; user-select: none;
+    }
+    .reviewer-option input:checked + label {
+      border-color: var(--primary); background: #eff6ff; color: var(--primary);
+    }
+    .reviewer-option label:hover { border-color: #93c5fd; }
+    .pw-input {
+      width: 100%; padding: 11px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+      color: var(--text);
+    }
+    .pw-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px #dbeafe; }
+    .btn-submit {
+      width: 100%; padding: 13px; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background 0.15s; letter-spacing: 0.01em;
+    }
+    .btn-submit:hover:not(:disabled) { background: var(--primary-h); }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+    .error-box {
+      background: #fee2e2; color: #b91c1c; padding: 10px 14px;
+      border-radius: 7px; font-size: 13px; margin-top: 14px; display: none;
+    }
+    .footer-link { text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted); }
+    .footer-link a { color: var(--primary); text-decoration: none; }
+    .footer-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>LEO Eval</h1>
+      <p>Philippine Labor Law<br>Expert Evaluation Console</p>
+    </div>
+
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <div class="form-label">Select Reviewer</div>
+        <div class="reviewer-grid">
+          <div class="reviewer-option">
+            <input type="radio" name="reviewer_id" id="r1" value="reviewer_1">
+            <label for="r1">Reviewer 1</label>
+          </div>
+          <div class="reviewer-option">
+            <input type="radio" name="reviewer_id" id="r2" value="reviewer_2">
+            <label for="r2">Reviewer 2</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="pw-input" type="password" id="password"
+               placeholder="Enter your password" autocomplete="current-password">
+      </div>
+
+      <button class="btn-submit" type="submit" id="login-btn">Sign In</button>
+      <div class="error-box" id="error-box"></div>
+    </form>
+
+    <p class="footer-link">
+      Admin? <a href="/progress">View Progress Dashboard →</a>
+    </p>
+  </div>
+
+  <script>
+    // Already authenticated → skip login
+    if (localStorage.getItem('leo_eval_token')) {
+      window.location.href = '/review';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const reviewerId = document.querySelector('input[name="reviewer_id"]:checked')?.value;
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('error-box');
+      const btn = document.getElementById('login-btn');
+
+      errorEl.style.display = 'none';
+
+      if (!reviewerId) {
+        errorEl.textContent = 'Please select a reviewer.';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (!password) {
+        errorEl.textContent = 'Please enter your password.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reviewer_id: reviewerId, password }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || 'Invalid credentials');
+        }
+        const data = await res.json();
+        localStorage.setItem('leo_eval_token', data.token);
+        localStorage.setItem('leo_eval_reviewer_id', data.reviewer_id);
+        window.location.href = '/review';
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>
