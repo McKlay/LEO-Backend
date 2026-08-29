@@ -1,0 +1,13 @@
+{
+  "label_to_variant": {
+    "Q": "llm_only",
+    "M": "stage2_only",
+    "J": "full_pipeline"
+  },
+  "variant_to_label": {
+    "llm_only": "Q",
+    "stage2_only": "M",
+    "full_pipeline": "J"
+  },
+  "seed": 42
+}

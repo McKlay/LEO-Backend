@@ -49,8 +49,12 @@ htmlcov/
 .tox/
 .hypothesis/
 
-# Benchmark results (generated outputs)
-tests/benchmark/results/
+# Benchmark results (generated outputs — exclude bulk results but keep eval console source data)
+tests/benchmark/results/*
+!tests/benchmark/results/exports/
+tests/benchmark/results/exports/*
+!tests/benchmark/results/exports/expert_evaluation.csv
+!tests/benchmark/results/exports/expert_blinding_mapping.json
 
 # Type checking
 .mypy_cache/
