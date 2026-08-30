@@ -29,18 +29,31 @@ Render will read `render.yaml` automatically:
 
 ---
 
-## 2. Attach a Persistent Disk
+## 2. Create the Ratings Table in Supabase
 
-The SQLite ratings database must survive restarts and redeploys.
+Run this once in your Supabase project → **SQL Editor** → **New query**:
 
-> **Cost**: $0.25/GB/month (1 GB = ~$0.25/month). The web service itself remains on the free plan.
+```sql
+CREATE TABLE IF NOT EXISTS ratings (
+    id                      SERIAL PRIMARY KEY,
+    eval_id                 TEXT NOT NULL,
+    reviewer_id             TEXT NOT NULL,
+    legal_accuracy          INTEGER,
+    hallucination           TEXT,
+    citation_notes          TEXT,
+    clarification_score     INTEGER,
+    notes                   TEXT,
+    turn6_legal_accuracy    INTEGER,
+    turn6_hallucination     TEXT,
+    turn6_citation_notes    TEXT,
+    turn6_notes             TEXT,
+    flagged                 INTEGER DEFAULT 0,
+    saved_at                TEXT,
+    UNIQUE(eval_id, reviewer_id)
+);
+```
 
-If using the Blueprint, the disk is defined in `render.yaml` automatically. For manual setup:
-
-1. In your Render service → **Disks** tab → **Add Disk**
-2. **Name**: `ratings-data`
-3. **Mount Path**: `/data`
-4. **Size**: 1 GB
+> This only needs to be done once. The app uses your existing Supabase project with the service role key — no disk, no extra cost.
 
 ---
 
@@ -50,10 +63,11 @@ In the Render service → **Environment** tab, add:
 
 | Variable | Value |
 |---|---|
+| `SUPABASE_URL` | `https://qoombyuhqwuozjnreouz.supabase.co` |
+| `SUPABASE_KEY` | *(service role key from Supabase → Project Settings → API → `service_role`)* |
 | `REVIEWER_1_PASSWORD` | *(strong password for Reviewer 1)* |
 | `REVIEWER_2_PASSWORD` | *(strong password for Reviewer 2)* |
 | `ADMIN_PASSWORD` | *(strong password for admin dashboard)* |
-| `DATABASE_PATH` | `/data/ratings.db` |
 | `SECRET_KEY` | *(any long random string, e.g. 64 hex chars)* |
 
 > Never commit `.env` — it is git-ignored. Use `.env.example` as reference only.
@@ -107,18 +121,14 @@ These paths are resolved relative to the repo root via `loader.py`. No manual up
 
 ## 7. Ratings Backup
 
-All reviewer ratings are stored in `/data/ratings.db` on the Render disk.
+All reviewer ratings are stored in the `ratings` table in your Supabase project.
 
-To back up, use the Render **Shell** tab in the dashboard:
+To back up, use the Supabase dashboard → **Table Editor** → select `ratings` → **Export as CSV**.
 
-```bash
-sqlite3 /data/ratings.db .dump > /tmp/ratings_backup.sql
-```
-
-Then download via the Render dashboard file browser, or use the export API:
+The final export (with Cohen's κ) is also available via the API:
 
 ```
-GET /api/export/csv          # requires ADMIN_PASSWORD
+GET /api/export/csv          # requires X-Admin-Password header
 ```
 
 This merges both reviewers' ratings with the original CSV columns (with Cohen's κ).

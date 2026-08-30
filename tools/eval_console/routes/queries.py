@@ -3,30 +3,34 @@ from fastapi import APIRouter, Depends, HTTPException
 from auth import get_current_reviewer
 from data.blinding import config_to_system_map, get_display_order
 from data.loader import get_query_order, get_query_rows, get_turn5_query
-from db import get_conn
+from db import get_client
 
 router = APIRouter(prefix="/api/queries")
 
 
 def _rated_eval_ids(reviewer_id: str) -> set[str]:
-    with get_conn() as conn:
-        rows = conn.execute(
-            """SELECT eval_id FROM ratings
-               WHERE reviewer_id = ?
-                 AND legal_accuracy IS NOT NULL
-                 AND hallucination IS NOT NULL""",
-            (reviewer_id,),
-        ).fetchall()
-    return {r["eval_id"] for r in rows}
+    result = (
+        get_client()
+        .table("ratings")
+        .select("eval_id")
+        .eq("reviewer_id", reviewer_id)
+        .filter("legal_accuracy", "not.is", "null")
+        .filter("hallucination", "not.is", "null")
+        .execute()
+    )
+    return {r["eval_id"] for r in result.data}
 
 
 def _flagged_eval_ids(reviewer_id: str) -> set[str]:
-    with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT eval_id FROM ratings WHERE reviewer_id = ? AND flagged = 1",
-            (reviewer_id,),
-        ).fetchall()
-    return {r["eval_id"] for r in rows}
+    result = (
+        get_client()
+        .table("ratings")
+        .select("eval_id")
+        .eq("reviewer_id", reviewer_id)
+        .eq("flagged", 1)
+        .execute()
+    )
+    return {r["eval_id"] for r in result.data}
 
 
 @router.get("")

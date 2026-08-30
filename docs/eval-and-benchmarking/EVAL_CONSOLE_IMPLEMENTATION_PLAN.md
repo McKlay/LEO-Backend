@@ -197,7 +197,7 @@ The `cohens_kappa_legal_accuracy` column is computed server-side per config grou
 | Phase | Tasks | Output |
 |---|---|---|
 | **P0 — Setup** (0.5 day) | Initialize repo/folder, install deps (FastAPI, sqlite3, uvicorn), wire CSV loader | Server starts, serves query count |
-| **P1 — Data layer** (0.5 day) | CSV loader → in-memory query store, blinding module, SQLite ratings schema | GET /queries returns blinded query list |
+| **P1 — Data layer** (0.5 day) | CSV loader → in-memory query store, blinding module, Supabase ratings schema (via REST API) | GET /queries returns blinded query list |
 | **P2 — Backend API** (1 day) | All routes: queries, ratings (save/update), progress, export | Full API with Swagger docs |
 | **P3 — Card UI** (1.5 days) | HTML/CSS for card layout, markdown renderer (marked.js), chat bubble renderer, rating widgets | Functional single card |
 | **P4 — Navigation & state** (0.5 day) | Card navigation, autosave, resume-on-login, filter sidebar | Full review session flow |
@@ -213,10 +213,16 @@ The `cohens_kappa_legal_accuracy` column is computed server-side per config grou
 | # | Decision | Choice |
 |---|---|---|
 | 1 | Repository placement | **Option B** — `tools/eval_console/` inside LEO-Backend |
-| 2 | Tech stack | **Option A** — FastAPI + SQLite + Vanilla HTML/CSS/JS |
-| 3 | Hosting | **Option C** — Cloud deploy on **Railway** |
+| 2 | Tech stack | ~~FastAPI + SQLite~~ **Superseded:** FastAPI + Supabase Postgres (REST API) + Vanilla HTML/CSS/JS |
+| 3 | Hosting | ~~Railway~~ **Superseded:** Cloud deploy on **Render** |
 | 4 | Answer display | **Option A** — All 3 answers side-by-side |
 | 5 | Session identity | **Option B** — Simple per-reviewer password in `.env` |
+
+> **Note:** Decisions 2 and 3 were revised after initial implementation. The console
+> now persists ratings in Supabase Postgres (already used by the main LEO backend)
+> instead of a local SQLite file, and deploys to Render instead of Railway. See
+> [DEPLOYMENT.md](../../tools/eval_console/DEPLOYMENT.md) for the current setup. The
+> original SQLite/Railway rationale below is kept for historical context only.
 
 ---
 
@@ -291,6 +297,6 @@ The following are explicitly not part of this tool:
 | Source CSV | `tests/benchmark/results/exports/expert_evaluation.csv` | `../../tests/benchmark/results/exports/expert_evaluation.csv` | Read-only data source |
 | Blinding mapping | `tests/benchmark/results/exports/expert_blinding_mapping.json` | `../../tests/benchmark/results/exports/expert_blinding_mapping.json` | Config label → System A/B/C translation (server-side only) |
 | Benchmark spec | `docs/eval-and-benchmarking/Evaluation and Benchmarking v2.md` | Reference only | Rating criteria and scale definitions |
-| Ratings DB | `tools/eval_console/data/ratings.db` | `data/ratings.db` (or `/data/ratings.db` on Railway volume) | Reviewer scores — never committed to git |
+| Ratings table | Supabase Postgres `ratings` table (see [DEPLOYMENT.md](../../tools/eval_console/DEPLOYMENT.md#2-create-the-ratings-table-in-supabase)) | Accessed via `SUPABASE_URL`/`SUPABASE_KEY` (REST API) | Reviewer scores — persisted in the cloud, never committed to git |
 
-The tool reads the CSV and blinding mapping at startup and never modifies them. `ratings.db` is listed in `.gitignore`.
+The tool reads the CSV and blinding mapping at startup and never modifies them. Ratings live in Supabase, not on local/container disk.

@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from auth import check_admin_password
 from data.blinding import config_to_system_map
 from data.loader import get_blinding_mapping, get_query_order, get_query_rows
-from db import get_conn
+from db import get_client
 
 try:
     from sklearn.metrics import cohen_kappa_score
@@ -44,13 +44,9 @@ def export_csv(
     if not check_admin_password(x_admin_password or ""):
         raise HTTPException(status_code=403, detail="Invalid admin password")
 
-    with get_conn() as conn:
-        r1 = {r["eval_id"]: dict(r) for r in conn.execute(
-            "SELECT * FROM ratings WHERE reviewer_id='reviewer_1'"
-        ).fetchall()}
-        r2 = {r["eval_id"]: dict(r) for r in conn.execute(
-            "SELECT * FROM ratings WHERE reviewer_id='reviewer_2'"
-        ).fetchall()}
+    client = get_client()
+    r1 = {r["eval_id"]: r for r in client.table("ratings").select("*").eq("reviewer_id", "reviewer_1").execute().data}
+    r2 = {r["eval_id"]: r for r in client.table("ratings").select("*").eq("reviewer_id", "reviewer_2").execute().data}
 
     blinding = get_blinding_mapping()
     label_to_variant: dict = blinding.get("label_to_variant", {})

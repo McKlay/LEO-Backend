@@ -4,21 +4,22 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 
 from auth import check_admin_password, get_current_reviewer
 from data.loader import get_all_eval_ids
-from db import get_conn
+from db import get_client
 
 router = APIRouter(prefix="/api/progress")
 
 
 def _count_completed(reviewer_id: str) -> int:
-    with get_conn() as conn:
-        row = conn.execute(
-            """SELECT COUNT(*) FROM ratings
-               WHERE reviewer_id = ?
-                 AND legal_accuracy IS NOT NULL
-                 AND hallucination IS NOT NULL""",
-            (reviewer_id,),
-        ).fetchone()
-    return row[0]
+    result = (
+        get_client()
+        .table("ratings")
+        .select("*", count="exact")
+        .eq("reviewer_id", reviewer_id)
+        .filter("legal_accuracy", "not.is", "null")
+        .filter("hallucination", "not.is", "null")
+        .execute()
+    )
+    return result.count or 0
 
 
 @router.get("")

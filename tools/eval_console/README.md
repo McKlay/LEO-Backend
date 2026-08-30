@@ -22,7 +22,10 @@ Edit `.env` and set real values for:
 - `REVIEWER_2_PASSWORD`
 - `ADMIN_PASSWORD`
 - `SECRET_KEY` (any long random string)
-- `DATABASE_PATH` (defaults to `data/ratings.db`, created automatically)
+- `SUPABASE_URL` (from Supabase dashboard → Project Settings → API)
+- `SUPABASE_KEY` (service role key from Supabase dashboard → Project Settings → API)
+
+The `ratings` table must already exist in Supabase — see [DEPLOYMENT.md](DEPLOYMENT.md#2-create-the-ratings-table-in-supabase) for the SQL.
 
 ## Run
 
@@ -43,7 +46,8 @@ Then open:
 
 - Must be run with `tools/eval_console/` as the working directory — `main.py` resolves
   the source CSV and frontend files via relative/repo-root paths.
-- `data/ratings.db` (SQLite) is created on first run and is git-ignored.
+- Ratings are persisted in the Supabase Postgres `ratings` table via the REST API
+  (no local disk storage); `init_db()` is a no-op since the table is created once via SQL.
 - Config labels (Q/M/J) are never sent to the browser; each reviewer sees a
   deterministic per-query shuffle as "System A/B/C".
 - `turn5_query` (Turn 6 follow-up context) is not in `expert_evaluation.csv` and is
