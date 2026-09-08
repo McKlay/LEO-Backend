@@ -235,6 +235,54 @@
     .btn-flag { background: #fff7ed; color: var(--warning); border: 1px solid #fed7aa; }
     .btn-flag:hover { background: #ffedd5; }
     .btn-flag.flagged { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+
+    /* ── Responsive (tablet/mobile) ───────────────────────────────
+       Fixed sidebar-w + 1fr grid squeezes main content on narrow
+       viewports, so stack everything vertically below this width. */
+    @media (max-width: 768px) {
+      body { height: auto; min-height: 100vh; overflow: auto; }
+      .app {
+        grid-template-areas: "hdr" "sidebar" "main";
+        grid-template-rows: auto auto 1fr;
+        grid-template-columns: 1fr;
+        height: auto; min-height: 100vh;
+      }
+      .app-header { height: auto; flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+      .header-left { gap: 10px; flex-wrap: wrap; }
+      .app-logo { font-size: 16px; }
+      .progress-track { width: 100px; }
+      .header-right { gap: 8px; }
+      .reviewer-badge { padding: 3px 9px; font-size: 12px; }
+      .btn-logout { padding: 4px 10px; font-size: 12px; }
+
+      .app-sidebar {
+        border-right: none; border-bottom: 1px solid var(--border);
+        max-height: 42vh;
+      }
+      .query-list { -webkit-overflow-scrolling: touch; }
+
+      .app-main { padding: 14px 14px 32px; }
+      .card-header { padding: 12px 14px; }
+      .section { padding: 12px 14px; }
+      .query-text { font-size: 14px; }
+      .reference-panel { margin: 12px 14px; }
+      .conv-history { margin: 12px 14px 0; }
+      .turn5-query-section { margin: 12px 14px 0; }
+
+      .answers-grid { grid-template-columns: 1fr; }
+      .answer-content { max-height: none; }
+
+      .card-nav { padding: 12px 14px; flex-wrap: wrap; }
+      .btn { padding: 8px 16px; font-size: 12px; }
+    }
+
+    @media (max-width: 480px) {
+      .header-left { gap: 6px; }
+      .progress-wrap { display: none; }
+      .filter-row { flex-direction: column; }
+      .filter-select { min-width: 100%; }
+      .answer-col-header { font-size: 12px; padding: 8px 12px; }
+    }
   </style>
 </head>
 <body>
